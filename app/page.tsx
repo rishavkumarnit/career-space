@@ -1,4 +1,4 @@
-import { BrainCircuit, ChevronRight, Code2, ExternalLink, FileText, Folder, ListChecks } from 'lucide-react';
+import { BrainCircuit, Code2, ExternalLink, ListChecks } from 'lucide-react';
 import UniversalSearch from './universal-search';
 import { buildSearchIndex } from '../lib/search-index';
 
@@ -50,41 +50,6 @@ export default function Home() {
           ))}
         </div>
 
-        <nav className="folder-tree" aria-label="File explorer">
-          <h2>Files</h2>
-          <details open>
-            <summary><ChevronRight className="tree-chevron" size={13} /><Folder size={15} />Interview prep</summary>
-            <div className="tree-children">
-              <details>
-                <summary><ChevronRight className="tree-chevron" size={13} /><Folder size={15} />MERN Stack</summary>
-                <div className="tree-children">
-                  <a href="/spaces/mern/index.html" target="_blank" rel="noopener noreferrer"><FileText size={14} />Overview</a>
-                  <a href="/spaces/mern/pages/js-fundamentals.html" target="_blank" rel="noopener noreferrer"><FileText size={14} />JavaScript</a>
-                  <a href="/spaces/mern/pages/react.html" target="_blank" rel="noopener noreferrer"><FileText size={14} />React</a>
-                  <a href="/spaces/mern/pages/node-express.html" target="_blank" rel="noopener noreferrer"><FileText size={14} />Node &amp; Express</a>
-                  <a href="/spaces/mern/pages/mongodb.html" target="_blank" rel="noopener noreferrer"><FileText size={14} />MongoDB</a>
-                </div>
-              </details>
-
-              <details>
-                <summary><ChevronRight className="tree-chevron" size={13} /><Folder size={15} />AI &amp; Machine Learning</summary>
-                <div className="tree-children">
-                  <a href="/spaces/genai/index.html" target="_blank" rel="noopener noreferrer"><FileText size={14} />GenAI guide</a>
-                  <a href="/spaces/genai/index.html#rag" target="_blank" rel="noopener noreferrer"><FileText size={14} />RAG</a>
-                  <a href="/spaces/genai/index.html#python" target="_blank" rel="noopener noreferrer"><FileText size={14} />Python</a>
-                  <a href="/spaces/genai/index.html#deep-learning" target="_blank" rel="noopener noreferrer"><FileText size={14} />Deep learning</a>
-                </div>
-              </details>
-
-              <details>
-                <summary><ChevronRight className="tree-chevron" size={13} /><Folder size={15} />DSA Practice</summary>
-                <div className="tree-children">
-                  <a href="/spaces/dsa/index.html" target="_blank" rel="noopener noreferrer"><FileText size={14} />My DSA Sheet</a>
-                </div>
-              </details>
-            </div>
-          </details>
-        </nav>
       </aside>
 
       <main className="simple-main">
