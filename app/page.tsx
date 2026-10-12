@@ -1,4 +1,6 @@
 import { BrainCircuit, Code2, ExternalLink, ListChecks } from 'lucide-react';
+import UniversalSearch from './universal-search';
+import { buildSearchIndex } from '../lib/search-index';
 
 const studySpaces = [
   {
@@ -25,6 +27,8 @@ const studySpaces = [
 ];
 
 export default function Home() {
+  const searchIndex = buildSearchIndex();
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -55,6 +59,8 @@ export default function Home() {
               <p>Your interview preparation and practice material in one place.</p>
             </div>
           </div>
+
+          <UniversalSearch entries={searchIndex} />
 
           <section className="study-section" aria-label="Study spaces">
             <div className="study-grid">
