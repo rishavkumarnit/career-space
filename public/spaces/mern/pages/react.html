@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html" class="active">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">React Interview Preparation Notes (MERN Stack)</h1>
+  <p class="page-sub">43 core topics plus 20 scenario-based questions commonly asked in interviews.</p>
+
+  <details class="qa">
+    <summary><span class="q-num">1.</span> What is React?</summary>
+    <div class="qa-body">
+      <p>React is an open-source JavaScript library for building user interfaces, especially Single Page Applications (SPAs). It uses a component-based architecture and Virtual DOM to efficiently update the UI.</p>
+      <p><strong>Why it matters:</strong> React is declarative — you describe <em>what</em> the UI should look like for a given piece of state, and React figures out <em>how</em> to update the real DOM to match. This is the opposite of imperative jQuery-style code where you manually query and mutate DOM nodes. Declarative code composes better and is easier to reason about because rendering is a pure function of state: <code>UI = f(state)</code>.</p>
+      <p><strong>Interview follow-up:</strong> React is explicitly a library, not a full framework — it only owns the view layer. Routing, global state management, and data fetching are separate choices left to the developer (see Q29, "Is React a framework?").</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">2.</span> What is a Single Page Application (SPA)?</summary>
+    <div class="qa-body">
+      <p>An SPA loads a single HTML page from the server and then updates content dynamically as the user interacts with it, without refreshing the entire page.</p>
+      <p><strong>Advantages:</strong> faster navigation, better user experience, reduced server load.</p>
+      <p><strong>How it actually works:</strong> a client-side router (e.g. React Router) intercepts link clicks and calls <code>history.pushState()</code> instead of letting the browser make a real navigation request. It then swaps which components are rendered based on the new URL, so the JS bundle and most assets are never re-downloaded.</p>
+      <p><strong>Trade-offs:</strong> larger initial JS bundle (mitigated with code splitting) and weaker default SEO/first-paint performance, since the initial HTML is near-empty until JS runs — this is the core motivation for SSR frameworks like Next.js (see Q37).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">3.</span> What are components in React?</summary>
+    <div class="qa-body">
+      <p>Components are reusable, independent UI building blocks.</p>
+      <p><strong>Benefits:</strong> reusability, maintainability, better code organization.</p>
+      <p>Example: Navbar, Sidebar, ProductCard, Footer.</p>
+      <p><strong>Deeper view:</strong> a component is really just a JS function that takes props and returns JSX describing UI at that point in time. React favors <em>composition over inheritance</em> — instead of extending a base component class, you build complex UI by nesting and combining smaller components (e.g. a Card component accepting a <code>children</code> prop rather than subclassing it). A common pattern is separating "presentational" components (pure UI, receive data via props) from "container" components (own state/data fetching and pass it down).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">4.</span> What is JSX?</summary>
+    <div class="qa-body">
+      <p>JSX (JavaScript XML) is a syntax extension allowing HTML-like code inside JavaScript. Browsers don't natively understand JSX — build tools like Babel translate it into standard JS function calls.</p>
+      <pre><code>const element = &lt;h1&gt;Hello World&lt;/h1&gt;;</code></pre>
+      <p><strong>Benefits:</strong> readable code, easy UI creation, compiles to React.createElement().</p>
+      <p><strong>What it compiles to:</strong> Babel transforms the JSX above into <code>React.createElement('h1', null, 'Hello World')</code> (or, with the modern automatic JSX runtime, an internal <code>jsx()</code> call). That call returns a plain JS object describing the element — this object is what makes up the Virtual DOM tree. Because JSX is just function calls, only expressions (not statements like <code>if</code> or <code>for</code>) are valid inside <code>{}</code> — which is why conditional rendering uses ternaries or <code>&amp;&amp;</code> instead of if-blocks.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">5.</span> Props vs State</summary>
+    <div class="qa-body">
+      <p><strong>Props</strong> (short for "properties") pass data from a parent component to a child. Unidirectional data flow — data moves strictly from parent to child. Immutable/read-only from the child's perspective.</p>
+      <p><strong>State</strong> is a component's mutable data that React tracks to determine what's displayed. Managed inside the component, mutable, triggers re-render when updated.</p>
+      <p><strong>Note:</strong> props changing also triggers a re-render of the child, just like state changing does in the owning component — both are "reactive" inputs to the render function. When two sibling components need to share what would otherwise be local state, the fix is "lifting state up": move the state to their closest common parent and pass it down as props (plus a callback to update it).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">6.</span> Class vs functional components</summary>
+    <div class="qa-body">
+      <p><strong>Class Components:</strong> use ES6 classes, lifecycle methods, the this keyword.</p>
+      <p><strong>Functional Components:</strong> plain JS functions, use Hooks, simpler and preferred.</p>
+      <p><strong>Why functional won:</strong> class components require binding <code>this</code> in constructors (or arrow-function class fields) to avoid <code>this</code> being <code>undefined</code> in event handlers, and they scatter related logic across lifecycle methods (setup code split between <code>componentDidMount</code>/<code>componentDidUpdate</code>). Hooks let you colocate related logic in one <code>useEffect</code> and share stateful logic via custom hooks without the wrapper-nesting of HOCs. Both compile to similarly fast code today — the difference is almost entirely developer ergonomics, not runtime performance.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">7.</span> What are Hooks?</summary>
+    <div class="qa-body">
+      <p>Special functions that let functional components use state and lifecycle features.</p>
+      <p><strong>Rules:</strong> only call Hooks at the top level (not in loops/conditions/nested functions); only call them from React functional components or other custom Hooks; hook names must start with use.</p>
+      <p><strong>Common Hooks:</strong> useState, useEffect, useRef, useMemo, useCallback, useContext, useReducer.</p>
+      <p><strong>Why the "top level only" rule exists:</strong> React doesn't track hooks by name — it relies on <em>call order</em>. Internally each component instance keeps a linked list of hook records, and every render walks that list in the same sequence. If a hook is called conditionally, the order can shift between renders and React ends up reading the wrong slot's state — this is what the "Rendered more hooks than during the previous render" error is warning about.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">8.</span> Important hooks in detail</summary>
+    <div class="qa-body">
+      <p><strong>useState:</strong> lets components "remember" information across re-renders.</p>
+      <pre><code>const [count, setCount] = useState(0);</code></pre>
+      <p><strong>useEffect:</strong> synchronizes a component with an external system via side effects. Runs after render, so it doesn't block the initial paint.</p>
+      <pre><code>useEffect(() => {
+fetchData();
+}, []);</code></pre>
+      <p><strong>useLayoutEffect:</strong> fires synchronously after DOM updates but before paint. Used to measure layout and apply synchronous style/state changes to prevent flicker.</p>
+      <p><strong>useMemo:</strong> caches the result of an expensive calculation between re-renders, recalculating only when a dependency changes.</p>
+      <pre><code>const total = useMemo(() => calculate(), [items]);</code></pre>
+      <p><strong>useCallback:</strong> caches a function definition between re-renders, returning the same instance unless dependencies change — prevents unnecessary child re-renders.</p>
+      <pre><code>const handleClick = useCallback(() => {}, []);</code></pre>
+      <p><strong>useRef:</strong> creates a mutable reference that persists across re-renders but doesn't trigger one when it changes.</p>
+      <pre><code>const inputRef = useRef();</code></pre>
+      <p><strong>Common pitfalls:</strong> forgetting the dependency array in useEffect (runs after every render); useMemo/useCallback are only worth it when the computation is genuinely expensive or when the memoized value/function is passed to a memoized child or another hook's dependency array — otherwise they add overhead without benefit. useRef is also commonly used to hold a mutable value across renders that shouldn't cause a re-render, e.g. a timer ID or a previous-value tracker, not just DOM nodes.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">9.</span> Custom hooks</summary>
+    <div class="qa-body">
+      <p>Reusable JS functions that extract and share stateful logic between components.</p>
+      <p>Examples: useFetch(), useAuth(). Use when multiple components share the same logic.</p>
+      <p><strong>Important nuance:</strong> a custom hook shares <em>logic</em>, not <em>state</em> — every component that calls <code>useFetch()</code> gets its own independent instance of the state and effects inside it, just like calling a regular function twice creates two separate closures. If you actually need shared state across components, that belongs in Context or a store, not a custom hook. A custom hook is just a plain function, by convention prefixed with "use", that internally calls other hooks (useState, useEffect, etc.) — this naming convention lets both React and lint rules verify the "rules of hooks" are followed.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">10.</span> React.memo</summary>
+    <div class="qa-body">
+      <p>Optimizes performance by preventing unnecessary re-renders of functional components.</p>
+      <pre><code>const Child = React.memo(Component);</code></pre>
+      <p>Skips the render if new props equal the previous ones (shallow comparison via Object.is), reusing the last rendered result. Useful when props rarely change.</p>
+      <p><strong>Common pitfall:</strong> React.memo only helps if props are referentially stable. If the parent passes an inline function or object literal (<code>onClick={() => doThing()}</code> or <code>style={{color: 'red'}}</code>), a new reference is created every render, the shallow comparison always fails, and the memoized child re-renders anyway. This is exactly why useCallback/useMemo exist — to give memo something stable to compare against. React.memo also doesn't help if the re-render is triggered by Context changing, since consuming a context bypasses the props comparison entirely.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">11.</span> How do you implement the Context API with useContext?</summary>
+    <div class="qa-body">
+      <p>Allows sharing data globally across a component tree without manually passing props through every level ("prop drilling"). Ideal for auth, themes, language preferences.</p>
+      <p><strong>Steps:</strong> Create Context → Create Provider → Wrap application → Consume using useContext().</p>
+      <p><strong>Example — a shared counter:</strong></p>
+      <pre><code>import { createContext, useContext, useState } from 'react';
+
+const CounterContext = createContext(null);
+
+export function CounterProvider({ children }) {
+  const [count, setCount] = useState(0);
+  const increment = () =&gt; setCount(prev =&gt; prev + 1);
+  const decrement = () =&gt; setCount(prev =&gt; prev - 1);
+
+  return (
+    &lt;CounterContext.Provider value={{ count, increment, decrement }}&gt;
+      {children}
+    &lt;/CounterContext.Provider&gt;
+  );
+}
+
+export function useCounter() {
+  const context = useContext(CounterContext);
+  if (context === null) {
+    throw new Error('useCounter must be used within a CounterProvider');
+  }
+  return context;
+}
+
+function Counter() {
+  const { count, increment, decrement } = useCounter();
+  return (
+    &lt;div&gt;
+      &lt;button onClick={decrement}&gt;-&lt;/button&gt;
+      &lt;span&gt;{count}&lt;/span&gt;
+      &lt;button onClick={increment}&gt;+&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+
+// Wrap consumers so they can access the shared counter state.
+function App() {
+  return &lt;CounterProvider&gt;&lt;Counter /&gt;&lt;/CounterProvider&gt;;
+}</code></pre>
+      <p>The custom hook gives consumers a simple API and throws a clear error if used outside the provider. The functional state updates use the latest count value.</p>
+      <p><strong>Re-render behavior:</strong> when a Provider's <code>value</code> changes, <em>every</em> component consuming that context re-renders, regardless of which part of the value it actually uses — Context has no built-in selector mechanism. Two mitigations: split state into multiple smaller contexts by concern (e.g. separate AuthContext and ThemeContext instead of one giant AppContext), and memoize the value object passed to the Provider so it doesn't get a new reference on every parent render. Context is a dependency-injection mechanism, not a performance optimization or a full state-management replacement — see Q14 for when to reach for Redux/Zustand instead.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">12.</span> Prop drilling</summary>
+    <div class="qa-body">
+      <p>Passing data from a parent down to a deeply nested child through intermediary components that don't actually need the data themselves.</p>
+      <p><strong>Solution:</strong> Context API, Redux, Zustand.</p>
+      <p><strong>Another underrated fix — composition:</strong> instead of piping a prop through 4 layers, pass the already-rendered element down as <code>children</code> or a render prop, so intermediate components never need to know about the data at all. E.g. <code>&lt;Layout&gt;&lt;Profile user={user} /&gt;&lt;/Layout&gt;</code> lets Layout render Profile without receiving or forwarding <code>user</code> itself. Reach for Context/Redux only when composition alone can't solve it (e.g. the data is needed in many unrelated branches of the tree).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">13.</span> Lazy loading</summary>
+    <div class="qa-body">
+      <p>Delays loading parts of the app (components, modules, images) until actually needed — reduces initial bundle size for faster page loads.</p>
+      <pre><code>const Dashboard = React.lazy(() => import('./Dashboard'));</code></pre>
+      <p>Used with Suspense. React.lazy() dynamically imports a component; &lt;Suspense&gt; wraps it and shows a fallback (spinner/text) while it loads.</p>
+      <p><strong>Benefits:</strong> smaller bundle, faster initial load.</p>
+      <p><strong>Practical notes:</strong> React.lazy() only supports default exports (you can work around named exports by re-exporting through a wrapper module); if you forget to wrap a lazy component in Suspense, React throws at render time instead of silently failing. Under the hood, <code>import()</code> triggers the bundler (Webpack/Vite) to split that module into its own chunk file, fetched over the network only when that branch of the UI is actually rendered — this is the mechanism behind route-based code splitting (see Q36).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">14.</span> Virtual DOM</summary>
+    <div class="qa-body">
+      <p>A lightweight JS representation of the Real DOM. React updates the Virtual DOM first, then updates only the changed elements in the Real DOM.</p>
+      <p><strong>Why it exists:</strong> real DOM mutations are expensive because the browser may need to recalculate style, layout (reflow), and repaint after each change. By building a tree of plain JS objects first, React can compute the minimal set of changes needed (see Q15, Reconciliation) and apply them to the real DOM in one batched pass, avoiding redundant layout thrashing from many small, uncoordinated updates.</p>
+      <p><strong>Common misconception:</strong> the Virtual DOM isn't inherently "faster than the DOM" for a single operation — hand-optimized direct DOM manipulation can always beat it. Its real value is making batched, correct-by-default updates practical at scale without the developer manually tracking what changed.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">15.</span> Reconciliation</summary>
+    <div class="qa-body">
+      <p>The process where React compares the old Virtual DOM with the new one and updates only changed nodes — called the Diffing Algorithm.</p>
+      <p><strong>Why it's fast (fiber diffing heuristics):</strong> a generic tree-diff algorithm is O(n³) in the number of nodes, which is too slow for UI updates. React's diffing (implemented on the Fiber architecture since React 16) uses two heuristics to get this down to O(n):</p>
+      <ol style="margin-left:1.2em;">
+        <li>Elements of a <strong>different type</strong> (e.g. &lt;div&gt; → &lt;span&gt;, or ComponentA → ComponentB) produce entirely different trees — React tears down the old subtree and builds a new one from scratch rather than trying to diff their internals.</li>
+        <li>For <strong>lists</strong>, React uses the <code>key</code> prop to match children between renders instead of comparing them positionally. With stable keys, React can detect that an item just moved rather than concluding every item after the moved one changed (see Q19).</li>
+      </ol>
+      <p><strong>Fiber specifically:</strong> Fiber is the internal data structure/reconciler (replacing the old recursive "stack reconciler") that represents each component as a unit of work in a linked-list-like tree. This lets React pause, abort, or resume rendering work incrementally instead of blocking the main thread for a full synchronous tree walk — the foundation for concurrent features like time-slicing and <code>startTransition</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">16.</span> Routing</summary>
+    <div class="qa-body">
+      <p>React Router is the standard library for routing in a SPA — allows changing views without a full browser reload, giving a multi-page experience.</p>
+      <p><strong>Components:</strong> BrowserRouter, Routes, Route, Link, Navigate.</p>
+      <p><strong>How it works under the hood:</strong> BrowserRouter uses the History API (<code>pushState</code>/<code>replaceState</code>) to change the URL without a full page reload, and subscribes to <code>popstate</code> to detect back/forward navigation. Routes/Route then re-render whichever component matches the current path. Nested routes with an <code>&lt;Outlet /&gt;</code> let a parent layout persist across child route changes (useful for shared navbars/sidebars), and route-level React.lazy() lets you code-split per page.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">17.</span> Error boundaries</summary>
+    <div class="qa-body">
+      <p>Specialized components that catch JS errors anywhere in their child component tree, log them, and display a fallback UI instead of crashing the whole app.</p>
+      <p>Implemented using class components with componentDidCatch() and getDerivedStateFromError().</p>
+      <p><strong>Important limitation:</strong> error boundaries only catch errors thrown during rendering, in lifecycle methods, and in constructors of the tree below them. They do <em>not</em> catch errors in event handlers (use a plain try/catch there), asynchronous code (setTimeout, promises), server-side rendering, or errors thrown in the boundary itself. There's no hook equivalent yet — function components can't define an error boundary directly, so most codebases use the <code>react-error-boundary</code> library instead of hand-rolling the class.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">18.</span> Controlled vs uncontrolled components</summary>
+    <div class="qa-body">
+      <p>In controlled components, React state is the single source of truth. In uncontrolled components, the DOM manages its own state, and values are extracted via refs when needed.</p>
+      <pre><code>// Controlled
+&lt;input value={name} onChange={...}/&gt;
+
+// Uncontrolled
+&lt;input ref={inputRef}/&gt;
+
+import { useRef } from "react";
+
+function LoginForm() {
+  const usernameRef = useRef();
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(usernameRef.current.value);
+  };
+  return (
+    &lt;form onSubmit={handleSubmit}&gt;
+      &lt;input
+        type="text"
+        ref={usernameRef}
+        placeholder="Enter username"
+      /&gt;
+      &lt;button type="submit"&gt;
+        Submit
+      &lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+      <p><strong>Source of truth:</strong> the crux of this distinction is <em>where the current value lives</em>. In a controlled input, the DOM element's <code>value</code> is always driven by React state — every keystroke fires <code>onChange</code>, which updates state, which re-renders the input with the new value. React is the single source of truth, which makes validation, conditional disabling, and formatting trivial, at the cost of a re-render per keystroke. In an uncontrolled input, the DOM itself holds the value and React only reads it on demand via a ref — cheaper for very large forms, file inputs (which can't be controlled since JS can't set a file input's value), or quick one-off forms where React doesn't need to react to every change.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">19.</span> Keys in lists</summary>
+    <div class="qa-body">
+      <p>A key is a special prop React uses to uniquely identify list elements. Every item in a rendered list should have a unique key, used during Reconciliation.</p>
+      <pre><code>users.map(user =>
+  &lt;li key={user.id}&gt;{user.name}&lt;/li&gt;
+)</code></pre>
+      <p>Avoid index as key when the list changes dynamically.</p>
+      <p><strong>Why index-as-key breaks things:</strong> React uses the key to match each rendered element to its previous version. If the list can be reordered, filtered, or have items inserted/removed, the array index of an item changes even though the item itself didn't — React ends up associating the wrong internal state (and DOM node, e.g. an input's focus/cursor position or a checkbox's checked state) with the wrong item. Classic symptom: deleting item #2 from a list makes item #3's typed input text appear to "jump" onto row #2. Using a stable, unique identifier (e.g. a database id) as the key avoids this entirely because the key follows the data, not its position.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">20.</span> React Fragment</summary>
+    <div class="qa-body">
+      <p>Fragments group a list of children without adding extra nodes to the DOM. Every component must return a single root element — Fragments act as that parent without appearing in the final HTML.</p>
+      <pre><code>&lt;&gt;
+  &lt;h1 /&gt;
+  &lt;p /&gt;
+&lt;/&gt;</code></pre>
+      <p><strong>Why not just a &lt;div&gt;?</strong> An extra wrapper div can break CSS that depends on direct parent-child relationships (e.g. CSS Grid/Flexbox children, or a &lt;table&gt; expecting &lt;tr&gt; as direct children of &lt;tbody&gt;) and adds meaningless nodes to the DOM. One caveat: the short <code>&lt;&gt;&lt;/&gt;</code> syntax cannot accept a <code>key</code> prop — when rendering a list of fragments (e.g. mapping to multiple sibling elements per item), you must use the explicit <code>&lt;React.Fragment key={id}&gt;</code> form instead.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">21.</span> HOC (Higher Order Component)</summary>
+    <div class="qa-body">
+      <p>An advanced pattern — a pure function that takes an existing component and returns a new component with added functionality, data, or styling.</p>
+      <p>Used for: authentication, logging, permissions.</p>
+      <p>Pure Components skip re-rendering if props/state haven't changed — a performance optimization.</p>
+      <pre><code>function withAuth(Component) {
+  return function Wrapped(props) {
+    const user = useAuth();
+    if (!user) return &lt;Redirect to="/login" /&gt;;
+    return &lt;Component {...props} user={user} /&gt;;
+  };
+}
+const ProtectedDashboard = withAuth(Dashboard);</code></pre>
+      <p><strong>Why HOCs fell out of favor:</strong> stacking several HOCs creates "wrapper hell" in DevTools (deeply nested anonymous wrapper components), and prop names can silently collide between HOCs. Custom hooks solve the same code-sharing problem more directly — a component calls <code>const user = useAuth()</code> instead of being wrapped, keeping the tree flatter and props traceable. HOCs (and the related render-props pattern) are mostly seen in legacy codebases or library APIs today (e.g. <code>connect()</code> from older Redux).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">22.</span> Lifecycle methods</summary>
+    <div class="qa-body">
+      <p>Built-in functions executing automatically at specific stages of a class component's existence.</p>
+      <p><strong>Mounting:</strong> componentDidMount. <strong>Updating:</strong> componentDidUpdate. <strong>Unmounting:</strong> componentWillUnmount.</p>
+      <pre><code>return () => {
+  window.removeEventListener('resize', handleResize);
+};</code></pre>
+      <p>Functional equivalent: useEffect.</p>
+      <p><strong>Mapping to useEffect:</strong> <code>useEffect(fn, [])</code> ≈ componentDidMount (runs once after first render); <code>useEffect(fn, [dep])</code> ≈ componentDidUpdate scoped to that dependency; the function <code>fn</code> returns ≈ componentWillUnmount (cleanup). Two other class-only lifecycle methods worth knowing: <code>shouldComponentUpdate</code> lets a class component bail out of re-rendering (the class equivalent of React.memo), and <code>getDerivedStateFromProps</code> lets state be derived from incoming props before render — both are rare in modern hook-based code but still appear in interview questions and legacy codebases.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">23.</span> Redux &amp; Redux Toolkit</summary>
+    <div class="qa-body">
+      <p>Redux manages and shares "global" state across an application via a centralized store, making data predictable and easy to test.</p>
+      <p>Redux Toolkit (RTK) is the officially recommended, modern way to write Redux logic — reduces boilerplate. configureStore() combines reducers and sets up middleware like Redux Thunk and DevTools automatically.</p>
+      <p>Redux Thunk is middleware for async logic — lets you dispatch functions containing async logic (like API calls), then dispatch real action objects based on the result.</p>
+      <pre><code>dispatch(async () => {
+  const users = await fetchUsers();
+});
+
+configureStore({
+  reducer: {}
+})</code></pre>
+      <p><strong>Unidirectional data flow:</strong> a component dispatches a plain action object → middleware (like Thunk) can intercept it to run async side effects → the reducer, a pure function of <code>(state, action)</code>, computes a brand-new state object → the store notifies subscribed components → connected components re-render. Because reducers must be pure (no mutation, same input always gives same output), Redux state changes are predictable, easy to test in isolation, and support time-travel debugging in Redux DevTools. RTK's <code>createSlice</code> further reduces boilerplate by letting you write "mutating" logic inside reducers, which Immer converts into safe immutable updates under the hood.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">24.</span> React folder structure</summary>
+    <div class="qa-body">
+      <pre><code>src/
+├─ components/
+├─ pages/
+├─ hooks/
+├─ services/
+├─ store/
+├─ routes/
+├─ utils/</code></pre>
+      <p>Feature-based structure is preferred for large applications.</p>
+      <p><strong>Type-based vs feature-based:</strong> the layout above is "type-based" — grouping by technical role (all components together, all hooks together). It works fine for small apps but scales poorly: adding one feature means touching five scattered folders. Feature-based (or "colocation") structure groups everything a single feature needs — its components, hooks, API calls, and slice — in one folder (see Q12's scenario answer for a worked example), so related code lives together and features can be deleted or moved as a unit.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">25.</span> Authentication &amp; token storage</summary>
+    <div class="qa-body">
+      <p><strong>Best practice:</strong> access token in memory; refresh token in an HttpOnly Secure cookie. Avoid localStorage for sensitive apps due to XSS risk.</p>
+      <p>Access token stored in memory (Context/Redux/Zustand), sent in the Authorization header. Refresh token in a Secure, HttpOnly cookie — inaccessible to JS. When the access token expires, the frontend calls a refresh endpoint, gets a new access token, and retries the failed request.</p>
+      <p>XSS is a vulnerability where an attacker injects malicious JS that runs in another user's browser. An HttpOnly cookie is one JS cannot read.</p>
+      <pre><code>app.get('/login', (req, res) => {
+  res.cookie('session_token', 'your_secure_value_here', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 3600000
+  });
+  res.send('HttpOnly cookie has been set.');
+});</code></pre>
+      <p><strong>Why memory + HttpOnly cookie beats localStorage:</strong> anything readable by JS (localStorage, sessionStorage, non-HttpOnly cookies) is readable by an attacker's injected script too — there's no way to scope localStorage access to "only my app's legitimate code". An HttpOnly cookie is invisible to <code>document.cookie</code> entirely, so even a successful XSS payload can't exfiltrate it; the browser still attaches it automatically to same-site requests. The trade-off is that HttpOnly cookies don't protect against CSRF, which needs its own defenses (SameSite cookies, CSRF tokens — see the scenario section, Q15).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">26.</span> Axios interceptors</summary>
+    <div class="qa-body">
+      <p>Middleware functions that intercept, modify, or handle HTTP requests/responses globally before the core application processes them.</p>
+      <p><strong>Uses:</strong> add JWT token, refresh token, global error handling.</p>
+      <pre><code>api.interceptors.request.use(config => {
+  const token = getAccessToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) redirectToLogin();
+    return Promise.reject(err);
+  }
+);</code></pre>
+      <p>This avoids repeating auth-header and error-handling logic in every single API call — the interceptor runs once, centrally, for the whole Axios instance. It's also the standard place to implement the token-refresh-and-retry flow described in the scenario section (Q16).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">27.</span> State management options</summary>
+    <div class="qa-body">
+      <p>Categorize state into: local UI state, shared client state, server state, and URL state. Local state → useState/useReducer. Shared client state (auth, theme) → Context, Zustand, or Redux. Server state → React Query (caching, sync, refetching).</p>
+      <p>For most modern apps: Zustand (client state) + React Query (server state) is simple and scalable; Redux Toolkit is common for large enterprise apps.</p>
+      <p><strong>Context:</strong> small-medium apps. <strong>Redux Toolkit:</strong> large enterprise apps. <strong>Zustand:</strong> lightweight (~1-2kB), boilerplate-free. <strong>MobX:</strong> observable-based. <strong>Jotai:</strong> atomic state management.</p>
+      <p><strong>When Context becomes a bottleneck:</strong> because a Context Provider re-renders every consumer on any value change (Q11), an app that puts frequently-changing state (like form input or a live counter) into one big Context often finds unrelated parts of the UI re-rendering unnecessarily. Zustand/Redux avoid this via selector-based subscriptions — a component only re-renders when the specific slice of state it selected actually changes, not the whole store.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">28.</span> Debugging React applications</summary>
+    <div class="qa-body">
+      <p>Tools: React DevTools, Redux DevTools, Browser Network Tab, Console Logs, Profiler.</p>
+      <p><strong>Going deeper:</strong> the React DevTools Profiler records a flamegraph per commit, showing which components rendered and roughly how long each took — invaluable for spotting a component that re-renders far more often than expected. The "why-did-you-render" library patches React to log the exact prop/state that caused an unnecessary re-render. For production issues, source maps let minified stack traces map back to real file/line numbers, and error-tracking tools (Sentry, LogRocket) combine that with session replay.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">29.</span> Is React a framework?</summary>
+    <div class="qa-body">
+      <p>No — React is a UI Library. Frameworks: Angular, Next.js.</p>
+      <p><strong>The distinction:</strong> a library (React) is something you call into — you're in control of the application structure and pull in React just for rendering. A framework (Angular, or Next.js built on top of React) calls into your code — it dictates routing conventions, build pipeline, data-fetching patterns, and file structure, trading flexibility for consistency and built-in solutions to problems (routing, SSR, bundling) that a plain React app has to solve itself by picking libraries.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">30.</span> Handling 10,000 records</summary>
+    <div class="qa-body">
+      <p>Use Virtualization — only visible rows of a large list/table are rendered to the DOM, while off-screen rows are replaced with spacers. Dramatically reduces DOM nodes and improves rendering performance.</p>
+      <p>For very large datasets, combine with backend pagination and infinite scrolling.</p>
+      <p><strong>Libraries:</strong> react-window, react-virtualized, TanStack Virtual.</p>
+      <p><strong>How it works internally:</strong> the container measures (or is given) each row's height and the viewport's scroll position, then computes which index range is currently visible. It renders only those rows (plus a small "overscan" buffer above/below for smoother scrolling) absolutely positioned at their correct offsets, while a spacer element with the total scroll height keeps the scrollbar proportionally accurate. As the user scrolls, the visible index range is recalculated and the DOM nodes are recycled/repositioned rather than growing indefinitely — this is what keeps 10,000 rows from becoming 10,000 real DOM nodes.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">31.</span> React Portals</summary>
+    <div class="qa-body">
+      <p>Allow a component to render its DOM elements outside its parent DOM hierarchy while remaining part of the same React component tree — created using createPortal(). Commonly used for modals, dialogs, tooltips, dropdowns, toasts, avoiding clipping/overflow/z-index conflicts.</p>
+      <p>Even though the DOM location changes, context and event bubbling continue to work normally.</p>
+      <pre><code>createPortal(child, document.body)</code></pre>
+      <p><strong>Why event bubbling still works:</strong> React dispatches synthetic events based on the <em>React component tree</em> position, not the DOM tree position — so a click inside a portal-rendered modal still bubbles up through its logical React parents (triggering their onClick handlers) even though in the actual DOM the modal is a sibling of the app root, not a descendant. This is what makes Portals safe for modals: styling escapes clipping/z-index/overflow constraints from ancestor CSS, but the component's logic (context, event handlers, state) behaves exactly as if it were rendered in place.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">32.</span> useEffect vs useLayoutEffect</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>useEffect</th><th>useLayoutEffect</th></tr>
+        <tr><td>Runs after browser paints</td><td>Runs before browser paints</td></tr>
+        <tr><td>Non-blocking</td><td>Blocks paint</td></tr>
+        <tr><td>Preferred in most cases</td><td>Use only when necessary</td></tr>
+        <tr><td>Data fetching, subscriptions</td><td>DOM measurements, layout calculations</td></tr>
+      </table>
+      <p><strong>The browser paint timing, concretely:</strong> the render pipeline is roughly JS execution → style recalculation → layout → paint → composite. useEffect callbacks are scheduled to run <em>after</em> the browser has painted the frame — so if the effect changes the DOM, the user briefly sees the old layout flash before the update (a visible flicker). useLayoutEffect runs synchronously right after React updates the DOM but <em>before</em> the browser paints, so any measurement (e.g. <code>getBoundingClientRect()</code>) and any resulting DOM/style change happens invisibly within the same frame — at the cost of blocking that frame's paint until the effect finishes. Rule of thumb: default to useEffect; reach for useLayoutEffect only when you must measure or mutate layout before the user sees it (e.g. auto-scrolling to the bottom, positioning a tooltip based on measured size).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">33.</span> useReducer</summary>
+    <div class="qa-body">
+      <p>A more structured alternative to useState for complex state logic, particularly when the next state depends on the previous one or involves multiple sub-values updated together. You dispatch an action (object with type + optional payload); a reducer function computes the new state.</p>
+      <pre><code>const [state, dispatch] = useReducer(reducer, initialState);</code></pre>
+      <p>Redux uses the same reducer pattern but manages state in a centralized global store accessible app-wide. Use useReducer for local component state with complex transitions; use Redux/global state when multiple parts of the app need access.</p>
+      <pre><code>function reducer(state, action) {
+  switch (action.type) {
+    case "increment":
+      return { count: state.count + 1 };
+    case "reset":
+      return { count: 0 };
+    default:
+      return state;
+  }
+}
+const [state, dispatch] = useReducer(reducer, { count: 0 });
+dispatch({ type: "increment" });</code></pre>
+      <p>useReducer also helps avoid stale-closure bugs common with useState + useCallback, since dispatch's identity never changes and the reducer always receives the latest state as its first argument — useful for passing a stable dispatch function deep via Context without re-renders on every state shape.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">34.</span> Strict Mode</summary>
+    <div class="qa-body">
+      <p>A development-only tool that highlights potential problems by activating extra checks/warnings. No visible UI, no impact on production builds.</p>
+      <p>Helps detect: side effects, deprecated APIs, unsafe code. In React 18, Strict Mode intentionally re-runs renders and effects in development to help uncover bugs under the concurrent rendering model.</p>
+      <p><strong>What it actually double-invokes:</strong> in dev only, React 18 Strict Mode calls component function bodies twice per render, and runs each effect's setup + cleanup + setup sequence once on mount. This is deliberate: it simulates what happens under concurrent rendering when React discards and re-creates work, surfacing bugs like effects that fetch data without cleanup, or components that mutate something outside React during render (both non-idempotent and therefore unsafe under concurrent features). Seeing "double console.logs" in dev is expected and not itself a bug — it disappears in production builds.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">35.</span> Synthetic Events</summary>
+    <div class="qa-body">
+      <p>React's cross-browser wrapper around native browser events — a consistent API for clicks, form submissions, keyboard interactions across browsers. React uses Synthetic Events to implement event delegation via a centralized event system rather than many individual DOM listeners. The original browser event is accessible via event.nativeEvent.</p>
+      <pre><code>function handleSubmit(event) {
+  // event = SyntheticEvent
+  event.preventDefault();
+}
+&lt;form onSubmit={handleSubmit}&gt;</code></pre>
+      <p>event.preventDefault() prevents the browser's default action; event.stopPropagation() stops the event from propagating through the DOM tree.</p>
+      <p><strong>History note:</strong> before React 17, synthetic events were "pooled" and nullified after the handler ran (so accessing <code>event</code> asynchronously, e.g. inside a setTimeout, returned all-null fields unless you called <code>event.persist()</code>). React 17+ removed event pooling, so synthetic events behave like normal objects you can reference later. React 17 also moved the root event listener attachment from <code>document</code> to the root DOM container the app is rendered into, making it safer to nest multiple React apps/versions on the same page.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">36.</span> Code splitting &amp; chunking</summary>
+    <div class="qa-body">
+      <p>Divides a large JS bundle into smaller chunks loaded only when needed. Implemented via React.lazy() and dynamic imports for routes or large components, reducing initial bundle size and improving caching.</p>
+      <p><strong>Techniques:</strong> React.lazy, dynamic import(), route-based splitting.</p>
+      <pre><code>const Settings = React.lazy(() => import("./pages/Settings"));
+
+&lt;Route
+  path="/settings"
+  element={
+    &lt;Suspense fallback={&lt;Spinner /&gt;}&gt;
+      &lt;Settings /&gt;
+    &lt;/Suspense&gt;
+  }
+/&gt;</code></pre>
+      <p>Route-based splitting is the highest-leverage place to apply this: a user visiting the homepage shouldn't have to download the JS for the admin settings page they may never open. Bundlers (Webpack/Vite) turn each dynamic <code>import()</code> call into a separate chunk file with its own content hash, which also improves long-term caching since unrelated code changes don't invalidate every chunk.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">37.</span> SSR vs CSR</summary>
+    <div class="qa-body">
+      <p><strong>CSR</strong> (Client-Side Rendering): rendering in the browser. Pros: rich interactions. Cons: SEO issues.</p>
+      <pre><code>Request → server responds with near-empty HTML + JS bundle link
+→ browser downloads/executes JS
+→ JS fetches data via APIs, generates DOM, injects into page</code></pre>
+      <p><strong>SSR</strong> (Server-Side Rendering): rendering on the server. Pros: better SEO, faster first load. Framework: Next.js.</p>
+      <pre><code>Request → server fetches DB/API data internally
+→ server injects data into layout, compiles static HTML, sends it back
+→ browser renders HTML instantly
+→ Hydration: JS bundle finishes downloading, attaches event handlers, page becomes interactive</code></pre>
+      <p>Hydration is the process where React attaches event handlers/state management to server-rendered HTML, comparing it with the client-side virtual DOM without re-rendering everything. A hydration mismatch occurs when server output differs from client output (e.g., Math.random() or browser-specific APIs during render).</p>
+      <p><strong>Why mismatches matter:</strong> React assumes the server-rendered markup and the first client render produce identical output, so it can skip re-creating DOM nodes and just attach listeners. If they differ (e.g. rendering <code>new Date()</code>, reading <code>window</code>/<code>localStorage</code> during render, or browser extensions injecting attributes), React logs a hydration warning and in the worst case discards the server HTML and re-renders client-side, losing the fast-first-paint benefit SSR was meant to provide. Fix by moving non-deterministic or browser-only logic into <code>useEffect</code> (which only runs client-side, after hydration). Modern frameworks (Next.js App Router) also support streaming SSR/React Server Components, sending HTML in chunks as data resolves rather than waiting for the entire page.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">38.</span> Performance optimization techniques</summary>
+    <div class="qa-body">
+      <p>Focuses on reducing unnecessary work: preventing re-renders (React.memo, useMemo, useCallback), virtualization for large datasets, caching server data (React Query), code splitting/lazy loading, stable list keys, debouncing/throttling expensive operations, optimizing context usage.</p>
+      <ul>
+        <li>React.memo</li>
+        <li>useMemo / useCallback</li>
+        <li>Lazy Loading / Code Splitting</li>
+        <li>Virtualization</li>
+        <li>Debouncing / Throttling</li>
+        <li>Proper Keys</li>
+        <li>Caching API Responses</li>
+      </ul>
+      <p><strong>Profile before optimizing:</strong> apply React.memo/useMemo/useCallback only where the React DevTools Profiler shows an actual measured cost — wrapping every component and function in memoization by default adds comparison overhead and code noise for no benefit if the underlying render was already cheap. The 80/20 wins in most real apps are: virtualizing long lists, code-splitting rarely-visited routes, and caching server responses (React Query) rather than fighting re-renders line by line.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">39.</span> Controlled vs uncontrolled forms</summary>
+    <div class="qa-body">
+      <p>A controlled input's value is managed by React state (useState) — React is the single source of truth, and every change re-renders. An uncontrolled input stores its value in the DOM, accessed via a ref.</p>
+      <p>Controlled inputs are preferred for most forms (simplify validation, conditional rendering). Uncontrolled inputs are useful for file inputs, simple forms, or performance-sensitive scenarios.</p>
+      <p><strong>Where form libraries fit:</strong> React Hook Form takes a middle path — inputs are technically uncontrolled (registered via ref, so typing doesn't re-render the whole form), but the library still gives you validation, error state, and a single source of truth for reading values on submit. This is why it scales much better to large forms than fully controlled useState-per-field approaches (see the scenario section, Q6).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">40.</span> React events vs DOM events</summary>
+    <div class="qa-body">
+      <p>React handles events through its Synthetic Event system rather than exposing native browser events directly — a cross-browser wrapper with a consistent API. React uses event delegation (a centralized listener system) instead of many individual DOM listeners.</p>
+      <pre><code>Root Container
+      ↓
+Single Listener
+      ↓
+React determines target
+      ↓
+Calls correct handler</code></pre>
+      <p><strong>Why delegate instead of attaching per-element listeners:</strong> a page with thousands of interactive elements would otherwise need thousands of native listeners, each consuming memory and needing cleanup on unmount. With one root listener, React registers a single native handler and uses its own internal event system to figure out which component's handler(s) to invoke based on where in the React tree the event originated — cheaper to set up and impossible to leak via a forgotten <code>removeEventListener</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">41.</span> Batching and state lifting</summary>
+    <div class="qa-body">
+      <p>Batching groups multiple state updates into a single re-render, reducing unnecessary rendering. In React 18, automatic batching applies to event handlers, promises, setTimeout, and native events. Use functional updates when updates depend on the previous value within a batch.</p>
+      <pre><code>function App() {
+  const [count, setCount] = useState(0);
+  const [name, setName] = useState("");
+  const handleClick = () => {
+    setCount(1);
+    setName("Rishav");
+  };
+  return (
+    &lt;button onClick={handleClick}&gt;
+      Click
+    &lt;/button&gt;
+  );
+}</code></pre>
+      <p><strong>State Lifting:</strong> moving state from a child to the closest common parent so multiple components can share and synchronize it — allows sibling components to share data.</p>
+      <p><strong>Before React 18:</strong> automatic batching only happened inside React event handlers. Updates inside a native event listener, a <code>setTimeout</code>, or a resolved promise were each applied synchronously, causing an extra render per <code>setState</code> call. React 18's <code>createRoot</code> extends automatic batching to those cases too, so the two <code>setState</code> calls above always produce one render regardless of where they're called from — one of the main reasons upgrading to <code>createRoot</code> (from the legacy <code>ReactDOM.render</code>) matters.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">42.</span> Default export vs named export</summary>
+    <div class="qa-body">
+      <p>A default export lets a module export a single primary value, importable under any name without curly braces. A named export lets a module export multiple values, imported with their exact names inside curly braces.</p>
+      <p>Default exports: pages/main components. Named exports: utility functions and component libraries — clearer, more consistent imports.</p>
+      <pre><code>// Default Export
+export default App;
+import App from './App';
+
+// Named Export
+export const App = () => {};
+import { App } from './App';</code></pre>
+      <p><strong>Practical trade-off:</strong> named exports are generally safer for refactors — renaming a named export causes every import site to break loudly (compiler/IDE catches it), whereas a default export can be imported under any arbitrary local name, so a typo or inconsistent naming across files goes unnoticed by tooling. Named exports also allow better tree-shaking and auto-import suggestions in editors. Some style guides (e.g. Airbnb) recommend named exports everywhere and reserve default exports only for a module's single obvious main output, like a page component.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">43.</span> Pagination component</summary>
+    <div class="qa-body">
+      <p><strong>Implementation steps:</strong> fetch data → store currentPage → calculate startIndex/endIndex → slice records → render page buttons.</p>
+      <pre><code>start = (page - 1) * limit
+end = start + limit</code></pre>
+      <pre><code>const totalPages = Math.ceil(records.length / limit);
+const pageRecords = records.slice(start, end);</code></pre>
+      <p><strong>Client-side vs server-side pagination:</strong> the slice-based approach above only works when the full dataset is already loaded in memory — fine for a few hundred rows. For large datasets, paginate on the backend instead: send <code>page</code>/<code>limit</code> as query params, let the database do <code>LIMIT</code>/<code>OFFSET</code> (or cursor-based pagination for very large or frequently-changing tables, which avoids the "shifting page" bug OFFSET has when rows are inserted/deleted between requests), and only fetch the current page's records over the network.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Scenario Questions</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">1.</span> A component re-renders too many times — how do you find the cause and fix it?</summary>
+    <div class="qa-body">
+      <p><strong>Check:</strong> state updates inside render, infinite useEffect, parent re-renders.</p>
+      <p><strong>Fix:</strong> React.memo, useMemo, useCallback.</p>
+      <pre><code>function Counter() {
+  const [count, setCount] = useState(0);
+  setCount(count + 1);
+  return &lt;div&gt;{count}&lt;/div&gt;;
+}
+// FIX
+useEffect(() => {
+  setCount(1);
+}, []);
+
+// ---
+useEffect(() => {
+  setCount(count + 1);
+}, [count]);
+// FIX
+useEffect(() => {
+  setCount(1);
+}, []);</code></pre>
+      <p><strong>Root cause and why the fix works:</strong> the first snippet calls <code>setCount</code> unconditionally in the component body itself — every render schedules another state update, which schedules another render, forever. Moving the update into a <code>useEffect</code> with an empty dependency array defers it to run exactly once, after the initial render, breaking the loop. The second case has an effect that depends on <code>count</code> and also updates <code>count</code> — each update re-triggers the effect. The general debugging process: use the React DevTools Profiler to see which component re-renders and how often; check for state updates during render, unstable object/array/function dependencies recreated every render (wrap with useMemo/useCallback), and parent re-renders cascading into children that aren't memoized (React.memo). Prefer the functional updater form (<code>setCount(c => c + 1)</code>) when a new value depends on the previous one, so <code>count</code> doesn't even need to be a dependency.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">2.</span> You have a list of 10,000 items — how do you render it without freezing the UI?</summary>
+    <div class="qa-body">
+      <p>Use Virtualization — only visible rows are rendered to the DOM, off-screen rows replaced with spacers. Combine with backend pagination and infinite scrolling for very large datasets.</p>
+      <p><strong>Libraries:</strong> react-window, react-virtualized.</p>
+      <p><strong>Why this fixes the freeze:</strong> rendering 10,000 real DOM nodes is expensive on two fronts — React has to create/diff 10,000 fiber nodes, and the browser has to lay out and paint 10,000 elements, most of which the user can't even see. Virtualization changes the DOM node count from O(n) to O(viewport size), typically 20-30 nodes regardless of whether the list has 100 or 100,000 items — the cost becomes constant instead of linear in dataset size. Trade-off: variable-height rows are harder to virtualize efficiently (need to measure or estimate heights), and browser Ctrl+F / native find-in-page won't find off-screen content since it isn't in the DOM yet.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">3.</span> You have deeply nested components — how do you avoid prop drilling?</summary>
+    <div class="qa-body">
+      <p>Use: Context API, Redux Toolkit, Zustand, Custom Hooks.</p>
+      <p><strong>Choosing between them:</strong> first check if composition alone solves it (pass the already-built child as <code>children</code> instead of a prop threaded through — see Q12 in the core section). If the data genuinely needs to reach many unrelated branches, Context is the lightest-weight fix for infrequently-changing values (theme, auth). If the shared state changes often and Context's all-consumers-re-render behavior becomes a measured performance problem, move it to Zustand/Redux, which use selector-based subscriptions so only components reading the changed slice re-render. A custom hook (e.g. <code>useCart()</code> wrapping Context or a store) also gives components a clean API without needing to know where the state actually lives.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">4.</span> State not updated immediately</summary>
+    <div class="qa-body">
+      <p>State updates don't reflect immediately because React queues and batches updates for performance. The state variable inside the current render stays unchanged until the next render. Use useEffect to react after the update, and functional updates (setState(prev =&gt; ...)) whenever new state depends on previous state — this also prevents stale state bugs during batching.</p>
+      <pre><code>Event Handler
+↓
+State Update Queued
+↓
+Handler Finishes
+↓
+React Batches Updates
+↓
+Re-render
+↓
+New State Available</code></pre>
+      <p><strong>Fix 1:</strong> useEffect. <strong>Fix 2:</strong> functional updates.</p>
+      <pre><code>setCount(prev => prev + 1);</code></pre>
+      <p><strong>Why functional updates fix it:</strong> a plain <code>setCount(count + 1)</code> closes over whatever value <code>count</code> was when that render's function was created. If called multiple times in the same handler (or across batched updates), every call reads the same stale <code>count</code>, so only the last call effectively "wins" and increments once. <code>setCount(prev => prev + 1)</code> instead gives React a function that it calls with the actual latest pending state at the time each update is applied, so calling it three times in a row correctly increments three times — this is the standard fix for the classic "calling setCount three times only increments once" interview question.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">5.</span> useEffect infinite loop</summary>
+    <div class="qa-body">
+      <p>The effect updates state, which causes the effect to run again, which updates state again, and so on.</p>
+      <p><strong>Common causes:</strong> missing dependency array, state update inside the effect, a new object/function dependency created every render.</p>
+      <p><strong>Concrete fixes:</strong> if the effect sets state unconditionally, either guard it with a condition (only update if the value actually changed) or remove the state from the dependency array if it truly doesn't need to re-run when that value changes. If the dependency is an object/array/function literal built inline (e.g. <code>{ id }</code> or <code>() =&gt; {}</code>), it's a new reference every render even if its contents are identical — wrap it in useMemo/useCallback, or depend on primitive fields (<code>user.id</code>) instead of the whole object. The <code>eslint-plugin-react-hooks</code> exhaustive-deps rule catches most of these before they ship, and should rarely be silenced without a very deliberate reason (e.g. an intentional "run once" mount effect).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">6.</span> Large form is slow</summary>
+    <div class="qa-body">
+      <p>Profile first to identify unnecessary re-renders. Split the form into smaller components, memoize fields with React.memo, stabilize handlers with useCallback, avoid derived state, debounce expensive validations/API requests. For many fields, use React Hook Form (uncontrolled inputs + field-level subscriptions reduce re-renders vs fully controlled forms). For extremely large forms, consider virtualization.</p>
+      <p><strong>Root cause:</strong> a fully controlled form (one useState per field, all rendered in one component) means every keystroke in any field re-renders the <em>entire</em> form, including all other fields, their validation, and any derived/computed values — the cost scales with the number of fields. Splitting each field into its own component only helps if each field also only re-renders on its own state change, which requires either lifting each field's state locally (not in one shared parent state object) or using a library. React Hook Form's approach — registering uncontrolled inputs via refs and only re-rendering a field when its own value or error subscribes to change — sidesteps the problem entirely rather than optimizing around it, which is why it scales noticeably better than hand-rolled controlled forms past a few dozen fields.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">7.</span> Slow API response</summary>
+    <div class="qa-body">
+      <p>Show a fallback UI for immediate feedback — loading state with a spinner or skeleton screen. In modern React, wrap data-fetching components in a Suspense boundary with a fallback. Avoid request waterfalls by fetching in parallel; use TanStack Query for caching, loading states, background refetching, and error handling. Skeleton loaders are generally preferred over generic spinners.</p>
+      <p><strong>Why waterfalls happen and how to avoid them:</strong> a common mistake is fetching data sequentially — a parent component fetches, waits, renders a child, which then fetches its own data, and so on — so total load time is the sum of each request's latency instead of the max. Kicking off independent requests together (e.g. <code>Promise.all</code>, or multiple parallel TanStack Query hooks) reduces total wait time to roughly the slowest single request. TanStack Query also deduplicates identical in-flight requests and serves stale-while-revalidate cached data instantly on repeat visits, which is why it's preferred over hand-rolled fetch + useState + useEffect for anything beyond a trivial one-off call.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">8.</span> Cache expensive calculations</summary>
+    <div class="qa-body">
+      <p>Use useMemo to cache the result of an expensive calculation so it isn't recomputed every render — React recalculates only when a dependency changes. Common uses: sorting, filtering, aggregating large datasets, stable references for memoized children. Avoid useMemo for trivial computations — memoization itself has a cost.</p>
+      <pre><code>const sortedRows = useMemo(
+  () => rows.slice().sort((a, b) => a.value - b.value),
+  [rows]
+);</code></pre>
+      <p>Without useMemo here, every render of the parent (e.g. from typing in an unrelated search box) would re-sort the entire array from scratch even though <code>rows</code> hasn't changed. With useMemo, React compares <code>[rows]</code> to the previous render's dependencies via <code>Object.is</code>, and only re-runs the sort when the reference actually changes. Watch out for recreating <code>rows</code> itself as a new array/object on every render upstream (e.g. from an inline <code>.filter()</code> in the parent) — that would defeat the memoization since the dependency would never be considered "equal".</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">9.</span> API retry logic</summary>
+    <div class="qa-body">
+      <p>Retry only for transient failures: network errors, timeouts, rate limits (429), server-side 5xx errors. Use exponential backoff — delay increases after each failed attempt (1s, 2s, 4s, 8s), with jitter to prevent synchronized retries. Avoid retrying client errors (400, 401, 403, 404) — unlikely to succeed without user action. TanStack Query provides configurable retry behavior out of the box.</p>
+      <p><strong>Use:</strong> Axios Retry, Exponential Backoff.</p>
+      <p><strong>Why exponential backoff (and jitter) specifically:</strong> retrying immediately after a failure often hits the same overloaded server again instantly, worsening the problem. Doubling the delay each attempt gives the backend time to recover, and adding random jitter prevents the "thundering herd" effect where many clients that failed at the same moment all retry at exactly the same intervals, re-creating the spike they were trying to avoid. Always cap the maximum number of retries and the maximum delay — unbounded retries can make a temporary outage feel like a hang to the user.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">10.</span> Global loader</summary>
+    <div class="qa-body">
+      <p>Implement using a centralized loading counter rather than a boolean flag. Every API request increments the counter when it starts and decrements it (in a finally block) when it completes. Show the loader whenever the counter &gt; 0 — correctly handles multiple concurrent requests. Centralize via Axios interceptors or a shared fetch wrapper. With TanStack Query, use useIsFetching() to auto-show a global loader.</p>
+      <p><strong>Why a boolean flag fails:</strong> with a simple <code>isLoading</code> boolean, if two requests fire concurrently, the first one to finish sets <code>isLoading = false</code> even though the second request is still in flight — the loader disappears prematurely while work is still happening. A counter (increment on start, decrement in a <code>finally</code> so it decrements even on error) only hits zero when every in-flight request has actually completed, which is the correct condition for hiding the loader.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">11.</span> Cancel API on unmount</summary>
+    <div class="qa-body">
+      <p>Use AbortController. Inside useEffect, create an AbortController, pass its signal to fetch, and call controller.abort() in the cleanup function. Prevents unnecessary network activity, memory leaks, and state updates on unmounted components — also prevents race conditions (e.g., search inputs where newer requests should cancel older ones).</p>
+      <pre><code>useEffect(() => {
+const controller = new AbortController();
+return () => controller.abort();
+}, []);</code></pre>
+      <p>TanStack Query handles cancellation automatically by passing an AbortSignal to the query function.</p>
+      <p><strong>Why this matters beyond "tidiness":</strong> if a component unmounts before its fetch resolves and the <code>.then()</code> callback calls <code>setState</code> anyway, React logs "Can't perform a state update on an unmounted component" and it's a real memory leak in long-running apps (the closure holding the stale component keeps getting referenced). It also fixes race conditions: in a search-as-you-type box, if request A (for "ap") is slow and request B (for "app") resolves first, then A resolves later and overwrites B's newer results with stale ones — aborting A when B starts (or on unmount/dependency change) guarantees only the latest request's response is ever applied.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">12.</span> Large project structure</summary>
+    <div class="qa-body">
+      <pre><code>Feature Based:
+features/
+  auth/
+  users/
+  products/
+pages/
+
+Each feature:
+* components
+* hooks
+* services
+* slices</code></pre>
+      <p><strong>Why feature-based scales better:</strong> in a type-based layout (all components/, all hooks/ together), adding or removing a feature touches many scattered folders and it's easy to accumulate cross-feature coupling since nothing enforces boundaries. Grouping by feature means each folder is close to self-contained — a new engineer can understand or delete the "products" feature by looking in one place. A shared top-level <code>components/</code> or <code>lib/</code> folder still holds genuinely cross-cutting things (Button, Modal, date utils) that aren't specific to any one feature.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">13.</span> Shared logic</summary>
+    <div class="qa-body">
+      <p>Extract shared stateful logic into a custom hook — a function that uses React hooks internally and returns reusable state/actions/computed values. Keeps components focused on rendering while business logic, side effects, and state management stay centralized and reusable. Examples: useUsers, useDebounce, useWindowSize, useAuth.</p>
+      <p><strong>Important caveat:</strong> a custom hook shares the <em>logic</em> (the code and the pattern of hooks it calls), not a single shared state instance — each component calling <code>useWindowSize()</code> gets its own independent state and effect subscription, exactly like calling any other function twice creates two separate closures. If the goal is one shared piece of state that multiple components read and write together (not just the same kind of logic), the fix is Context or a store (Zustand/Redux), not a custom hook.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">14.</span> Context vs Redux</summary>
+    <div class="qa-body">
+      <p>Use Context for relatively stable, app-wide values (theme, auth, language, feature flags) with infrequent updates. For larger apps with frequently changing shared state, complex update logic, or many consumers, prefer Redux Toolkit or Zustand — they provide fine-grained subscriptions so only components using the changed state re-render, whereas Context re-renders all consumers on any provider value change. Separate server state (TanStack Query) from client state (Redux/Zustand).</p>
+      <p><strong>Re-render propagation mechanics:</strong> a Context Provider's <code>value</code> change forces React to re-render every component calling <code>useContext</code> on it, regardless of which field of that value the component actually reads — there is no selector layer built in. Redux/Zustand, by contrast, let a component subscribe with a selector function (<code>useSelector(state => state.user.name)</code>), and the store's subscription mechanism only notifies that component when the specific selected value changes (via reference/shallow equality), leaving components reading unrelated state slices untouched. This is the concrete reason Redux/Zustand scale better for state that updates frequently and is read by many components — Context's simplicity comes at the cost of that fine-grained control.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">15.</span> JWT storage</summary>
+    <div class="qa-body">
+      <p>Storing JWTs in localStorage is simple but exposes them to theft via XSS (JS can access localStorage). For production, prefer secure HttpOnly cookies — inaccessible to client-side scripts. Mitigate CSRF with SameSite cookies + CSRF protection. Common architecture: refresh token in HttpOnly Secure cookie, short-lived access token in memory, refreshed when needed.</p>
+      <p><strong>Most secure:</strong> Refresh Token → HttpOnly Cookie; Access Token → Memory. JS cannot read the cookie, but the browser still attaches it to requests.</p>
+      <p><strong>What HttpOnly does NOT protect against — CSRF.</strong> If an attacker tricks the user into submitting a form to your bank, the browser still sends HttpOnly cookies automatically. Prevent with CSRF tokens and SameSite cookies.</p>
+      <pre><code>Set-Cookie: token=abc123; HttpOnly; SameSite=Strict</code></pre>
+      <p><strong>Why the split (memory + cookie) is the recommended pattern:</strong> it combines the strengths of each storage location while covering the other's weakness. The access token lives only in JS memory (a module-level variable or Context) — it's never persisted, so it disappears on tab close/refresh (mitigating impact if XSS does occur, since the exposure window is short) and isn't automatically attached to cross-site requests. The long-lived refresh token sits in an HttpOnly cookie, immune to XSS theft entirely. SameSite=Strict/Lax further restricts the cookie from being sent on cross-site requests at all, which is the primary defense against CSRF alongside explicit CSRF tokens for state-changing requests.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">16.</span> Token refresh on 401</summary>
+    <div class="qa-body">
+      <p>Intercept the 401 response and trigger a refresh-token flow — send a request to a refresh endpoint using the refresh token stored in an HttpOnly Secure cookie. On success, update the access token and retry the original request. On failure, clear auth state and redirect to login. Implement via Axios interceptors, ensuring multiple simultaneous 401s share a single refresh request through a queue to avoid multiple refresh calls.</p>
+      <pre><code>Axios Response Interceptor:
+401 →
+Call Refresh API →
+Get New Token →
+Retry Original Request</code></pre>
+      <p><strong>Why the queue matters:</strong> if five API calls all fail with 401 at roughly the same time (e.g. a dashboard firing several requests on mount right as the token expires), a naive interceptor would trigger five separate refresh calls simultaneously. This can invalidate refresh tokens that rotate on use, cause race conditions, or just waste requests. The fix: track a single "refreshing" promise — the first 401 starts the refresh and stores that in-flight promise; subsequent 401s arriving while it's pending just await the same promise instead of starting their own, then all retry with the one new token once it resolves.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">17.</span> How to protect routes in React Router? (private routes)</summary>
+    <div class="qa-body">
+      <p>Create a PrivateRoute component or protected layout that checks authentication state. If authenticated, render the route; otherwise redirect to login via Navigate. Store auth state in Context/Redux/Zustand rather than reading localStorage directly. For larger apps, use a protected layout with Outlet so multiple routes share one auth guard. Handle loading states during verification, support role-based access for admin routes, and always enforce authorization on the backend too — frontend route protection alone is not a security boundary.</p>
+      <pre><code>function PrivateRoute({ children }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return &lt;Spinner /&gt;;
+  return user ? children : &lt;Navigate to="/login" replace /&gt;;
+}</code></pre>
+      <p><strong>Why "frontend-only" protection isn't real security:</strong> hiding a route or a button in the UI just changes what's rendered — it does nothing to stop someone from calling the underlying API endpoint directly with a tool like curl or Postman. The frontend guard is purely a UX convenience (don't show a page the user can't use); the actual authorization check — verifying the JWT, checking roles/permissions — must be enforced again on every protected backend endpoint. The <code>isLoading</code> check above also matters: without it, a page can flash the login redirect for a split second before the auth check (e.g. a cookie-based session lookup) finishes.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">18.</span> Skeleton loader</summary>
+    <div class="qa-body">
+      <p>Render placeholder components mimicking the final UI's structure while data loads, instead of a generic spinner. Once the request completes, the skeleton is replaced with real data — controlled via a loading state, Suspense fallback, or TanStack Query's isLoading. Add a shimmer animation and match the final layout to minimize layout shift and improve perceived performance.</p>
+      <p><strong>Why skeletons beat spinners for perceived performance:</strong> a spinner communicates "something is happening" but gives no sense of what's coming or how much content to expect, and its removal is a jarring pop from nothing to a fully laid-out page. A skeleton that mirrors the final layout's shape (card outlines, text-line bars) primes the user's expectation of the structure, and — critically — reserves the correct space up front, so when real content arrives it fills in without causing Cumulative Layout Shift (CLS), a measured Core Web Vital. Studies on perceived performance generally show skeleton screens feel faster than spinners even at identical actual load times.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">19.</span> Click outside detection</summary>
+    <div class="qa-body">
+      <p>Create a ref with useRef, attach it to the dropdown container. In a useEffect, add a document-level mousedown listener; check if the click is inside using ref.current.contains(event.target) — if outside, close the dropdown. Remove the listener in cleanup. Often extracted into a reusable useClickOutside hook.</p>
+      <pre><code>import { useState, useRef, useEffect } from "react";
+
+function Dropdown() {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
+  }, []);
+  return (
+    &lt;div ref={dropdownRef}&gt;
+      &lt;button onClick={() => setOpen(!open)}&gt;
+        Menu
+      &lt;/button&gt;
+      {open && (
+        &lt;div&gt;
+          &lt;p&gt;Profile&lt;/p&gt;
+          &lt;p&gt;Settings&lt;/p&gt;
+          &lt;p&gt;Logout&lt;/p&gt;
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+}</code></pre>
+      <p>The core difference: event.target is the element that triggered the event; event.currentTarget is the element holding the event listener.</p>
+      <p><strong>Why <code>mousedown</code> instead of <code>click</code>, and why check <code>.contains()</code>:</strong> using <code>mousedown</code> (fires before <code>click</code>) lets the outside-click check run and close the dropdown before a separate click handler elsewhere might otherwise conflict with it — some implementations specifically need this ordering to avoid immediately re-opening a toggle button that itself listens for click. <code>ref.current.contains(event.target)</code> is necessary rather than comparing <code>event.target === ref.current</code> directly, since clicking any descendant element inside the dropdown (a menu item, an icon) sets <code>event.target</code> to that descendant, not the container itself — <code>contains()</code> correctly treats clicks anywhere inside the subtree as "inside".</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">20.</span> Modal above everything</summary>
+    <div class="qa-body">
+      <p>Use React Portals to render a modal outside the normal DOM hierarchy while it remains part of the React component tree, mounted into a separate node like #modal-root via createPortal. Avoids clipping/overflow/z-index conflicts from parent containers, while still accessing context and event handling normally. Add overlay click handling, Escape-key support, focus management, and body scroll locking for accessibility.</p>
+      <pre><code>body
+├── root
+└── modal-root</code></pre>
+      <p><strong>Why this specifically solves "modal hidden behind other content":</strong> without a Portal, a modal rendered deep inside the component tree is still a DOM descendant of whatever container it's nested in — if any ancestor has <code>overflow: hidden</code>, a lower <code>z-index</code> stacking context, or a CSS <code>transform</code>/<code>filter</code> (which creates a new stacking context), the modal can get clipped or layered incorrectly no matter how high its own <code>z-index</code> is set. Rendering it into a sibling DOM node (<code>#modal-root</code>, a direct child of <code>&lt;body&gt;</code>) removes it from that ancestor chain entirely, so its stacking and clipping behavior is independent of wherever it's logically triggered from in the component tree — while, as noted in Q31, it still participates in the same React context and event bubbling as if it hadn't moved.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Extra Notes</h2>
+
+  <details class="qa">
+    <summary>Race conditions in useEffect</summary>
+    <div class="qa-body">
+      <p>A race condition in useEffect happens when multiple async operations start but complete in a different order than initiated, causing stale data to overwrite newer data.</p>
+      <pre><code>useEffect(() => {
+  let ignore = false;
+  fetch(`/api/users/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (!ignore) {
+        setUser(data);
+      }
+    });
+  return () => {
+    ignore = true;
+  };
+}, [userId]);</code></pre>
+      <p>Concretely: if <code>userId</code> changes from 1 to 2 quickly, the effect for user 1 is already in flight when the effect for user 2 starts. If user 1's slower request resolves after user 2's faster one, its <code>.then()</code> would otherwise overwrite the screen with user 1's data even though the UI has moved on to user 2. The <code>ignore</code> flag is set to <code>true</code> in the cleanup function, which React calls before re-running the effect (or on unmount) — so the stale response's callback checks the flag and simply skips calling <code>setUser</code>. This is the manual version of what an AbortController + <code>signal.aborted</code> check, or a library like TanStack Query, does automatically (see the scenario section, Q11).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary>Why the useEffect callback can't be async</summary>
+    <div class="qa-body">
+      <p>React expects the effect function to return either undefined or a cleanup function. An async function always returns a Promise, which React does not use as a cleanup function.</p>
+      <p><strong>What actually goes wrong if you do it anyway:</strong> <code>useEffect(async () => { ... }, [])</code> technically runs, but the Promise it returns is silently ignored by React — worse, if the async function's logic ever needs a cleanup (e.g. canceling a subscription), there's no way to return that cleanup function since the slot is already taken by the Promise. React also logs a warning in development because a Promise isn't a valid effect return value. The standard workaround is defining an async function <em>inside</em> the effect and calling it immediately, keeping the effect callback itself synchronous:</p>
+      <pre><code>useEffect(() => {
+  let ignore = false;
+  async function load() {
+    const data = await fetchData();
+    if (!ignore) setData(data);
+  }
+  load();
+  return () => { ignore = true; };
+}, []);</code></pre>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

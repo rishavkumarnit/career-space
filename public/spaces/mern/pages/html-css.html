@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML &amp; CSS — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html" class="active">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">HTML &amp; CSS — Interview Prep</h1>
+  <p class="page-sub">The recurring greatest hits — semantics, the box model, specificity, positioning, and layout. Priority noted where marked (*** highest).</p>
+
+  <h2 class="section-heading">1. HTML</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is semantic HTML, and why does it matter? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Semantic HTML means using tags that describe the <em>meaning</em> or role of their content, not just how it looks — <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;aside&gt;</code>, <code>&lt;footer&gt;</code> — instead of reaching for a generic <code>&lt;div&gt;</code> for every container.</p>
+      <pre><code>&lt;!-- div soup: no information beyond class names --&gt;
+&lt;div class="nav"&gt;...&lt;/div&gt;
+&lt;div class="content"&gt;
+  &lt;div class="post"&gt;...&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- semantic: the tag itself carries meaning --&gt;
+&lt;nav&gt;...&lt;/nav&gt;
+&lt;main&gt;
+  &lt;article&gt;...&lt;/article&gt;
+&lt;/main&gt;</code></pre>
+      <p>It matters for three concrete reasons: <strong>accessibility</strong> — screen readers expose semantic landmarks so users can jump straight to nav/main/footer instead of reading the whole page linearly; <strong>SEO</strong> — search engines weight content inside <code>&lt;article&gt;</code>/heading tags more meaningfully than content in unlabeled divs; and <strong>maintainability</strong> — <code>&lt;nav&gt;</code> tells the next developer what it's for at a glance, whereas <code>&lt;div class="nav"&gt;</code> only works as long as nobody edits the class name.</p>
+      <p><strong>Common follow-up:</strong> "so is <code>&lt;div&gt;</code> ever the right choice?" — yes, whenever a wrapper has no inherent meaning of its own and exists purely as a styling/layout hook. Semantic tags are for regions that genuinely represent something; div/span are for everything else.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> Block vs inline vs inline-block elements <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Block</th><th>Inline</th><th>Inline-block</th></tr>
+        <tr><td>Line breaks</td><td>Starts on a new line</td><td>Flows within surrounding text</td><td>Flows within surrounding text</td></tr>
+        <tr><td>Width/height</td><td>Respected; defaults to full available width</td><td>Ignored — sized to content</td><td>Respected</td></tr>
+        <tr><td>Vertical margin/padding</td><td>Pushes surrounding elements</td><td>Applied visually but doesn't affect layout</td><td>Pushes surrounding elements</td></tr>
+        <tr><td>Examples</td><td><code>div</code>, <code>p</code>, <code>h1</code>, <code>section</code></td><td><code>span</code>, <code>a</code>, <code>strong</code>, <code>em</code></td><td>None natively — set via <code>display: inline-block</code></td></tr>
+      </table>
+      <p><code>inline-block</code> is the hybrid: it sits in the flow of text like an inline element, but respects width, height, and vertical margin/padding like a block — which is why it's a common choice for nav items, badges, and buttons that need to sit next to each other yet still be sized explicitly.</p>
+      <p><strong>Common pitfall:</strong> setting <code>margin-top</code>/<code>margin-bottom</code> on an inline element (like a <code>span</code>) and being confused when nothing moves — inline elements ignore vertical margin entirely, they only respect horizontal margin.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> <code>defer</code> vs <code>async</code> on <code>&lt;script&gt;</code> tags <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A plain <code>&lt;script src="..."&gt;</code> blocks HTML parsing entirely while it downloads and executes. Both <code>defer</code> and <code>async</code> let the script download in parallel with parsing instead — they differ in <em>when</em> it's allowed to execute.</p>
+      <table>
+        <tr><th></th><th>async</th><th>defer</th></tr>
+        <tr><td>Executes</td><td>Immediately once downloaded — pauses parsing right then</td><td>After parsing finishes, just before <code>DOMContentLoaded</code></td></tr>
+        <tr><td>Execution order (multiple scripts)</td><td>Not guaranteed — whichever finishes downloading first runs first</td><td>Guaranteed — runs in document order</td></tr>
+        <tr><td>Good for</td><td>Independent scripts with no dependencies (analytics, ads)</td><td>Scripts that need the full DOM, or depend on each other</td></tr>
+      </table>
+      <p><strong>Common follow-up:</strong> "why not just put <code>&lt;script&gt;</code> at the end of <code>&lt;body&gt;</code> instead?" — that was the pre-<code>defer</code> workaround, and it still blocks parsing for that script's download+execution at the point it's encountered. <code>defer</code> achieves the non-blocking download without moving markup around, while additionally guaranteeing both document order and that it runs before <code>DOMContentLoaded</code> fires.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> What are <code>data-*</code> attributes for? <span class="priority">*</span></summary>
+    <div class="qa-body">
+      <p>Custom attributes for embedding extra information directly on an element, for JS or CSS to read, without inventing a non-standard attribute name that could collide with a future HTML spec addition.</p>
+      <pre><code>&lt;button data-user-id="42" data-role="admin"&gt;Edit&lt;/button&gt;
+
+&lt;script&gt;
+  const btn = document.querySelector("button");
+  console.log(btn.dataset.userId); // "42"
+  console.log(btn.dataset.role);   // "admin"
+&lt;/script&gt;</code></pre>
+      <p>Each <code>data-kebab-case</code> attribute is exposed on the element's <code>.dataset</code> object in <code>camelCase</code>. They're also directly selectable in CSS via attribute selectors, e.g. <code>[data-role="admin"] { ... }</code>.</p>
+      <p><strong>Common pitfall:</strong> <code>dataset</code> values are always strings, even if they look numeric — <code>data-count="5"</code> gives <code>"5"</code>, not <code>5</code>. Forgetting to convert (<code>Number(el.dataset.count)</code>) before doing arithmetic is a classic bug.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> What is web accessibility (a11y), and what do ARIA attributes do? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Accessibility (a11y) means building UI that works for people using assistive technology — screen readers, keyboard-only navigation, switch devices, and so on. Semantic HTML (Q1) is the first line of defense: native elements like <code>&lt;button&gt;</code> or <code>&lt;select&gt;</code> come with keyboard support and a screen-reader role built in, for free.</p>
+      <p>ARIA (<code>role</code>, <code>aria-label</code>, <code>aria-expanded</code>, <code>aria-hidden</code>, etc.) fills the gap when semantic HTML genuinely can't express something — e.g. a custom dropdown built from styled <code>&lt;div&gt;</code>s needs <code>role="listbox"</code> and <code>aria-expanded</code> to behave like a native <code>&lt;select&gt;</code> for a screen reader.</p>
+      <pre><code>&lt;button aria-expanded="false" aria-controls="menu" onclick="toggleMenu()"&gt;
+  Menu
+&lt;/button&gt;
+&lt;ul id="menu" hidden&gt;...&lt;/ul&gt;</code></pre>
+      <p><strong>Interview soundbite:</strong> "no ARIA is better than bad ARIA." Reach for a native semantic element first; only bolt on ARIA when there's genuinely no built-in equivalent, since incorrect ARIA can actively make things worse than having none at all.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">2. CSS</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> The CSS box model — content-box vs border-box <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Every element's rendered box is made of four layers, from the inside out: <strong>content</strong>, <strong>padding</strong>, <strong>border</strong>, and <strong>margin</strong> (margin is spacing outside the box, between it and its neighbors — it's not part of the box's own size).</p>
+      <pre><code>┌─────────────── margin ───────────────┐
+│ ┌────────────── border ─────────────┐ │
+│ │ ┌──────────── padding ──────────┐ │ │
+│ │ │          content              │ │ │
+│ │ └────────────────────────────────┘ │ │
+│ └──────────────────────────────────┘ │
+└────────────────────────────────────────┘</code></pre>
+      <p>The <code>box-sizing</code> property decides what <code>width</code>/<code>height</code> actually measure:</p>
+      <pre><code>.content-box { box-sizing: content-box; width: 200px; padding: 20px; border: 5px solid; }
+/* rendered width = 200 + 20*2 + 5*2 = 250px — padding/border ADD to the width */
+
+.border-box { box-sizing: border-box; width: 200px; padding: 20px; border: 5px solid; }
+/* rendered width = 200px flat — padding/border eat INTO the 200px */</code></pre>
+      <p><code>content-box</code> is the CSS default, but it means adding padding or a border changes an element's actual rendered size — which is rarely what you want. That's why almost every reset/framework starts with <code>* { box-sizing: border-box; }</code>: it makes the width you declare the width you get, regardless of padding or border.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> How does CSS specificity and the cascade work? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>When multiple rules target the same element and property, the browser resolves the conflict in order: <strong>(1) importance</strong> — <code>!important</code> rules win outright, <strong>(2) specificity</strong> — a weighted score per selector, <strong>(3) source order</strong> — if specificity ties, whichever rule was declared last wins.</p>
+      <table>
+        <tr><th>Selector type</th><th>Weight</th><th>Example</th></tr>
+        <tr><td>Inline style</td><td>1000</td><td><code>style="color:red"</code></td></tr>
+        <tr><td>ID</td><td>100</td><td><code>#header</code></td></tr>
+        <tr><td>Class / attribute / pseudo-class</td><td>10</td><td><code>.btn</code>, <code>[type=text]</code>, <code>:hover</code></td></tr>
+        <tr><td>Element / pseudo-element</td><td>1</td><td><code>div</code>, <code>::before</code></td></tr>
+      </table>
+      <p>Scores add up per selector — <code>.card .title</code> is two classes (10+10=20), which beats a single <code>.title</code> (10) regardless of source order, but loses to a single ID like <code>#title</code> (100).</p>
+      <p><strong>Common pitfall:</strong> reaching for <code>!important</code> to win a specificity fight. It works locally, but the only way to override it later is another <code>!important</code> of equal-or-higher specificity — which spirals into a stylesheet nobody can reason about. Fixing the actual selector specificity or source order is almost always the better call.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q8.</span> The <code>position</code> property — static/relative/absolute/fixed/sticky <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Value</th><th>In normal flow?</th><th>Positioned relative to</th></tr>
+        <tr><td>static (default)</td><td>Yes</td><td>N/A — <code>top</code>/<code>left</code>/etc. have no effect</td></tr>
+        <tr><td>relative</td><td>Yes — still occupies original space</td><td>Its own original position</td></tr>
+        <tr><td>absolute</td><td>No — removed from flow</td><td>Nearest positioned ancestor, or the viewport if none</td></tr>
+        <tr><td>fixed</td><td>No — removed from flow</td><td>The viewport; stays put while scrolling</td></tr>
+        <tr><td>sticky</td><td>Yes, until threshold crossed</td><td>Behaves like relative, then sticks like fixed within its container's bounds</td></tr>
+      </table>
+      <p>An element also becomes a "positioned ancestor" (a valid target for its absolutely-positioned children) the moment it gets any <code>position</code> other than <code>static</code> — this is why <code>position: relative</code> with no offsets is such a common pattern: it changes nothing visually but establishes a containing block for children.</p>
+      <p><strong>Common pitfall:</strong> an <code>absolute</code> element jumping to the corner of the whole page instead of positioning inside its intended parent — it walks up the ancestor chain looking for the nearest non-static ancestor, and silently falls back to the viewport if it never finds one. A less obvious variant: a <code>transform</code>, <code>filter</code>, or <code>will-change</code> on an ancestor also creates a new containing block, which can unexpectedly trap a <code>fixed</code> child into behaving like <code>absolute</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q9.</span> Flexbox vs Grid — when do you reach for which? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Flexbox</th><th>Grid</th></tr>
+        <tr><td>Dimensions</td><td>One at a time — a row OR a column</td><td>Two at once — rows AND columns together</td></tr>
+        <tr><td>Sizing driven by</td><td>Content — items can grow/shrink to fill space</td><td>Container — you define the grid, items place into it</td></tr>
+        <tr><td>Best for</td><td>Nav bars, toolbars, centering, evenly distributing items along one axis</td><td>Page/section layout, dashboards, image galleries</td></tr>
+      </table>
+      <p>Flexbox thinks in terms of a single axis: give it a row of items and rules for how to distribute leftover space (<code>justify-content</code>, <code>flex-grow</code>). Grid thinks in terms of a two-dimensional template: you declare rows and columns up front (<code>grid-template-columns</code>) and place items into cells, which is what one-dimensional Flexbox can't do without nesting.</p>
+      <p><strong>Common follow-up:</strong> "can you combine them?" — yes, and it's the normal pattern in real layouts: Grid for the overall page skeleton, Flexbox for aligning content within an individual grid cell or component (e.g. centering a button inside a card).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q10.</span> Pseudo-classes vs pseudo-elements <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A <strong>pseudo-class</strong> (single colon, <code>:</code>) selects a real element that already exists in the DOM, based on its state or position — <code>:hover</code>, <code>:focus</code>, <code>:first-child</code>, <code>:nth-child()</code>, <code>:checked</code>.</p>
+      <p>A <strong>pseudo-element</strong> (double colon, <code>::</code>) targets a sub-part of an element that isn't a real DOM node at all — <code>::before</code>, <code>::after</code>, <code>::first-line</code>, <code>::placeholder</code>. (<code>::before</code>/<code>::after</code> still work with a single colon for legacy reasons, but <code>::</code> is the modern, unambiguous syntax.)</p>
+      <pre><code>.card:hover {              /* state on a real element */
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+.card::before {            /* generated content, not a real element */
+  content: "★";
+  color: gold;
+}</code></pre>
+      <p><strong>Common pitfall:</strong> setting other properties on <code>::before</code>/<code>::after</code> but forgetting <code>content: ""</code> — without it, the pseudo-element is never generated at all, so nothing renders no matter what else is styled.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q11.</span> <code>z-index</code> and stacking contexts <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p><code>z-index</code> only has an effect on positioned elements (or flex/grid items), and it's only ever compared against other elements within the <strong>same stacking context</strong> — not globally across the whole page.</p>
+      <p>A stacking context is a self-contained layer. Several common properties create a new one: <code>position</code> paired with a <code>z-index</code> other than <code>auto</code>, <code>opacity</code> below <code>1</code>, <code>transform</code>, <code>filter</code>, <code>will-change</code>, <code>isolation: isolate</code>. Once created, every descendant's <code>z-index</code> is only ranked against siblings inside that same context — the entire context then gets stacked as a single unit against its own siblings, using the parent context's rules.</p>
+      <p><strong>Classic gotcha:</strong> a child with <code>z-index: 9999</code> still renders behind another, seemingly lower element. Usually the culprit is a parent that unintentionally created its own stacking context (e.g. an <code>opacity: 0.99</code> or a <code>transform</code> added for an unrelated animation) — the child's huge z-index is only winning inside that small context, while the parent itself is losing the outer stacking fight.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q12.</span> CSS units — px vs % vs em vs rem vs vw/vh <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Unit</th><th>Relative to</th><th>Notes</th></tr>
+        <tr><td><code>px</code></td><td>Nothing — absolute</td><td>Fixed size, doesn't scale with anything else</td></tr>
+        <tr><td><code>%</code></td><td>The parent's corresponding dimension</td><td>Height <code>%</code> resolves to nothing unless the parent has an explicit height</td></tr>
+        <tr><td><code>em</code></td><td>The element's own <code>font-size</code></td><td>Compounds across nesting — each level scales off its already-scaled parent</td></tr>
+        <tr><td><code>rem</code></td><td>The root (<code>&lt;html&gt;</code>) <code>font-size</code> only</td><td>Never compounds, regardless of nesting depth</td></tr>
+        <tr><td><code>vw</code> / <code>vh</code></td><td>1% of viewport width/height</td><td>Independent of any parent — useful for full-bleed sizing</td></tr>
+      </table>
+      <p><strong>Common pitfall:</strong> nesting <code>em</code>-sized elements and getting unexpectedly large text — a <code>font-size: 1.2em</code> three levels deep multiplies against each ancestor's already-scaled size (1.2 × 1.2 × 1.2 ≈ 1.7×), not against the page's base size. <code>rem</code> exists specifically to sidestep this by always measuring from the root, which is why it's the more predictable default for sizing.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q13.</span> What is a Block Formatting Context (BFC)? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A BFC is a self-contained mini layout environment — floats, margins, and clears happening inside it don't leak out and affect elements outside it. It's triggered by properties like <code>overflow</code> other than <code>visible</code>, any <code>float</code>, <code>position: absolute</code>/<code>fixed</code>, or <code>display: flow-root</code>/<code>flex</code>/<code>grid</code>.</p>
+      <p>It solves two classic layout problems:</p>
+      <pre><code>&lt;!-- Problem: floated children collapse the parent's height to 0 --&gt;
+&lt;div class="gallery"&gt;
+  &lt;img style="float:left" src="a.jpg"&gt;
+  &lt;img style="float:left" src="b.jpg"&gt;
+&lt;/div&gt;
+&lt;!-- .gallery has zero height — floats are out of normal flow --&gt;
+
+&lt;!-- Fix: give the container its own BFC --&gt;
+.gallery { display: flow-root; }
+&lt;!-- now .gallery expands to contain its floated children --&gt;</code></pre>
+      <p>The other classic case is <strong>margin collapsing</strong>: a child's top margin can "escape" through its parent and collapse with the parent's own margin if nothing separates them. Giving the parent a new BFC contains the child's margin inside it instead.</p>
+      <p><strong>Common follow-up:</strong> "isn't <code>overflow: hidden</code> the usual fix for this?" — it works and is common in older code, but it has the side effect of clipping any content that overflows the container. <code>display: flow-root</code> was added specifically to create a BFC with no side effects, and is the modern preferred fix.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q14.</span> Responsive design — media queries &amp; mobile-first <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Media queries apply CSS conditionally based on viewport characteristics:</p>
+      <pre><code>/* mobile-first: base styles target the smallest screen, no query needed */
+.card { display: block; }
+
+@media (min-width: 768px) {
+  .card { display: flex; } /* progressively enhance for larger screens */
+}</code></pre>
+      <p><strong>Mobile-first</strong> means writing unqualified base styles for the smallest screen, then layering on <code>min-width</code> queries to enhance for larger viewports — as opposed to desktop-first, which starts with the full desktop layout and uses <code>max-width</code> queries to scale things down. Mobile-first is generally preferred because it forces prioritizing core content, and phones never have to download or parse override rules meant to undo a desktop layout.</p>
+      <p><strong>Common pitfall:</strong> forgetting the viewport meta tag — <code>&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;</code>. Without it, mobile browsers render the page at a fake desktop-width viewport and zoom out to fit, so <code>min-width</code>/<code>max-width</code> queries evaluate against that fake width instead of the real device width, and "responsive" styles never seem to trigger correctly.</p>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

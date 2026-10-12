@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misc — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html" class="active">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Misc — Extra Notes</h1>
+  <p class="page-sub">Odds and ends that don't fit neatly under the other topics.</p>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is the difference between debouncing and throttling?</summary>
+    <div class="qa-body">
+      <p><strong>Execution frequency:</strong> debouncing postpones execution until after a period of inactivity — the function only runs once the calls have stopped coming in for a set delay. Throttling instead limits execution to a fixed number of times per interval, running immediately and then ignoring further calls until the interval elapses.</p>
+      <p><strong>Use cases:</strong> debouncing suits tasks that shouldn't fire repeatedly in quick succession, e.g. an API call triggered by a search input. Throttling suits controlling the rate of handlers on high-frequency events like scroll or resize, where you still want periodic updates rather than silence until the user stops.</p>
+
+      <h3>Debounce</h3>
+      <pre><code>const input1 = document.querySelector("#input1");
+
+input1.addEventListener("input", () => {
+  console.log("input..."); // runs hundreds of times!
+});
+
+function debounce(func, delay) {
+  let timeout;
+  return function() {
+    clearTimeout(timeout);   // clear previous timer
+    timeout = setTimeout(() => {
+      func();                // run after delay
+    }, delay);
+  };
+}
+
+// Example usage:
+const searchHandler = debounce(() => {
+  console.log("Searching...");
+}, 3000);
+
+input1.addEventListener("input", searchHandler);</code></pre>
+      <p>Every keystroke resets the timer, so <code>func</code> only fires once the user has stopped typing for the full delay — ideal for search-as-you-type API calls where you don't want a request per keystroke.</p>
+
+      <h3>Throttle</h3>
+      <pre><code>window.addEventListener("scroll", () => {
+  console.log("scrolling");
+});
+
+function throttle(func, limit) {
+  let inThrottle;
+  return function() {
+    if (!inThrottle) {
+      func();                 // run immediately
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+}
+
+// Example usage:
+const scrollHandler = throttle(() => {
+  console.log("fetching...");
+}, 1000);
+
+window.addEventListener("scroll", scrollHandler);</code></pre>
+      <p>The first call runs immediately, then a cooldown flag blocks further calls until the limit expires — so <code>func</code> runs at most once per interval no matter how many scroll events fire in between.</p>
+      <p><strong>Source:</strong> <a href="https://www.geeksforgeeks.org/javascript/difference-between-debouncing-and-throttling/" target="_blank" rel="noopener">GeeksforGeeks — Difference between Debouncing and Throttling</a></p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> What's the difference between localStorage, sessionStorage, and cookies?</summary>
+    <div class="qa-body">
+      <p>All three store data in the browser, but they differ in capacity, lifetime, scope, server interaction, and security.</p>
+
+      <table>
+        <tr>
+          <th>Feature</th>
+          <th><code>localStorage</code></th>
+          <th><code>sessionStorage</code></th>
+          <th>Cookies</th>
+        </tr>
+        <tr>
+          <td><strong>Storage capacity</strong></td>
+          <td>Usually about 5–10 MB per origin</td>
+          <td>Usually about 5 MB per origin and tab</td>
+          <td>About 4 KB per cookie</td>
+        </tr>
+        <tr>
+          <td><strong>Lifespan / expiry</strong></td>
+          <td>Persists until explicitly cleared by the application, browser, or user</td>
+          <td>Exists for the page session and is cleared when that tab or window is closed</td>
+          <td>Can be a session cookie or expire at a configured time using <code>Expires</code> or <code>Max-Age</code></td>
+        </tr>
+        <tr>
+          <td><strong>Server interaction</strong></td>
+          <td>Not automatically sent to the server</td>
+          <td>Not automatically sent to the server</td>
+          <td>Automatically sent with matching HTTP requests, subject to domain, path, and cookie rules</td>
+        </tr>
+        <tr>
+          <td><strong>Access / scope</strong></td>
+          <td>Shared by same-origin pages and tabs</td>
+          <td>Restricted to the same origin and the specific browser tab</td>
+          <td>Available to matching domains and paths; JavaScript access depends on <code>HttpOnly</code></td>
+        </tr>
+        <tr>
+          <td><strong>Security</strong></td>
+          <td>Accessible to JavaScript, so an XSS attack can read it</td>
+          <td>Accessible to JavaScript, so an XSS attack can read it</td>
+          <td>Supports <code>HttpOnly</code>, <code>Secure</code>, and <code>SameSite</code>; still requires CSRF and XSS protection</td>
+        </tr>
+        <tr>
+          <td><strong>API</strong></td>
+          <td><code>setItem()</code>, <code>getItem()</code>, <code>removeItem()</code>, <code>clear()</code></td>
+          <td><code>setItem()</code>, <code>getItem()</code>, <code>removeItem()</code>, <code>clear()</code></td>
+          <td>Read/write through <code>document.cookie</code>, response headers, or a cookie library</td>
+        </tr>
+        <tr>
+          <td><strong>Best suited for</strong></td>
+          <td>Persistent client preferences such as theme or language</td>
+          <td>Temporary tab-specific state such as a multi-step form</td>
+          <td>Sessions, authentication, and small values the server needs</td>
+        </tr>
+      </table>
+
+      <p><strong>Security recommendation:</strong> avoid storing sensitive data or long-lived authentication tokens in Web Storage. For session authentication, a properly configured <code>HttpOnly</code>, <code>Secure</code>, and <code>SameSite</code> cookie is generally safer because JavaScript cannot read an <code>HttpOnly</code> cookie.</p>
+      <p><strong>Important note:</strong> storage limits vary by browser, device, and user settings. The capacity values above are common approximations, not guaranteed limits.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> What's the architectural difference between Node.js and the browser?</summary>
+    <div class="qa-body">
+      <p>Both run JavaScript through an engine, but everything outside that engine — how async work actually gets done — is implemented differently.</p>
+
+      <table>
+        <tr><th></th><th>Node.js</th><th>Browser</th></tr>
+        <tr><td>Core engine</td><td>V8 (Google)</td><td>V8 (Chrome/Edge), SpiderMonkey (Firefox), or JavaScriptCore (Safari)</td></tr>
+        <tr><td>Asynchronous layer</td><td>libuv — a multi-platform C library</td><td>Built-in Web APIs managed by the browser runtime</td></tr>
+        <tr><td>Purpose</td><td>libuv manages the event loop, thread pool, file system I/O, and network sockets</td><td>The browser implements the event loop, DOM events, timers (<code>setTimeout</code>), and fetch requests using native C++ subsystems</td></tr>
+      </table>
+
+      <p><strong>Common follow-up:</strong> "so is the event loop spec-mandated?" — no, the event loop isn't part of the JavaScript language spec at all; it's a runtime concept. That's why Node (via libuv) and browsers (via their own C++ internals) are free to implement it differently, e.g. Node's distinct timers/poll/check phases vs. the browser's simpler task-queue-plus-microtask-queue model.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> Why do callbacks "lose" <code>this</code> — and is that a closure problem?</summary>
+    <div class="qa-body">
+      <p>No. A closure remembers variables from the place where a function was created. <code>this</code> follows separate rules.</p>
+
+      <h3>Normal function: <code>this</code> comes from the call</h3>
+      <pre><code>const user = {
+  name: "Rishav",
+  greet() {
+    console.log(this.name);
+  }
+};
+
+user.greet(); // "Rishav"</code></pre>
+      <p>Here, <code>user.greet()</code> means “call <code>greet</code> using <code>user</code>.” Therefore, inside <code>greet</code>, <code>this</code> is <code>user</code>.</p>
+
+      <p>But when you pass the method as a callback, it is no longer called through <code>user</code>:</p>
+      <pre><code>setTimeout(user.greet, 1000); // this is lost</code></pre>
+      <p><code>setTimeout</code> receives only the function. It does not know that it originally belonged to <code>user</code>. Therefore <code>this.name</code> is usually <code>undefined</code>.</p>
+
+      <h3>Arrow function: <code>this</code> comes from the surrounding scope</h3>
+      <pre><code>const user = {
+  name: "Rishav",
+  greet: () =&gt; {
+    console.log(this.name);
+  }
+};
+
+user.greet(); // not "Rishav"</code></pre>
+      <p>An arrow function does not get its own <code>this</code>. It uses <code>this</code> from the place where it was created. An object literal does not provide a new <code>this</code>, so the arrow does not point to <code>user</code>.</p>
+
+      <h3>How to fix a callback</h3>
+      <pre><code>setTimeout(user.greet.bind(user), 1000);
+
+// or
+setTimeout(() => user.greet(), 1000);</code></pre>
+      <p><strong>Easy rule:</strong> use a normal function for an object method that needs its object’s <code>this</code>. Use an arrow function when you want to keep <code>this</code> from the surrounding function.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> Predict the output — sync code, an async function, a Promise, and setTimeout</summary>
+    <div class="qa-body">
+      <pre><code>console.log(1);
+
+async function test() {
+  console.log(2);
+
+  Promise.resolve().then(() => console.log(3));
+
+  setTimeout(() => console.log(4), 0);
+}
+
+test();
+
+console.log(5);</code></pre>
+      <p><strong>Output:</strong></p>
+      <pre><code>1
+2
+5
+3
+4</code></pre>
+      <p>Three execution tiers are in play, and they always run in this order: <strong>all synchronous code</strong>, then <strong>every queued microtask</strong>, then <strong>one macrotask</strong> — repeating.</p>
+      <ul>
+        <li><strong>Synchronous code runs first, top to bottom</strong> — including the body of an async function. <code>test</code> has no <code>await</code> anywhere in it, so calling <code>test()</code> never yields control back to the caller; its entire body runs synchronously in place, exactly like a normal function call. That's why <code>2</code> logs before <code>5</code> — the whole <code>test()</code> call (print 2, schedule the Promise callback, schedule the timeout) finishes before the script even reaches <code>console.log(5)</code>.</li>
+        <li><strong>Microtasks (Promise callbacks) run next</strong> — but only once the call stack is completely empty, i.e. after the <em>entire</em> synchronous script (including that <code>console.log(5)</code>) has finished. That's why <code>3</code> logs after <code>5</code>, not right after <code>2</code>.</li>
+        <li><strong><code>setTimeout</code>, even with a delay of <code>0</code>, is a macrotask</strong> — it always waits for the microtask queue to fully drain first. That's why <code>4</code> is last, no matter what delay was passed.</li>
+      </ul>
+      <p><strong>Common pitfall:</strong> assuming <code>setTimeout(fn, 0)</code> means "run next." It actually means "run as soon as possible, but only after the current script and every pending microtask" — a Promise callback registered even after a 0ms timeout still runs before it, because the microtask queue always fully drains before the next macrotask is picked up.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> Predict the output — useState batching, stale closures, and the useEffect cleanup order</summary>
+    <div class="qa-body">
+      <pre><code>import React, { useState, useEffect } from "react";
+
+export default function App() {
+  const [count, setCount] = useState(0);
+  console.log("Render:", count);
+
+  useEffect(() => {
+    console.log("Effect Start:", count);
+    return () => {
+      console.log("Cleanup:", count);
+    };
+  }, [count]);
+
+  console.log("After useEffect:", count);
+
+  const handleClick = () => {
+    console.log("Click Start:", count);
+    setCount(count + 1);
+    setCount(count + 1);
+    setCount((c) => c + 1);
+    console.log("Click End:", count);
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;{count}&lt;/h1&gt;
+      &lt;button onClick={handleClick}&gt;Click&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+      <h3>On initial mount</h3>
+      <pre><code>Render: 0
+After useEffect: 0
+Effect Start: 0</code></pre>
+      <p>The component function body runs top to bottom during the <strong>render phase</strong> — the <code>useEffect(...)</code> call only <em>registers</em> the effect at this point, it doesn't run the callback. That's why <code>"After useEffect: 0"</code> (an ordinary <code>console.log</code> sitting right after <code>useEffect</code> in the function body) logs before <code>"Effect Start: 0"</code> — the effect itself is deferred until after React commits the DOM and the browser paints.</p>
+
+      <h3>After one click</h3>
+      <pre><code>Click Start: 0
+Click End: 0
+Render: 2
+After useEffect: 2
+Cleanup: 0
+Effect Start: 2</code></pre>
+      <p><strong>Why count ends up 2, not 3:</strong> <code>count</code> inside <code>handleClick</code> is a plain constant captured from this render's closure — it stays <code>0</code> for the entire lifetime of that function call, no matter how many times <code>setCount</code> is called inside it. The first two calls, <code>setCount(count + 1)</code>, both evaluate to <code>setCount(0 + 1)</code> — they're the same "replace state with 1" instruction issued twice, not two separate increments. Only the third call, the <strong>functional updater</strong> <code>setCount((c) => c + 1)</code>, reads React's actual latest queued value instead of the stale closure — it takes the <code>1</code> left behind by the previous two calls and produces <code>2</code>. This is exactly why the functional-updater form exists: it's the only one of the three that's safe to chain.</p>
+      <p><strong>Why "Click Start"/"Click End" both log 0:</strong> React batches all three <code>setCount</code> calls inside the event handler and applies them in a single re-render <em>after</em> <code>handleClick</code> finishes running — so nothing inside the handler itself ever observes the updated value, only the next render does.</p>
+      <p><strong>Why "Cleanup: 0" logs after the new render, not before it:</strong> React always fully re-runs the component function (the render phase — <code>"Render: 2"</code>, <code>"After useEffect: 2"</code>) before it touches effects at all. Only in the subsequent commit/effects phase does it clean up the <em>outgoing</em> effect — using the <code>count = 0</code> that was closed over when that effect was originally created — and then run the <em>new</em> effect, which closes over the new <code>count = 2</code>. Cleanup always fires immediately before the next effect, never immediately when the state changes.</p>
+      <p><strong>Common pitfall:</strong> expecting three <code>setCount</code> calls to add up to <code>+3</code>, and expecting the cleanup log to fire "live" the moment you click rather than one render-cycle later, right before the next effect runs.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> What is TypeScript, and what does it actually give you over JavaScript?</summary>
+    <div class="qa-body">
+      <p>TypeScript is a superset of JavaScript that adds static types, then compiles down to plain JavaScript before it ever runs — browsers and Node execute the compiled output, never the <code>.ts</code> source directly.</p>
+      <pre><code>function add(a: number, b: number) {
+  return a + b;
+}
+
+add(2, "3"); // compile error — caught before the code ever runs
+// JS equivalent would silently return "23" (string concatenation)</code></pre>
+      <p>The core value isn't a new language feature — it's shifting a whole class of bugs (wrong argument types, typos in property names, calling a method that doesn't exist on this shape) from a runtime crash in production to a red squiggle in the editor. It also unlocks much richer autocomplete and safer refactors, since the tooling knows the exact shape of every variable, not just whatever value it currently holds.</p>
+      <p><strong>Common follow-up:</strong> "so does TypeScript add any runtime type checking?" — no. Types are fully erased at compile time (with rare exceptions like enums) — there is zero runtime cost and zero runtime safety net. If an API response doesn't actually match the type you told TypeScript to expect, nothing will catch that at runtime; TypeScript only ever checked what your own code claimed.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q8.</span> <code>interface</code> vs <code>type</code> — what's the actual difference?</summary>
+    <div class="qa-body">
+      <p>For a plain object shape, they're close to interchangeable — the real differences show up at the edges.</p>
+      <table>
+        <tr><th></th><th><code>interface</code></th><th><code>type</code></th></tr>
+        <tr><td>What it can describe</td><td>Object, function, and class shapes only</td><td>Anything — object shapes, unions, tuples, primitives, mapped types</td></tr>
+        <tr><td>Combining</td><td><code>extends</code></td><td>Intersection (<code>&amp;</code>)</td></tr>
+        <tr><td>Re-opening the same name</td><td>Declaration merging — allowed, members combine</td><td>Error — a type alias can't be declared twice</td></tr>
+        <tr><td>Conflicting members when combined</td><td><code>extends</code> gives a clear compile error</td><td>Intersecting conflicting primitive types silently collapses to <code>never</code></td></tr>
+      </table>
+      <pre><code>interface User { name: string }
+interface User { age: number }   // merges — User now has both name and age
+
+type Id = string | number;        // type can express a union; interface can't</code></pre>
+      <p><strong>Common follow-up:</strong> "so which should I default to?" — most style guides land on: prefer <code>interface</code> for public object/class shapes that might need extending later (cleaner error messages, declaration merging can be useful for augmenting third-party types), and prefer <code>type</code> for unions, tuples, and anything that isn't a plain object shape, since <code>interface</code> can't express those at all.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q9.</span> <code>any</code> vs <code>unknown</code> vs <code>never</code> — when do you use which?</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Type</th><th>What it means</th><th>Usable without checking first?</th></tr>
+        <tr><td><code>any</code></td><td>Opts the value out of type checking entirely</td><td>Yes — anything goes, no compiler help at all</td></tr>
+        <tr><td><code>unknown</code></td><td>Could be anything, but must be proven before use</td><td>No — must narrow first (typeof/instanceof/assertion)</td></tr>
+        <tr><td><code>never</code></td><td>A value that can never actually occur</td><td>N/A — nothing is ever assignable to it except itself</td></tr>
+      </table>
+      <pre><code>function handleAny(x: any) {
+  x.toUpperCase(); // compiles fine — even if x is actually a number, this blows up at runtime
+}
+
+function handleUnknown(x: unknown) {
+  x.toUpperCase();               // compile error — x isn't proven to be a string yet
+  if (typeof x === "string") {
+    x.toUpperCase();             // fine — narrowed to string inside this branch
+  }
+}
+
+function fail(): never {
+  throw new Error("always throws — never returns normally");
+}</code></pre>
+      <p><code>never</code> also shows up as the type TypeScript infers when a union has been narrowed down to nothing left — useful for exhaustiveness checks, where assigning a switch's default case to a <code>never</code>-typed variable makes the compiler flag it if a new union member is ever added and forgotten in the switch.</p>
+      <p><strong>Common pitfall:</strong> reaching for <code>any</code> just to silence an error quickly. It doesn't stay contained to that one line — the "any-ness" propagates through everything that touches the value afterward, quietly turning off type checking for the rest of that call chain too. <code>unknown</code> is almost always the safer choice when a type genuinely isn't known yet, since it forces the check instead of skipping it.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q10.</span> What are generics, and why do you actually need them?</summary>
+    <div class="qa-body">
+      <p>Generics let a function, type, or class work over a range of types while still preserving the relationship between what goes in and what comes out — instead of hardcoding one specific type, or throwing that relationship away with <code>any</code>.</p>
+      <pre><code>function firstAny(arr: any[]): any {
+  return arr[0];
+}
+const a = firstAny(["a", "b"]); // type: any — TypeScript has no idea it's a string
+
+function firstOf&lt;T&gt;(arr: T[]): T {
+  return arr[0];
+}
+const b = firstOf(["a", "b"]); // type: string — inferred from the actual argument
+const c = firstOf([1, 2, 3]);   // type: number — same function, different T</code></pre>
+      <p><code>T</code> here is a placeholder filled in per call site, based on whatever's actually passed in — <code>firstOf</code> is one function definition, but the compiler checks each call as if it were written specifically for that call's type.</p>
+      <p><strong>Common follow-up:</strong> "how is that different from just using <code>any</code>?" — <code>any</code> discards type information entirely, so the compiler can't help with anything downstream. A generic keeps the information flowing: the return type is still statically tied to whatever type was passed in, so misusing the result (e.g. calling <code>.toUpperCase()</code> on what <code>firstOf</code> returned from a <code>number[]</code>) is still caught at compile time.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q11.</span> TypeScript's structural typing ("duck typing") — why can two unrelated types be interchangeable?</summary>
+    <div class="qa-body">
+      <p>TypeScript compares types by their <strong>shape</strong> — the properties and methods actually present — not by name or an explicit declared relationship. This is different from a nominal type system (Java, C#), where two classes are only compatible if one explicitly extends or implements the other, even if their members are identical.</p>
+      <pre><code>interface Point { x: number; y: number }
+
+class Vector {
+  constructor(public x: number, public y: number) {}
+}
+
+function printPoint(p: Point) {
+  console.log(p.x, p.y);
+}
+
+printPoint(new Vector(1, 2)); // fine — Vector was never declared to implement Point,
+                               // but it has the same shape, so it's accepted</code></pre>
+      <p><code>Vector</code> never mentions <code>Point</code> anywhere, yet a <code>Vector</code> instance satisfies it — as far as TypeScript is concerned, "has an <code>x: number</code> and a <code>y: number</code>" <em>is</em> what it means to be a <code>Point</code>.</p>
+      <p><strong>Common pitfall / interesting exception:</strong> structural typing normally allows extra properties too (having more than required still satisfies the shape) — <em>except</em> when passing an object literal directly to a typed parameter. That specific case triggers "excess property checking," a stricter, typo-catching rule that doesn't apply once the same object is assigned to a variable first and passed by reference instead.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q12.</span> Type narrowing — how does TypeScript know which branch you're in?</summary>
+    <div class="qa-body">
+      <p>When a variable's declared type is a union (e.g. <code>string | number</code>), TypeScript won't let you use members specific to just one side of it until the code's control flow proves which one you're dealing with at that point — that's narrowing.</p>
+      <pre><code>function format(value: string | number) {
+  if (typeof value === "string") {
+    return value.toUpperCase(); // narrowed to string here
+  }
+  return value.toFixed(2);      // only number left, narrowed by elimination
+}</code></pre>
+      <p>Common narrowing tools: <code>typeof</code> for primitives, <code>instanceof</code> for class instances, the <code>in</code> operator for checking whether a property exists on an object (useful for distinguishing between object shapes), and equality checks against literal values. For anything more involved, a <strong>custom type guard</strong> — a function that returns <code>arg is SomeType</code> instead of a plain <code>boolean</code> — lets you package up a reusable check that TypeScript will trust and apply at every call site.</p>
+      <pre><code>interface Cat { meow(): void }
+interface Dog { bark(): void }
+
+function isCat(pet: Cat | Dog): pet is Cat {
+  return (pet as Cat).meow !== undefined;
+}
+
+function speak(pet: Cat | Dog) {
+  if (isCat(pet)) {
+    pet.meow(); // narrowed to Cat inside this branch
+  } else {
+    pet.bark(); // narrowed to Dog by elimination
+  }
+}</code></pre>
+      <p><strong>Common pitfall:</strong> reaching for <code>typeof</code> to distinguish between two custom object shapes — it can't; every plain object reports <code>"object"</code> regardless of which interface it matches. That's exactly the situation the <code>in</code> operator or a custom type predicate is for.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q13.</span> Quick reference — <code>Partial</code>, <code>Pick</code>, <code>Omit</code>, <code>Record</code>, <code>Readonly</code></summary>
+    <div class="qa-body">
+      <pre><code>interface User {
+  id: number;
+  name: string;
+  email: string;
+}</code></pre>
+      <table>
+        <tr><th>Utility type</th><th>What it produces</th><th>Typical use</th></tr>
+        <tr><td><code>Partial&lt;User&gt;</code></td><td>Every property becomes optional</td><td>An update/patch payload where only changed fields are sent</td></tr>
+        <tr><td><code>Required&lt;User&gt;</code></td><td>Every property becomes mandatory</td><td>Undoing a <code>Partial</code>, or enforcing full objects</td></tr>
+        <tr><td><code>Pick&lt;User, "id" | "name"&gt;</code></td><td>Only the listed keys</td><td>A trimmed-down view for a list row or a public API response</td></tr>
+        <tr><td><code>Omit&lt;User, "email"&gt;</code></td><td>Every key except the listed ones</td><td>Stripping sensitive/internal fields before sending a response</td></tr>
+        <tr><td><code>Record&lt;string, User&gt;</code></td><td>An object type with arbitrary keys, all mapped to <code>User</code></td><td>Lookup maps/dictionaries, e.g. users indexed by id</td></tr>
+        <tr><td><code>Readonly&lt;User&gt;</code></td><td>Every property becomes read-only</td><td>Preventing reassignment after creation, e.g. Redux-style state</td></tr>
+      </table>
+      <p><strong>Common pitfall:</strong> <code>Readonly&lt;T&gt;</code> (and the <code>readonly</code> modifier generally) is shallow — it only blocks reassigning the top-level property itself. <code>const u: Readonly&lt;User&gt; = ...; u.name = "x"</code> is a compile error, but if <code>User</code> had a nested object or array property, its contents could still be mutated freely through that property.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q14.</span> What is the difference between REST and GraphQL, and when would you use each?</summary>
+    <div class="qa-body">
+      <p><strong>REST</strong> models an API as multiple resource-oriented endpoints, such as <code>GET /users/42</code> and <code>GET /users/42/orders</code>. The server decides the response shape, and HTTP methods and status codes express the operation and its result.</p>
+      <p><strong>GraphQL</strong> normally exposes a single endpoint. The client sends a typed query describing exactly which fields and related objects it needs, and resolvers obtain that data from the underlying services or databases.</p>
+      <table>
+        <tr><th>Area</th><th>REST</th><th>GraphQL</th></tr>
+        <tr><td>Data fetching</td><td>Fixed response per endpoint; may over-fetch or require several requests</td><td>Client requests exactly the fields it needs, including related data</td></tr>
+        <tr><td>API contract</td><td>Endpoint documentation or an OpenAPI specification</td><td>Strongly typed, introspectable schema</td></tr>
+        <tr><td>Caching</td><td>Works naturally with standard HTTP and CDN caching</td><td>Often requires application-aware client or server caching</td></tr>
+        <tr><td>Error handling</td><td>Primarily uses HTTP status codes</td><td>Can return partial data together with an <code>errors</code> array</td></tr>
+        <tr><td>Complexity</td><td>Simple and familiar for resource-based CRUD APIs</td><td>Requires schema design, resolvers, query limits, and protection against expensive nested queries</td></tr>
+        <tr><td>Versioning</td><td>Often uses URL or header versions</td><td>Usually evolves by adding fields and deprecating old ones</td></tr>
+      </table>
+      <p><strong>Choose REST</strong> for straightforward CRUD services, public HTTP APIs, file operations, and cases where simple infrastructure and HTTP caching matter most. <strong>Choose GraphQL</strong> when several clients need different data shapes or a screen must combine deeply related data without many round trips.</p>
+      <p><strong>Interview point:</strong> GraphQL is not automatically faster than REST. It can reduce over-fetching and network requests, but poorly designed resolvers can create N+1 queries or expensive requests. The best choice depends on the clients, data relationships, caching requirements, and operational complexity; the two approaches can also coexist.</p>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

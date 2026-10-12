@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apache Kafka — Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html" class="active">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Apache Kafka — Interview Prep</h1>
+  <p class="page-sub">Fundamentals, internals, producers, consumers, delivery guarantees, Spring Boot integration, security, monitoring, and production troubleshooting.</p>
+
+  <aside class="resource-links" aria-labelledby="kafka-resources-heading">
+    <h2 id="kafka-resources-heading">Kafka Interview Resources</h2>
+    <ol>
+      <li><a href="https://medium.com/@meet2sudhakar/40-apache-kafka-interview-questions-every-experienced-java-developer-must-know-in-2026-c700d254c36a" target="_blank" rel="noopener noreferrer">40 Apache Kafka Interview Questions for Experienced Java Developers</a></li>
+      <li>Attached PDF — 50 Apache Kafka interview questions (basic to advanced)</li>
+    </ol>
+  </aside>
+
+  <h2 class="section-heading">Kafka Fundamentals</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is Apache Kafka?</summary>
+    <div class="qa-body">
+      <p><strong>Apache Kafka is a distributed, fault-tolerant event-streaming platform built for high-throughput, real-time data pipelines and streaming applications.</strong> Producers append events to durable topic partitions, and consumers read them independently at their own pace.</p>
+      <h3>What does each part mean?</h3>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning in Kafka</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Distributed</strong></td>
+            <td>Kafka runs as a cluster of multiple brokers instead of relying on one server. Topic partitions are spread across those brokers, allowing storage and traffic to be shared.</td>
+            <td>An <code>orders</code> topic has six partitions distributed across three brokers. Each broker handles part of the order traffic, and more brokers can be added as traffic grows.</td>
+          </tr>
+          <tr>
+            <td><strong>Fault-tolerant</strong></td>
+            <td>Kafka replicates partition data across brokers. If the broker hosting a leader replica fails, an in-sync follower can become the new leader so clients can continue operating.</td>
+            <td>With replication factor <code>3</code>, an order event is stored on three brokers. If one broker crashes, another replica serves the partition without losing the acknowledged event.</td>
+          </tr>
+          <tr>
+            <td><strong>Event</strong></td>
+            <td>An event is an immutable record describing something that happened. It normally contains a key, value, timestamp, and optional headers.</td>
+            <td><code>{ "orderId": "O-101", "status": "CREATED" }</code> records the fact that order O-101 was created. The <code>orderId</code> can be used as the key to preserve ordering for that order.</td>
+          </tr>
+          <tr>
+            <td><strong>Streaming</strong></td>
+            <td>Events are produced and consumed continuously rather than waiting for a complete batch. Kafka retains them for a configured period, so consumers can process new events or replay older ones.</td>
+            <td>Every checkout immediately produces an order event. Inventory, payment, analytics, and notification consumers process the stream independently.</td>
+          </tr>
+          <tr>
+            <td><strong>Platform</strong></td>
+            <td>Kafka is more than a message queue. It provides durable storage, producers and consumers, replication, consumer groups, Kafka Connect for integrations, and Kafka Streams for processing.</td>
+            <td>An application publishes transactions, Kafka Connect moves them to a data warehouse, and Kafka Streams calculates totals in real time.</td>
+          </tr>
+          <tr>
+            <td><strong>High throughput</strong></td>
+            <td>Kafka can handle large numbers of events efficiently by using append-only sequential writes, batching, compression, partition-level parallelism, and efficient network transfer.</td>
+            <td>An e-commerce system can publish hundreds of thousands of click or order events per second by distributing them across partitions and batching producer requests.</td>
+          </tr>
+          <tr>
+            <td><strong>Real time</strong></td>
+            <td>Consumers can receive and process events with very low latency soon after they are published. “Real time” here generally means near-real-time processing, not a hard real-time deadline.</td>
+            <td>A fraud-detection consumer evaluates a payment seconds or milliseconds after the payment event arrives instead of processing it in an overnight job.</td>
+          </tr>
+          <tr>
+            <td><strong>Data pipeline</strong></td>
+            <td>A pipeline moves and transforms data between systems reliably. Kafka acts as the durable middle layer that decouples the source from one or more destinations.</td>
+            <td>Application database changes are captured into Kafka and then delivered to Elasticsearch for search, S3 for archival, and a warehouse for reporting.</td>
+          </tr>
+          <tr>
+            <td><strong>Streaming application</strong></td>
+            <td>A streaming application continuously consumes events, applies operations such as filtering, grouping, joining, or aggregation, and produces results or new events.</td>
+            <td>A Kafka Streams application groups purchases by customer over a five-minute window and emits an alert when the total crosses a fraud threshold.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Simple flow:</strong> An Order Service produces an <code>OrderCreated</code> event to Kafka. Kafka stores it durably in a replicated partition. Inventory and Payment services consume it through separate consumer groups, while Analytics can replay the same event later without affecting those services.</p>
+      <p><strong>Interview answer:</strong> “Kafka is distributed because its partitions run across multiple brokers, fault-tolerant because those partitions are replicated, and high-throughput because it uses partitioning, batching, and sequential log writes. It streams durable events in near real time, allowing independent applications to process or replay the same data for pipelines, analytics, and event-driven microservices.”</p>
+    </div>
+  </details>
+  <details class="qa"><summary><span class="q-num">Q2.</span> Why do we use Kafka?</summary><div class="qa-body"><p>Kafka handles large traffic spikes, durable event storage, real-time processing, and asynchronous communication. It decouples producers from consumers, lets services scale independently, and supports replay because consuming an event does not immediately delete it.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q3.</span> What are Kafka's main components?</summary><div class="qa-body"><p>A <strong>producer</strong> publishes records; a <strong>broker</strong> stores and serves them; a <strong>topic</strong> names an event stream; <strong>partitions</strong> divide that stream; a <strong>consumer</strong> reads records; a <strong>consumer group</strong> shares partitions; and an <strong>offset</strong> identifies a record's position within a partition.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q4.</span> What is a Kafka topic?</summary><div class="qa-body"><p>A topic is a named, append-only stream of related events, such as <code>orders.created</code> or <code>payments.completed</code>. Producers write to it and one or more independent consumer groups read from it.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q5.</span> What is a partition?</summary><div class="qa-body"><p>A partition is an ordered, immutable log that forms part of a topic. Partitions are distributed among brokers and let Kafka process reads and writes in parallel.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q6.</span> Why are partitions important?</summary><div class="qa-body"><p>Partitions provide horizontal scalability, parallel consumption, and load distribution. Within one consumer group, a partition is assigned to only one consumer at a time, so useful consumer parallelism cannot exceed the number of partitions.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q7.</span> What is a Kafka broker?</summary><div class="qa-body"><p>A broker is a Kafka server. It stores partition log files, handles producer and consumer requests, replicates partitions, and participates in cluster coordination. A production cluster normally uses multiple brokers for capacity and fault tolerance.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q8.</span> What is a producer?</summary><div class="qa-body"><p>A producer is a client that serializes records and publishes them to topics. It chooses a partition through a key, default partitioner, or custom partitioner and controls batching, compression, acknowledgements, and retries.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q9.</span> What is a consumer?</summary><div class="qa-body"><p>A consumer pulls records from brokers, deserializes and processes them, and tracks its position through offsets. Different consumer groups can independently read the same records.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q10.</span> What is a consumer group?</summary><div class="qa-body"><p>A consumer group is a set of consumers cooperating on a workload. Kafka assigns each subscribed partition to exactly one consumer in that group, while a different group receives its own independent view of the topic.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q11.</span> What is an offset?</summary><div class="qa-body"><p>An offset is a monotonically increasing position assigned to a record within one partition. Consumers commit offsets, commonly in Kafka's <code>__consumer_offsets</code> topic, so they can resume or deliberately replay data.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q12.</span> Is Kafka push-based or pull-based?</summary><div class="qa-body"><p>Kafka uses a pull model: consumers request batches when ready. This provides natural back pressure, allows efficient batching, and prevents the broker from overwhelming a slow consumer.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q13.</span> What does append-only log mean?</summary><div class="qa-body"><p>Records are appended sequentially to the end of a partition log rather than updated in place. Sequential I/O, batching, and the operating-system page cache are major reasons Kafka achieves high throughput.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q14.</span> Does Kafka delete messages after consumption?</summary><div class="qa-body"><p>No. Consumption only advances a consumer's offset. Kafka deletes or compacts records according to the topic's time, size, or compaction policy, which makes replay possible.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q15.</span> Kafka vs RabbitMQ: when would you choose each?</summary><div class="qa-body"><p>Choose Kafka for durable event streams, replay, very high throughput, analytics, and event-driven architectures. Choose RabbitMQ for traditional work queues, flexible per-message routing, and low-latency task distribution. The correct choice depends on delivery, retention, ordering, and replay requirements.</p></div></details>
+
+  <h2 class="section-heading">Internals, Reliability, and Delivery</h2>
+
+  <details class="qa"><summary><span class="q-num">Q16.</span> How does Kafka achieve high throughput?</summary><div class="qa-body"><p>Kafka combines sequential disk writes, page-cache use, zero-copy transfer, record batching, compression, and partition-level parallelism. It avoids expensive per-record random I/O.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q17.</span> What is replication factor?</summary><div class="qa-body"><p>The replication factor is the number of copies of each partition across brokers. A factor of three normally means one leader and two followers, allowing the cluster to survive broker failures when replicas remain in sync.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q18.</span> What are leader and follower replicas?</summary><div class="qa-body"><p>The leader handles reads and writes for a partition. Followers copy the leader's log and can be elected leader if the current leader fails. Replica placement should span brokers and, where supported, failure domains.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q19.</span> What happens if a broker goes down?</summary><div class="qa-body"><p>The controller detects the failure and elects new leaders from eligible in-sync replicas. Clients refresh metadata and reconnect. With adequate replication and <code>min.insync.replicas</code>, service continues without acknowledged data loss.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q20.</span> What is ISR?</summary><div class="qa-body"><p>ISR means <strong>in-sync replicas</strong>: replicas sufficiently caught up with the partition leader. ISR membership matters because <code>acks=all</code> waits for the required in-sync replicas and leader election normally selects from this set.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q21.</span> How does Kafka guarantee message ordering?</summary><div class="qa-body"><p>Kafka guarantees order only within a partition. Use a stable entity key such as <code>orderId</code> so related records reach the same partition. Global ordering requires one partition and therefore sacrifices parallelism.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q22.</span> What delivery semantics does Kafka support?</summary><div class="qa-body"><p><strong>At-most-once</strong> can lose messages but avoids duplicates; <strong>at-least-once</strong> avoids loss but may redeliver; <strong>exactly-once</strong> uses idempotence and transactions for atomic Kafka read-process-write flows. External side effects still require idempotent application design.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q23.</span> How does a consumer know where to resume?</summary><div class="qa-body"><p>It resumes from the committed offset for its group and partition. Commit after successful processing for at-least-once delivery; commit before processing only when occasional loss is acceptable.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q24.</span> What is consumer rebalancing?</summary><div class="qa-body"><p>Rebalancing redistributes partitions among members of a consumer group. Consumption may pause while ownership changes, so frequent rebalances can create latency and lag spikes.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q25.</span> When does a rebalance occur?</summary><div class="qa-body"><p>Common triggers are a consumer joining or leaving, missed heartbeats, a subscription change, or a partition-count change. Static membership and cooperative assignment can reduce unnecessary partition movement.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q26.</span> What is auto offset commit?</summary><div class="qa-body"><p>With auto commit, the client periodically commits the latest polled positions. It is convenient but can commit records before business processing finishes, so critical consumers commonly disable it and acknowledge only after success.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q27.</span> What is the difference between <code>enable.auto.commit=true</code> and <code>false</code>?</summary><div class="qa-body"><p><code>true</code> lets the consumer library commit periodically; <code>false</code> gives the application explicit commit control. Manual control improves processing guarantees but requires careful handling of failures, batches, and retries.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q28.</span> What happens if a consumer crashes?</summary><div class="qa-body"><p>After its session expires, the group coordinator triggers a rebalance and assigns its partitions to surviving consumers. Processing resumes from the last committed offsets, so uncommitted records may be delivered again.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q29.</span> What is a retention policy?</summary><div class="qa-body"><p>Retention determines how long or how much data Kafka keeps, independently of whether records were consumed. Typical controls are time-based retention, size-based retention, and log compaction.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q30.</span> What is the difference between time- and size-based retention?</summary><div class="qa-body"><p>Time retention removes old log segments after a configured age; size retention removes old segments when a partition exceeds its byte limit. If both apply, Kafka removes eligible segments when either limit is reached.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q31.</span> What is log compaction?</summary><div class="qa-body"><p>Compaction eventually retains the latest value for each key, while tombstone records represent deletion. It is useful for changelogs and rebuilding current state; it is different from keeping every event for a fixed time.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q32.</span> What is an idempotent producer?</summary><div class="qa-body"><p>An idempotent producer prevents duplicate writes caused by producer retries. With <code>enable.idempotence=true</code>, Kafka uses producer IDs and per-partition sequence numbers to reject duplicate batches.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q33.</span> Explain <code>acks=0</code>, <code>acks=1</code>, and <code>acks=all</code>.</summary><div class="qa-body"><table><tr><th>Setting</th><th>Behaviour</th><th>Trade-off</th></tr><tr><td><code>0</code></td><td>No broker acknowledgement</td><td>Lowest latency, highest loss risk</td></tr><tr><td><code>1</code></td><td>Leader acknowledges</td><td>Leader failure before replication may lose data</td></tr><tr><td><code>all</code></td><td>All required ISR replicas acknowledge</td><td>Strongest durability, somewhat higher latency</td></tr></table><p>For important events, pair <code>acks=all</code> with an appropriate <code>min.insync.replicas</code>.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q34.</span> What are serializers and deserializers?</summary><div class="qa-body"><p>A serializer converts a key or value object into bytes before publishing; a deserializer reconstructs an object when consuming. Producer and consumer formats must agree, ideally through a versioned schema.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q35.</span> What is a dead-letter topic?</summary><div class="qa-body"><p>A dead-letter topic stores records that still fail after bounded retries. Include the original topic, partition, offset, exception, timestamp, and correlation ID so teams can diagnose, fix, and safely replay failures.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q36.</span> What is exactly-once semantics?</summary><div class="qa-body"><p>Kafka exactly-once semantics combine idempotent production with transactions so output records and consumed offsets commit atomically in a Kafka-to-Kafka pipeline. It does not automatically make database calls or emails exactly once.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q37.</span> How does Kafka achieve fault tolerance?</summary><div class="qa-body"><p>Kafka uses replicated partition logs, leader election, ISR tracking, persistent storage, producer retries, and committed consumer offsets. Correct replication and acknowledgement settings are essential; replication alone is not a complete guarantee.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q38.</span> What role did ZooKeeper play in Kafka?</summary><div class="qa-body"><p>Older Kafka deployments used ZooKeeper for controller election, broker membership, and cluster metadata coordination. Modern Kafka uses KRaft and no longer requires ZooKeeper.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q39.</span> What is KRaft mode?</summary><div class="qa-body"><p>KRaft is Kafka's built-in metadata consensus system based on a Raft-style quorum. It removes the ZooKeeper dependency, simplifies operations, and improves metadata scalability and controller failover.</p></div></details>
+
+  <h2 class="section-heading">Ecosystem, Performance, and Security</h2>
+
+  <details class="qa"><summary><span class="q-num">Q40.</span> Kafka Streams vs Consumer API: what is the difference?</summary><div class="qa-body"><p>The Consumer API gives low-level polling, offset, and processing control. Kafka Streams is a higher-level Java library for transformations, joins, windows, aggregations, local state stores, and fault-tolerant stream-processing topologies.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q41.</span> What is Kafka Connect?</summary><div class="qa-body"><p>Kafka Connect is a framework for moving data between Kafka and external systems using reusable connectors. It handles scaling, offsets, configuration, and fault recovery without requiring a custom integration service.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q42.</span> What is the difference between a source and a sink connector?</summary><div class="qa-body"><p>A source connector imports records from an external system into Kafka. A sink connector exports Kafka records to an external system such as a database, search index, or object store.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q43.</span> What is Schema Registry?</summary><div class="qa-body"><p>A Schema Registry centrally stores schemas and compatibility rules for formats such as Avro, Protobuf, and JSON Schema. It enables safe schema evolution and prevents incompatible producers from breaking consumers.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q44.</span> Compare Avro, JSON, and Protobuf.</summary><div class="qa-body"><p>JSON is readable and flexible but larger and often weakly governed. Avro is compact, schema-driven, and popular in Kafka ecosystems. Protobuf is compact, fast, strongly typed, and supports explicit field evolution. Choose based on interoperability, tooling, evolution rules, and readability needs.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q45.</span> What is zero-copy in Kafka?</summary><div class="qa-body"><p>Zero-copy lets the operating system transfer cached log data directly to the network socket without repeatedly copying it through application buffers. This lowers CPU use and memory-copy overhead.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q46.</span> How does Kafka handle back pressure?</summary><div class="qa-body"><p>Consumers pull only what they can handle and can tune fetch and poll sizes. Growing consumer lag signals insufficient processing capacity; respond by optimizing work, batching, or scaling consumers up to the partition count.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q47.</span> What is throttling in Kafka?</summary><div class="qa-body"><p>Kafka quotas can limit producer byte rate, consumer fetch rate, and request rate per client or user. Throttling protects broker resources and prevents one workload from degrading the whole cluster.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q48.</span> What happens if a producer is faster than the broker?</summary><div class="qa-body"><p>The producer buffers records and sends batches. If its buffer fills before delivery completes, <code>send()</code> can block up to <code>max.block.ms</code> and then fail. Tune batching and compression, apply upstream back pressure, and fix broker or network bottlenecks rather than retrying forever.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q49.</span> How do you secure Kafka?</summary><div class="qa-body"><p>Use TLS for encryption, SASL or mutual TLS for authentication, and ACLs for authorization. Also protect secrets, isolate networks, apply least privilege, encrypt disks where required, audit access, and secure Schema Registry and Connect endpoints.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q50.</span> What are common real-time Kafka use cases?</summary><div class="qa-body"><p>Examples include order and payment events, notifications, audit logs, clickstreams, fraud detection, CDC pipelines, metrics, log aggregation, event-driven microservices, and continuously updated analytics.</p></div></details>
+
+  <h2 class="section-heading">Spring Boot and Production Scenarios</h2>
+
+  <details class="qa"><summary><span class="q-num">Q51.</span> Why is Kafka useful in a microservice architecture?</summary><div class="qa-body"><p>Kafka enables asynchronous, loosely coupled communication: producers do not require consumers to be available at the same moment. Events remain durable and replayable, while separate consumer groups let services scale and fail independently. Use REST when an immediate response is genuinely required.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q52.</span> What is <code>KafkaTemplate</code> in Spring Boot?</summary><div class="qa-body"><p><code>KafkaTemplate</code> is Spring Kafka's producer abstraction. It handles serialization and asynchronous sends, exposes delivery results, and can participate in Kafka transactions. Production code should observe send failures rather than treating <code>send()</code> as guaranteed success.</p><pre><code>kafkaTemplate.send("orders.created", order.id(), event)
+    .whenComplete((result, error) -&gt; {
+        if (error != null) log.error("Kafka publish failed", error);
+    });</code></pre></div></details>
+  <details class="qa"><summary><span class="q-num">Q53.</span> What does <code>@KafkaListener</code> do?</summary><div class="qa-body"><p><code>@KafkaListener</code> registers a Spring method as a Kafka message handler and configures topics, group ID, concurrency, and container factory. The container manages polling, heartbeats, deserialization, offset commits, and error handling.</p><pre><code>@KafkaListener(topics = "orders.created", groupId = "inventory-service")
+public void reserve(OrderCreated event) {
+    inventoryService.reserve(event);
+}</code></pre></div></details>
+  <details class="qa"><summary><span class="q-num">Q54.</span> How do you handle consumer exceptions in Spring Boot?</summary><div class="qa-body"><p>Classify errors as retriable or permanent. Use a bounded backoff for transient failures, route exhausted or non-retriable records through <code>DeadLetterPublishingRecoverer</code>, preserve diagnostic headers, alert on the DLT, and make processing idempotent.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q55.</span> How should failed Kafka messages be retried?</summary><div class="qa-body"><p>Use immediate retry only for brief transient errors, then exponential backoff or retry topics for longer outages, followed by a DLT after a fixed maximum. Avoid blocking a partition indefinitely and never retry validation or deserialization errors without a remediation path.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q56.</span> What is consumer lag?</summary><div class="qa-body"><p>Consumer lag is the difference between a partition's log-end offset and a consumer group's committed or current offset. Persistent growth means production is outpacing processing; a momentary spike may simply reflect batching or a rebalance.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q57.</span> How do you debug continuously increasing consumer lag?</summary><div class="qa-body"><ol><li>Measure lag per partition and identify whether it is uniform or caused by a hot key.</li><li>Compare producer rate with consumer throughput and inspect rebalances, errors, GC pauses, CPU, disk, and network.</li><li>Profile slow database or HTTP calls and check <code>max.poll.records</code> and <code>max.poll.interval.ms</code>.</li><li>Optimize or batch processing, then add consumers up to the partition count or repartition through a controlled migration.</li></ol></div></details>
+  <details class="qa"><summary><span class="q-num">Q58.</span> How do you improve Kafka consumer performance?</summary><div class="qa-body"><p>Batch reads and writes, remove blocking or N+1 work, tune fetch and poll sizes, use appropriate listener concurrency, compress efficiently, and add partitions and consumers when justified. Preserve per-key ordering and do not let asynchronous work cause offsets to commit before processing completes.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q59.</span> How do you monitor Kafka in production?</summary><div class="qa-body"><p>Monitor consumer lag and consumption rate; producer error, retry, and request latency; broker request latency, disk use, network traffic, offline partitions, under-replicated partitions, ISR changes, and controller health. Correlate metrics with logs and traces, and alert on sustained symptoms rather than isolated spikes.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q60.</span> What happens when partition count is increased?</summary><div class="qa-body"><p>Consumers rebalance and new records spread across more partitions, increasing potential parallelism. Existing records are not redistributed. Key-to-partition mapping can change, so per-key ordering across the change may be affected. Partition count cannot simply be reduced; for strict requirements, migrate to a new topic.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q61.</span> How do you choose a partition strategy?</summary><div class="qa-body"><p>Estimate target throughput, per-partition capacity, and maximum useful consumer concurrency. Choose a high-cardinality key that preserves required entity ordering and distributes load evenly. Avoid low-cardinality or skewed keys, leave measured growth headroom, and account for broker file-handle and metadata overhead.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q62.</span> What happens internally when a producer sends and a consumer reads a record?</summary><div class="qa-body"><ol><li>The producer serializes the record, selects a partition, batches it, and sends it to the leader.</li><li>The leader appends it to a log segment; followers replicate it.</li><li>The broker acknowledges according to the producer's <code>acks</code> setting.</li><li>The consumer fetches a batch from a chosen offset, processes records, and commits its next position.</li></ol></div></details>
+  <details class="qa"><summary><span class="q-num">Q63.</span> What is <code>auto.offset.reset</code>?</summary><div class="qa-body"><p>It applies only when a consumer group has no valid committed offset. <code>earliest</code> starts at the oldest retained record, <code>latest</code> starts with new records, and <code>none</code> fails instead of choosing automatically.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q64.</span> What happens when a new consumer joins a group?</summary><div class="qa-body"><p>The member joins through the group coordinator, the group negotiates an assignment, partitions move according to the configured assignor, and consumption resumes. Cooperative sticky assignment reduces stop-the-world movement compared with eager rebalancing.</p></div></details>
+  <details class="qa"><summary><span class="q-num">Q65.</span> What are common Kafka production issues and first checks?</summary><div class="qa-body"><table><tr><th>Symptom</th><th>First checks</th></tr><tr><td>High lag</td><td>Hot partitions, slow downstream calls, consumer capacity, rebalances</td></tr><tr><td>Frequent rebalances</td><td>Heartbeat/session settings, poll duration, unstable instances</td></tr><tr><td>Under-replicated partitions</td><td>Broker health, disk/network saturation, replica lag</td></tr><tr><td>Deserialization failures</td><td>Schema compatibility and producer deployment changes</td></tr><tr><td>Uneven load</td><td>Key cardinality, skew, partitioner behaviour</td></tr></table></div></details>
+  <details class="qa"><summary><span class="q-num">Q66.</span> Kafka Streams vs Spark Structured Streaming: when would you use each?</summary><div class="qa-body"><p>Kafka Streams is an embedded Java library suited to low-latency, Kafka-native per-service processing with local state stores. Spark Structured Streaming is a separate distributed analytics engine suited to large ETL, data-lake, SQL, and machine-learning workloads across many data sources.</p></div></details>
+  <details class="qa">
+    <summary><span class="q-num">Q67.</span> How do Kafka consumer groups, offsets, and rebalancing work together?</summary>
+    <div class="qa-body">
+      <p>Kafka combines <strong>consumer groups</strong>, <strong>partition offsets</strong>, and <strong>rebalancing</strong> to provide parallel processing, failure recovery, and independent consumption of the same topic.</p>
+
+      <h3>1. Consumer groups</h3>
+      <ul>
+        <li>Consumers that use the same <code>group.id</code> cooperate to process a topic.</li>
+        <li>Within one group, each partition is assigned to <strong>exactly one consumer at a time</strong>. A consumer may own several partitions.</li>
+        <li>If a topic has four partitions and the group has two consumers, each consumer will typically process two partitions.</li>
+        <li>If the group has six consumers but only four partitions, at most four consumers can receive assignments; the remaining consumers stay idle.</li>
+        <li>Different groups consume independently. For example, <code>inventory-service</code> and <code>analytics-service</code> can each read every event from <code>orders.created</code> because they use different group IDs.</li>
+      </ul>
+
+      <h3>2. Offsets</h3>
+      <p>An offset is a record's sequential position <strong>inside one partition</strong>. Offsets are not global across a topic. Each consumer group maintains a committed offset for every partition it consumes, normally in Kafka's internal <code>__consumer_offsets</code> topic.</p>
+      <ul>
+        <li><strong>Current position:</strong> the next record the consumer will fetch during its active session.</li>
+        <li><strong>Committed offset:</strong> the durable recovery position stored for the group. Kafka commits the offset of the <em>next</em> record to read.</li>
+        <li>If records at offsets 0–9 were processed successfully, committing offset 10 means processing should resume from record 10.</li>
+        <li>Commit <strong>after</strong> successful processing for at-least-once delivery. A crash before the commit may cause records to be delivered again, so consumers must be idempotent.</li>
+        <li>Committing before processing can provide at-most-once behavior, but a crash after the commit can lose unprocessed work.</li>
+      </ul>
+
+      <h3>3. Rebalancing</h3>
+      <p>A rebalance redistributes partitions among the active members of a group. The <strong>group coordinator</strong> tracks membership using join requests, heartbeats, and polling activity.</p>
+      <p>Common rebalance triggers include:</p>
+      <ul>
+        <li>a new consumer joining the group;</li>
+        <li>a consumer shutting down, crashing, or missing heartbeats;</li>
+        <li>a consumer exceeding <code>max.poll.interval.ms</code> because processing takes too long;</li>
+        <li>subscribed topics or their partition counts changing.</li>
+      </ul>
+      <p>During assignment, a partition assignor decides which member owns each partition. With an <strong>eager</strong> strategy, members revoke all partitions before receiving a new assignment, temporarily pausing the group. A <strong>cooperative sticky</strong> strategy moves only the partitions that need to change, reducing disruption and retaining assignments where possible.</p>
+
+      <h3>End-to-end failure example</h3>
+      <ol>
+        <li>The <code>orders.created</code> topic has partitions P0, P1, P2, and P3. Consumer A owns P0/P1, while Consumer B owns P2/P3.</li>
+        <li>Consumer A processes and commits its offsets independently for P0 and P1.</li>
+        <li>Consumer A crashes and stops sending heartbeats.</li>
+        <li>After the session timeout, the coordinator removes A and starts a rebalance.</li>
+        <li>Consumer B, or a newly started Consumer C, receives P0 and P1 and resumes from that group's last committed offsets.</li>
+        <li>Any successfully processed but uncommitted records may be delivered again. Idempotent processing prevents duplicate database updates or notifications.</li>
+      </ol>
+
+      <h3>How to reduce harmful rebalances</h3>
+      <ul>
+        <li>Keep polling regularly and ensure record processing does not exceed <code>max.poll.interval.ms</code>.</li>
+        <li>Tune <code>session.timeout.ms</code> and heartbeat settings carefully instead of masking slow processing with very large values.</li>
+        <li>Use cooperative sticky assignment to reduce partition movement.</li>
+        <li>Use static membership with a stable <code>group.instance.id</code> for consumers that restart predictably.</li>
+        <li>Shut consumers down gracefully so they can leave the group cleanly and commit completed work.</li>
+        <li>Monitor rebalance count/duration, consumer lag, processing time, poll interval, and commit failures.</li>
+      </ul>
+
+      <p><strong>Interview answer:</strong> “Consumers with the same group ID divide topic partitions so only one member in that group owns a partition at a time. The group stores a committed offset per partition, which is the next position to read after recovery. When membership or partition metadata changes, Kafka rebalances those assignments. If a consumer fails, another member takes its partitions and resumes from the last committed offsets, which can redeliver uncommitted records; therefore, I commit only after successful processing and make the consumer idempotent.”</p>
+    </div>
+  </details>
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+</body>
+</html>

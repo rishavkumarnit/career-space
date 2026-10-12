@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MongoDB — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html" class="active">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">MongoDB Interview Questions</h1>
+  <p class="page-sub">16 questions on documents, schema design, queries, indexes, aggregation, transactions, and scaling.</p>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is MongoDB?</summary>
+    <div class="qa-body">
+      <p>MongoDB is a document-oriented NoSQL database. It stores records as BSON documents inside collections rather than rows inside tables. Documents can contain nested objects and arrays, which often map naturally to JavaScript application data.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> What is the difference between MongoDB and a relational database?</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>MongoDB</th><th>Relational database</th></tr>
+        <tr><td>Stores documents in collections</td><td>Stores rows in tables</td></tr>
+        <tr><td>Supports flexible document shapes</td><td>Usually enforces a predefined table schema</td></tr>
+        <tr><td>Often embeds related data</td><td>Often normalizes data across related tables</td></tr>
+        <tr><td>Uses document queries and aggregation pipelines</td><td>Uses SQL, joins, and relational operations</td></tr>
+      </table>
+      <p>Neither model is universally better. The choice depends on relationships, consistency requirements, query patterns, and operational needs.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> What are BSON, documents, and collections?</summary>
+    <div class="qa-body">
+      <p><strong>BSON</strong> is MongoDB's binary representation of JSON-like data and supports additional types such as dates, binary values, decimals, and ObjectIds. A <strong>document</strong> is one record, and a <strong>collection</strong> groups related documents.</p>
+      <pre><code>{
+  _id: ObjectId("..."),
+  name: "Rishav",
+  skills: ["Node.js", "MongoDB"],
+  active: true
+}</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> What is an ObjectId?</summary>
+    <div class="qa-body">
+      <p>An ObjectId is MongoDB's commonly used default value for the <code>_id</code> field. It is a 12-byte value designed to be unique and includes a timestamp component. Applications may use another unique value for <code>_id</code>, but every document in a collection must have one.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> Does MongoDB have a schema?</summary>
+    <div class="qa-body">
+      <p>MongoDB has a flexible schema: documents in one collection can have different shapes. This does not mean schema design is unnecessary. Applications should define expected fields and types, and important rules can be enforced with MongoDB schema validation or an ODM such as Mongoose.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> What is the difference between embedding and referencing?</summary>
+    <div class="qa-body">
+      <p><strong>Embedding</strong> stores related data inside the same document, giving atomic reads and writes and avoiding extra queries. <strong>Referencing</strong> stores another document's ID, reducing duplication and supporting relationships that grow independently or are shared by many records.</p>
+      <p>Embed data that is bounded and normally read with its parent. Reference large, frequently changing, many-to-many, or independently accessed data.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> How do basic CRUD operations work?</summary>
+    <div class="qa-body">
+      <pre><code>db.users.insertOne({ name: "Rishav", active: true });
+
+db.users.find({ active: true });
+
+db.users.updateOne(
+  { name: "Rishav" },
+  { $set: { active: false } }
+);
+
+db.users.deleteOne({ name: "Rishav" });</code></pre>
+      <p>Use precise filters and appropriate operators. For updates, <code>$set</code> changes selected fields without replacing the entire document.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q8.</span> What is an index, and why is it important?</summary>
+    <div class="qa-body">
+      <p>An index is a data structure that helps MongoDB locate and sort matching documents without scanning the entire collection. Indexes improve reads but consume storage and add work to inserts and updates, so they should be based on real query patterns.</p>
+      <pre><code>db.users.createIndex({ email: 1 }, { unique: true });</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q9.</span> Why does field order matter in a compound index?</summary>
+    <div class="qa-body">
+      <p>A compound index stores multiple fields in a defined order. MongoDB can efficiently use its prefixes, so an index on <code>{ status: 1, createdAt: -1 }</code> supports queries beginning with <code>status</code>, but is generally less useful for a query only on <code>createdAt</code>. Equality fields commonly come before sort and range fields.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q10.</span> What is the aggregation pipeline?</summary>
+    <div class="qa-body">
+      <p>The aggregation pipeline processes documents through ordered stages. Common stages include <code>$match</code> for filtering, <code>$project</code> for reshaping, <code>$group</code> for aggregation, <code>$sort</code>, <code>$limit</code>, and <code>$lookup</code> for combining collections.</p>
+      <pre><code>db.orders.aggregate([
+  { $match: { status: "paid" } },
+  { $group: { _id: "$customerId", total: { $sum: "$amount" } } },
+  { $sort: { total: -1 } }
+]);</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q11.</span> What is the difference between <code>find()</code> and <code>aggregate()</code>?</summary>
+    <div class="qa-body">
+      <p><code>find()</code> is ideal for retrieving documents with filtering, projection, sorting, and pagination. <code>aggregate()</code> is used for multi-stage transformations, grouping, calculated fields, analytics, and collection joins. Use the simplest operation that expresses the query clearly.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q12.</span> Are MongoDB operations atomic?</summary>
+    <div class="qa-body">
+      <p>A write operation is atomic at the single-document level, even when it changes several fields. MongoDB also supports multi-document transactions when an operation must update multiple documents atomically, but transactions add overhead and should not replace good document design.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q13.</span> What are replication and replica sets?</summary>
+    <div class="qa-body">
+      <p>A replica set maintains copies of the same data across multiple MongoDB servers. One primary accepts writes, while secondary members replicate its operation log. If the primary becomes unavailable, eligible members elect a new primary, improving availability and supporting disaster recovery.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q14.</span> What is sharding?</summary>
+    <div class="qa-body">
+      <p>Sharding horizontally partitions a collection across multiple servers so storage and workload can scale beyond one machine. The shard key determines how documents are distributed. A poor shard key can create uneven data distribution, hot shards, or inefficient scatter-gather queries.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q15.</span> How do you investigate a slow MongoDB query?</summary>
+    <div class="qa-body">
+      <p>Use <code>explain("executionStats")</code> to inspect the query plan. Compare documents examined with documents returned, check whether a collection scan occurred, confirm that filtering and sorting use an appropriate index, and look for large skips or unbounded results. Then validate any new index against production-like data and write costs.</p>
+      <pre><code>db.users
+  .find({ status: "active" })
+  .sort({ createdAt: -1 })
+  .explain("executionStats");</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q16.</span> How does MongoDB aggregation work? Explain with an example using important operations.</summary>
+    <div class="qa-body">
+      <p>MongoDB aggregation passes documents through a sequence of pipeline stages. Each stage receives the previous stage's output, performs an operation, and passes its result to the next stage.</p>
+      <p>Suppose each order contains a <code>customerId</code>, <code>status</code>, <code>createdAt</code>, and an <code>items</code> array. The following pipeline finds the five highest-spending customers for paid orders placed in 2026:</p>
+      <pre><code>db.orders.aggregate([
+  // 1. Filter early so later stages process fewer documents
+  {
+    $match: {
+      status: "paid",
+      createdAt: { $gte: ISODate("2026-01-01") }
+    }
+  },
+
+  // 2. Turn every item in the items array into a separate document
+  { $unwind: "$items" },
+
+  // 3. Calculate the value of each order item
+  {
+    $set: {
+      itemTotal: { $multiply: ["$items.price", "$items.quantity"] }
+    }
+  },
+
+  // 4. Group items by customer and calculate totals
+  {
+    $group: {
+      _id: "$customerId",
+      totalSpent: { $sum: "$itemTotal" },
+      totalItems: { $sum: "$items.quantity" },
+      orderIds: { $addToSet: "$_id" }
+    }
+  },
+
+  // 5. Join the matching customer document
+  {
+    $lookup: {
+      from: "customers",
+      localField: "_id",
+      foreignField: "_id",
+      as: "customer"
+    }
+  },
+  { $unwind: "$customer" },
+
+  // 6. Select and rename the fields returned to the client
+  {
+    $project: {
+      _id: 0,
+      customerId: "$_id",
+      customerName: "$customer.name",
+      totalSpent: 1,
+      totalItems: 1,
+      orderCount: { $size: "$orderIds" }
+    }
+  },
+
+  // 7. Return only the top five customers
+  { $sort: { totalSpent: -1 } },
+  { $limit: 5 }
+]);</code></pre>
+      <p><strong>Important operations:</strong> <code>$match</code> filters documents, <code>$unwind</code> expands an array, <code>$set</code> creates a calculated field, <code>$group</code> aggregates values, <code>$lookup</code> joins another collection, <code>$project</code> shapes the result, <code>$sort</code> orders it, and <code>$limit</code> restricts its size.</p>
+      <p><strong>Performance tip:</strong> place selective <code>$match</code> stages near the beginning and create indexes for commonly filtered, sorted, and joined fields. Use <code>explain("executionStats")</code> to inspect the pipeline's execution plan.</p>
+    </div>
+  </details>
+</main>
+
+<footer class="site"><a href="../index.html">&larr; Back to all topics</a></footer>
+
+</body>
+</html>

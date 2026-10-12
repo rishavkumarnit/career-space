@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java &amp; Spring Boot | Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a class="active" href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <aside class="resource-links resource-links--horizontal" aria-labelledby="interview-documents-heading">
+    <h2 id="interview-documents-heading">Interview Documents</h2>
+    <ol>
+      <li><a href="https://docs.google.com/document/d/1Z-vIFzYkDSgB-VS2Fm8M9soCsi6wFrWmNxglZDBprbY/edit?tab=t.0" target="_blank" rel="noopener noreferrer">BrandSmashers</a></li>
+      <li><a href="https://docs.google.com/document/d/1p-SzY6qfhL4idiVPinNwPfw24muo8o82F9J5ED5hF30/edit?tab=t.0" target="_blank" rel="noopener noreferrer">Gen Interview</a></li>
+      <li><a href="https://docs.google.com/document/d/12faoTAocsstQP7xRCtOPKU8gNJQ7BIfXPIpGzLeumUA/edit?tab=t.b6n5nebizkgf#heading=h.b5l9a5sv4xbr" target="_blank" rel="noopener noreferrer">REST_DBMS</a></li>
+      <li><a href="https://docs.google.com/document/d/1WXjjovc0B-WCVhSp7maPFUQOqhK4lyUqJSRWWgZNOGo/edit?tab=t.0#heading=h.wq7ifwwa96nx" target="_blank" rel="noopener noreferrer">Scenario-Based</a></li>
+      <li><a href="https://howtodoinjava.com/interview-questions/interview-guides/" target="_blank" rel="noopener noreferrer">HowToDoInJava Guides</a></li>
+      <li><a href="https://www.youtube.com/watch?v=vz6vSZRuS2M" target="_blank" rel="noopener noreferrer">Java Interview Video 1</a></li>
+      <li><a href="https://www.youtube.com/watch?v=hv0zdiEN6_s" target="_blank" rel="noopener noreferrer">Java Interview Video 2</a></li>
+      <li><a href="https://docs.google.com/document/d/1KT8QDKe-JD64HV1I706FMsNZOiZtJvtYUrlnKsob9kI/edit?tab=t.0" target="_blank" rel="noopener noreferrer">Java Interview Document 1</a></li>
+      <li><a href="https://docs.google.com/document/d/1uPhiUPcTt27E4BLr70xFOzplkuqGF71rZ90egvhcwE8/edit?tab=t.0#heading=h.x7kzdzu437p7" target="_blank" rel="noopener noreferrer">Java Interview Document 2</a></li>
+      <li><a href="https://docs.google.com/document/d/1y256UUndwRXu_6XCUbEqxqV9hvgXJbXZJ6ZklQmopD4/edit?tab=t.0#heading=h.ikpu6rs61ix" target="_blank" rel="noopener noreferrer">Java Interview Document 3</a></li>
+      <li><a href="https://drive.google.com/drive/folders/1WiIudmxbr0wPjfQ96bDfcnhnLIzRg5cV" target="_blank" rel="noopener noreferrer">Java Interview Drive Folder</a></li>
+      <li><a href="https://docs.google.com/document/d/1_XAqwIgB-05caQo_rhQIRcDDfiBaDYKPmkL4oM1x4rY/edit?tab=t.0#heading=h.kwoju0ys15k5" target="_blank" rel="noopener noreferrer">Java Interview Document 4</a></li>
+    </ol>
+  </aside>
+
+  <h2 class="section-heading">High-Level Design</h2>
+
+  <details class="qa" open>
+    <summary><span class="q-num">1.</span> What is EventFlow Commerce?</summary>
+    <div class="qa-body">
+      <p>It is an <strong>event-driven e-commerce platform</strong>. A React frontend sends requests to a Spring Boot API gateway. Independent Java services manage orders, inventory, products, and payments. Kafka carries business events between services, while PostgreSQL stores each service's data.</p>
+      <figure hidden aria-hidden="true" style="margin: 1.25rem 0; overflow-x: auto;">
+        <svg viewBox="0 0 1120 650" width="1120" role="img" aria-labelledby="eventflow-hld-title eventflow-hld-desc" style="max-width: 100%; height: auto; border: 1px solid #2d4054; border-radius: 10px; background: #0b1625; font-family: Arial, sans-serif;">
+          <title id="eventflow-hld-title">EventFlow Commerce two-part high-level design</title>
+          <desc id="eventflow-hld-desc">The top section shows the public request architecture. The bottom section shows the asynchronous order event flow through Kafka.</desc>
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#5bc0eb" /></marker>
+            <marker id="event-arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#c084fc" /></marker>
+          </defs>
+
+          <text x="35" y="42" fill="#ffffff" font-size="23" font-weight="700">Part 1 — Public request architecture</text>
+          <text x="35" y="68" fill="#9fb3c8" font-size="14">Only the frontend, API Gateway, and Keycloak are public. Business services are private.</text>
+
+          <g fill="#12304c" stroke="#5bc0eb" stroke-width="2">
+            <rect x="35" y="108" width="130" height="62" rx="8" />
+            <rect x="230" y="108" width="150" height="62" rx="8" />
+            <rect x="445" y="108" width="150" height="62" rx="8" />
+            <rect x="675" y="108" width="150" height="62" rx="8" />
+          </g>
+          <g fill="#dceeff" font-size="15" font-weight="700" text-anchor="middle">
+            <text x="100" y="145">Browser</text>
+            <text x="305" y="137">React Frontend</text><text x="305" y="156">(Render Static)</text>
+            <text x="520" y="137">API Gateway</text><text x="520" y="156">(public)</text>
+            <text x="750" y="137">Keycloak</text><text x="750" y="156">Login / JWT</text>
+          </g>
+          <g stroke="#5bc0eb" stroke-width="2.5" marker-end="url(#arrow)">
+            <line x1="165" y1="139" x2="229" y2="139" />
+            <line x1="380" y1="139" x2="444" y2="139" />
+            <line x1="380" y1="121" x2="674" y2="121" stroke-dasharray="7 6" />
+          </g>
+          <text x="527" y="110" fill="#9fb3c8" font-size="12">sign in / JWT</text>
+
+          <g fill="#172b3d" stroke="#84cc16" stroke-width="2">
+            <rect x="130" y="230" width="145" height="55" rx="8" />
+            <rect x="340" y="230" width="145" height="55" rx="8" />
+            <rect x="550" y="230" width="145" height="55" rx="8" />
+            <rect x="760" y="230" width="145" height="55" rx="8" />
+          </g>
+          <g fill="#e6ffcc" font-size="14" font-weight="700" text-anchor="middle">
+            <text x="202" y="261">Order Service</text>
+            <text x="412" y="261">Product Catalog</text>
+            <text x="622" y="261">Inventory Service</text>
+            <text x="832" y="261">Payment Service</text>
+          </g>
+          <g stroke="#5bc0eb" stroke-width="2.5" marker-end="url(#arrow)">
+            <line x1="520" y1="170" x2="202" y2="229" />
+            <line x1="520" y1="170" x2="412" y2="229" />
+            <line x1="520" y1="170" x2="622" y2="229" />
+            <line x1="520" y1="170" x2="832" y2="229" />
+          </g>
+          <g fill="#302248" stroke="#c084fc" stroke-width="2">
+            <rect x="130" y="315" width="145" height="42" rx="7" />
+            <rect x="340" y="315" width="145" height="42" rx="7" />
+            <rect x="550" y="315" width="145" height="42" rx="7" />
+            <rect x="760" y="315" width="145" height="42" rx="7" />
+          </g>
+          <g fill="#f1e7ff" font-size="13" text-anchor="middle">
+            <text x="202" y="341">order_db</text><text x="412" y="341">product_db</text>
+            <text x="622" y="341">inventory_db</text><text x="832" y="341">payment_db</text>
+          </g>
+          <g stroke="#c084fc" stroke-width="2" stroke-dasharray="6 5"><line x1="202" y1="285" x2="202" y2="314" /><line x1="412" y1="285" x2="412" y2="314" /><line x1="622" y1="285" x2="622" y2="314" /><line x1="832" y1="285" x2="832" y2="314" /></g>
+
+          <line x1="25" y1="390" x2="1095" y2="390" stroke="#2d4054" />
+          <text x="35" y="430" fill="#ffffff" font-size="23" font-weight="700">Part 2 — Order workflow through Kafka</text>
+          <text x="35" y="456" fill="#9fb3c8" font-size="14">Solid arrows are HTTP calls. Purple dashed arrows are Kafka events.</text>
+
+          <g fill="#12304c" stroke="#5bc0eb" stroke-width="2"><rect x="35" y="500" width="120" height="58" rx="8" /><rect x="195" y="500" width="145" height="58" rx="8" /><rect x="410" y="500" width="115" height="58" rx="8" /><rect x="590" y="500" width="125" height="58" rx="8" /><rect x="780" y="500" width="125" height="58" rx="8" /><rect x="960" y="500" width="115" height="58" rx="8" /></g>
+          <g fill="#dceeff" font-size="13" font-weight="700" text-anchor="middle"><text x="95" y="526">Frontend</text><text x="95" y="545">create order</text><text x="267" y="526">Order Service</text><text x="267" y="545">order + outbox</text><text x="467" y="533">Kafka</text><text x="652" y="526">Inventory</text><text x="652" y="545">reserve stock</text><text x="842" y="526">Payment</text><text x="842" y="545">Razorpay</text><text x="1017" y="526">Order Service</text><text x="1017" y="545">status: PAID</text></g>
+          <line x1="155" y1="529" x2="194" y2="529" stroke="#5bc0eb" stroke-width="2.5" marker-end="url(#arrow)" />
+          <line x1="340" y1="529" x2="409" y2="529" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#event-arrow)" />
+          <line x1="525" y1="529" x2="589" y2="529" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#event-arrow)" />
+          <line x1="715" y1="529" x2="779" y2="529" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#event-arrow)" />
+          <line x1="905" y1="529" x2="959" y2="529" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#event-arrow)" />
+          <g fill="#c084fc" font-size="11" text-anchor="middle"><text x="375" y="582">orders.created.v1</text><text x="552" y="602">inventory.reserved.v1</text><text x="747" y="582">payments.completed.v1</text></g>
+        </svg>
+        <figcaption style="margin-top: 0.6rem; color: #9fb3c8;">EventFlow Commerce HLD: direct browser requests go through the gateway; business workflow changes move asynchronously through Kafka.</figcaption>
+      </figure>
+      <figure style="margin: 1.25rem 0;">
+        <img src="../assets/eventflow-commerce-hld.svg" alt="EventFlow Commerce high-level design showing the public request architecture and private service boundaries." style="display: block; width: 100%; height: auto; border-radius: 10px;" />
+        <figcaption style="margin-top: 0.6rem; color: #9fb3c8;">EventFlow Commerce HLD: public request architecture and private service boundaries.</figcaption>
+      </figure>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">2.</span> Why use microservices instead of one large application?</summary>
+    <div class="qa-body">
+      <p>Each business capability is isolated: orders, inventory, products, and payments can be deployed or changed independently. The trade-off is more deployment, networking, and observability complexity. For a small project, this architecture is used to demonstrate distributed-system design.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">3.</span> What does the API Gateway do?</summary>
+    <div class="qa-body">
+      <p>The gateway is the single public backend entry point. It routes <code>/api/v1/orders/**</code> to Order Service, product requests to Product Catalog, and so on. It also validates JWTs, handles CORS, and applies a request-rate limit before requests reach private services.</p>
+      <p><strong>EventFlow security flow:</strong> the API Gateway is publicly reachable, but that does not mean every route is public.</p>
+      <ul>
+        <li><code>POST /api/v1/orders</code> is protected and requires the user's Keycloak JWT.</li>
+        <li>The gateway acts as an <strong>OAuth2 Resource Server</strong>. It verifies the token's signature with Keycloak's public signing keys and validates its issuer and expiry time.</li>
+        <li>A missing, invalid, expired, or forged token is rejected with <code>401 Unauthorized</code> before the request reaches Order Service.</li>
+        <li>Order Service validates the JWT again and requires the <code>orders.write</code> scope. This defense-in-depth check protects the service even if gateway routing or network configuration is changed incorrectly.</li>
+        <li>Order, Inventory, Payment, and Product services use Render's private network, so internet clients cannot call them directly. Public backend traffic must enter through the gateway.</li>
+        <li>Product catalogue routes are intentionally public so users can browse products before signing in.</li>
+        <li><code>/health</code> and API-documentation routes are also public for Render health monitoring and developer access. In production, documentation access can be restricted if required.</li>
+      </ul>
+      <pre><code>Public client
+    |
+    v
+API Gateway (public + JWT validation)
+    |
+    v
+Order Service (private + JWT validation + orders.write scope)</code></pre>
+      <p><strong>Interview summary:</strong> public reachability and public authorization are different. The gateway can be reachable from the internet while Spring Security still protects selected routes, and private services add their own authorization checks rather than trusting network location alone.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Spring Boot and Java Layers</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">4.</span> What is Spring Boot?</summary>
+    <div class="qa-body">
+      <p><strong>Spring Boot</strong> is an opinionated extension of the Spring Framework that makes it faster to create stand-alone, production-ready Java applications. It reduces manual configuration by providing sensible defaults while still allowing those defaults to be overridden.</p>
+      <p>Its main features are:</p>
+      <ul>
+        <li><strong>Auto-configuration:</strong> configures beans automatically based on the dependencies on the classpath. For example, adding the web starter configures Spring MVC, JSON conversion, validation, and an embedded server.</li>
+        <li><strong>Starter dependencies:</strong> packages compatible libraries for common use cases, such as <code>spring-boot-starter-web</code>, <code>spring-boot-starter-data-jpa</code>, and <code>spring-boot-starter-security</code>.</li>
+        <li><strong>Embedded server:</strong> applications can run directly with an embedded Tomcat, Jetty, or Undertow server instead of deploying a WAR file to an external server.</li>
+        <li><strong>Externalized configuration:</strong> environment-specific settings can come from <code>application.properties</code>, YAML, environment variables, command-line arguments, and profiles.</li>
+        <li><strong>Production support:</strong> Spring Boot Actuator provides health checks, metrics, environment information, and observability endpoints.</li>
+        <li><strong>Spring ecosystem integration:</strong> it works with Spring MVC, WebFlux, Data JPA, Security, Kafka, testing tools, and dependency injection.</li>
+      </ul>
+      <pre><code>@SpringBootApplication
+public class Application {
+  public static void main(String[] args) {
+    SpringApplication.run(Application.class, args);
+  }
+}</code></pre>
+      <p><code>@SpringBootApplication</code> combines <code>@Configuration</code>, <code>@EnableAutoConfiguration</code>, and <code>@ComponentScan</code>. <code>SpringApplication.run()</code> creates the application context, discovers components, applies auto-configuration, and starts the embedded server.</p>
+      <p><strong>Spring vs Spring Boot:</strong> Spring is the broader framework that provides features such as dependency injection, MVC, data access, and security. Spring Boot builds on Spring and simplifies application setup, dependency management, configuration, execution, and production monitoring. It does not replace Spring.</p>
+      <p><strong>Interview summary:</strong> Spring Boot helps developers focus on business logic by minimizing boilerplate configuration and providing a consistent way to build, run, test, and monitor Spring applications.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">5.</span> What are controller, service, repository, and entity layers?</summary>
+    <div class="qa-body">
+      <ul>
+        <li><strong>Controller:</strong> receives HTTP requests and returns HTTP responses.</li>
+        <li><strong>Service:</strong> contains business rules, such as creating an order or reserving inventory.</li>
+        <li><strong>Repository:</strong> reads and writes database records through Spring Data JPA.</li>
+        <li><strong>Entity:</strong> a Java class mapped to a PostgreSQL table.</li>
+      </ul>
+      <pre>HTTP request → Controller → Service → Repository → PostgreSQL</pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">6.</span> What does dependency injection mean?</summary>
+    <div class="qa-body">
+      <p>Spring creates and supplies required objects instead of classes manually creating them with <code>new</code>. For example, Order Service receives its repository and Kafka publisher through its constructor. This reduces coupling and makes testing easier.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">7.</span> What does <code>@Transactional</code> do?</summary>
+    <div class="qa-body">
+      <p>It groups database operations into one atomic unit of work. If an operation fails, Spring rolls back the transaction instead of leaving partial database changes. It is important when updating an order status after a business event.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Kafka and the Order Workflow</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">8.</span> What is Apache Kafka?</summary>
+    <div class="qa-body">
+      <p><strong>Apache Kafka is a distributed event-streaming platform</strong> designed for high-throughput, fault-tolerant, real-time data processing.</p>
+      <p>A service publishes events to a named topic, and other services consume those events when ready. Kafka stores events durably, distributes topic partitions across brokers, and replicates data for resilience. This lets services communicate asynchronously without directly calling or waiting for one another.</p>
+      <p><strong>Learn more:</strong> <a href="https://www.geeksforgeeks.org/apache-kafka/apache-kafka/" target="_blank" rel="noopener noreferrer">Apache Kafka — GeeksforGeeks</a></p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">9.</span> What are producers, consumers, topics, and consumer groups?</summary>
+    <div class="qa-body">
+      <ul>
+        <li><strong>Producer:</strong> sends an event, for example Order Service.</li>
+        <li><strong>Topic:</strong> named stream of events, such as <code>orders.created.v1</code>.</li>
+        <li><strong>Consumer:</strong> reads events, for example Inventory Service.</li>
+        <li><strong>Consumer group:</strong> allows multiple copies of one service to share message processing work safely.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">10.</span> How does an order become paid?</summary>
+    <div class="qa-body">
+      <ol>
+        <li>
+          <strong>User signs in.</strong><br>
+          Frontend → Keycloak/Google → JWT access token.<br>
+          The frontend sends this token with protected API requests. The API Gateway verifies that the token is legitimate before forwarding the request.
+        </li>
+        <li>
+          <strong>User creates an order.</strong><br>
+          Frontend → API Gateway → Order Service.
+          <ul>
+            <li>Order Service creates an order in <code>order_db</code> with status <code>PENDING_INVENTORY</code>.</li>
+            <li><code>PENDING_INVENTORY</code> means that the order exists, but stock has not yet been confirmed.</li>
+            <li>In the same database transaction, it saves an unpublished <code>orders.created.v1</code> event in <code>outbox_events</code>.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Why use <code>outbox_events</code>?</strong><br>
+          Sending directly to Kafka after saving the order is simpler, but Kafka could be temporarily unavailable after the database save succeeds. The order would then exist while Inventory Service would never receive its event. Saving the order and event in one transaction ensures that either both are saved or neither is saved.
+        </li>
+        <li>
+          <strong>The order event is published.</strong><br>
+          <code>OutboxPublisher</code> runs every second. It reads unpublished rows from <code>outbox_events</code>, sends them to the Kafka topic <code>orders.created.v1</code>, and then marks them as published.
+        </li>
+        <li>
+          <strong>Inventory is reserved.</strong><br>
+          Inventory Service consumes <code>orders.created.v1</code>.
+          <ul>
+            <li>It reduces <code>available_quantity</code> and increases <code>reserved_quantity</code> in <code>inventory_db</code>.</li>
+            <li>For an order of one unit, <code>available: 50, reserved: 0</code> becomes <code>available: 49, reserved: 1</code>.</li>
+            <li>It publishes <code>inventory.reserved.v1</code>, or <code>inventory.reservation-failed.v1</code> when stock is insufficient.</li>
+            <li>It stores the Kafka <code>eventId</code> in <code>processed_events</code> so that a duplicate delivery cannot reserve stock twice.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Order status is updated and payment begins.</strong><br>
+          Order Service and Payment Service consume <code>inventory.reserved.v1</code> using separate Kafka consumer groups.
+          <ul>
+            <li>Order Service changes the status from <code>PENDING_INVENTORY</code> to <code>INVENTORY_RESERVED</code>.</li>
+            <li>Payment Service creates a Razorpay test checkout order and stores a pending payment in <code>payment_db</code>.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>The user completes the Razorpay payment.</strong><br>
+          The frontend opens Razorpay Checkout. After payment, Payment Service verifies Razorpay's signature, preventing a client from falsely claiming that a payment succeeded.
+          <ul>
+            <li>Payment Service marks the payment as <code>PAID</code>.</li>
+            <li>It publishes <code>payments.completed.v1</code>.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>The order becomes paid.</strong><br>
+          Order Service consumes <code>payments.completed.v1</code> and changes the order status to <code>PAID</code>. Inventory's reserved count is finalized, so the sold unit remains removed from available stock. The frontend polls the order endpoint and displays <strong>Paid</strong>.
+        </li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">11.</span> What is eventual consistency?</summary>
+    <div class="qa-body">
+      <p>An order is saved before inventory and payment are complete, so the system is not immediately consistent everywhere. Its status changes as later Kafka events arrive: <code>Pending Inventory → Inventory Reserved → Paid</code>. This is normal in event-driven microservices.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">12.</span> What is the outbox pattern used by Order Service?</summary>
+    <div class="qa-body">
+      <p>The order and its outgoing event are stored together in the Order Service database. A publisher later sends the stored event to Kafka. This reduces the risk of saving an order successfully but losing the event because Kafka was temporarily unavailable.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Authentication and Security</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">13.</span> What is Keycloak?</summary>
+    <div class="qa-body">
+      <p>Keycloak is an identity and access-management server. It manages user accounts, login pages, Google OAuth integration, roles, scopes, and JSON Web Tokens. Your application does not store users' Google passwords.</p>
+      <p>Keycloak maintains <strong>one identity for each user</strong> and can link that identity to multiple authentication methods or external identity providers, such as a username and password, Google, Microsoft, or another OpenID Connect/SAML provider. The user can therefore sign in through different supported methods while the application continues to recognize the same account.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">14.</span> What are OAuth 2.0, OpenID Connect, and JWT?</summary>
+    <div class="qa-body">
+      <p><strong>OAuth 2.0 is the industry-standard delegated-authorization framework.</strong> It allows a third-party application to obtain limited access to a user's protected resources on an HTTP service—such as Google or GitHub—without exposing the user's login credentials to that application. Instead of sharing the user's password, OAuth uses access tokens that are normally short-lived and restricted by permissions called <strong>scopes</strong>.</p>
+      <p>An access token is a credential used to call an API. It may be a cryptographically signed structured token such as a JWT or an opaque, securely generated random value. OAuth 2.0 defines authorization delegation; it does not itself define user authentication.</p>
+
+      <h3>OAuth 2.0 participants</h3>
+      <ul>
+        <li><strong>Resource Owner:</strong> the user who owns the protected data—for example, a user who owns a Google profile.</li>
+        <li><strong>Client:</strong> the application requesting limited access—for example, a job portal requesting permission to read the user's basic Google profile.</li>
+        <li><strong>Authorization Server:</strong> authenticates the user, obtains consent, and issues tokens—for example, Google Authorization Server or Keycloak.</li>
+        <li><strong>Resource Server:</strong> the API holding protected resources. It accepts the access token, validates it, and checks whether its scopes permit the requested operation.</li>
+      </ul>
+
+      <figure style="margin: 1.25rem 0;">
+        <img src="../assets/oauth2-workflow.jpeg" alt="Conceptual OAuth 2.0 workflow between the client, resource owner, authorization server, and resource server." style="display: block; width: 100%; height: auto; border-radius: 10px;" />
+        <figcaption style="margin-top: .5rem; color: var(--muted);">Conceptual OAuth 2.0 delegated-authorization workflow.</figcaption>
+      </figure>
+
+      <h3>Conceptual workflow shown above</h3>
+      <ol>
+        <li><strong>Authorization request:</strong> the client asks the resource owner for permission to access specific resources.</li>
+        <li><strong>Authorization grant:</strong> after authentication and consent, the client receives a grant representing the approved authorization.</li>
+        <li><strong>Token request:</strong> the client presents the authorization grant to the authorization server.</li>
+        <li><strong>Access token:</strong> the authorization server validates the client and grant, then issues a scoped access token.</li>
+        <li><strong>Protected-resource request:</strong> the client sends the access token to the resource server, normally as <code>Authorization: Bearer &lt;token&gt;</code>.</li>
+        <li><strong>Protected resource:</strong> after validating the token and required scopes, the resource server returns the permitted data.</li>
+      </ol>
+      <p><strong>Modern browser/mobile flow:</strong> applications normally use Authorization Code Flow with PKCE. The user is redirected to the authorization server, so the client never receives or handles the user's Google, GitHub, or Keycloak password. The authorization code is exchanged for tokens, and PKCE prevents a stolen code from being redeemed without the original verifier.</p>
+
+      <h3>OAuth 2.0 vs OpenID Connect vs JWT</h3>
+      <ul>
+        <li><strong>OAuth 2.0:</strong> answers, “What is this client allowed to access?” It provides delegated authorization through access tokens and scopes.</li>
+        <li><strong>OpenID Connect (OIDC):</strong> adds authentication and identity on top of OAuth 2.0. It introduces an <code>id_token</code> that tells the client who authenticated.</li>
+        <li><strong>JWT:</strong> is a compact token format, not an authorization protocol. A JWT contains signed claims such as issuer, subject, audience, expiry, roles, and scopes. OAuth access tokens and OIDC ID tokens may use JWT format, but OAuth also supports opaque access tokens.</li>
+      </ul>
+      <p>In EventFlow, Keycloak acts as the authorization/OpenID provider. The frontend obtains tokens using Authorization Code Flow with PKCE. The API Gateway and Order Service act as OAuth 2.0 Resource Servers: they validate the access token's signature, issuer, audience, and expiry, then enforce scopes such as <code>orders.write</code>.</p>
+      <p><strong>Interview answer:</strong> “OAuth 2.0 lets an application access a user's protected resources without receiving the user's password. The user authorizes specific scopes, the authorization server issues a limited access token, and the resource server validates that token before returning data. OpenID Connect adds login and identity through an ID token, while JWT is only one possible format used to represent tokens.”</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">15.</span> What is PKCE and why does the React frontend use it?</summary>
+    <div class="qa-body">
+      <p>PKCE protects the OAuth authorization-code flow for browser applications. The frontend creates a temporary secret, sends only a derived challenge during login, and proves it later when redeeming the authorization code. It helps prevent intercepted login codes from being used by an attacker.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Notifications</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">16.</span> How do push notifications work with Firebase, and how can you build your own notification service?</summary>
+    <div class="qa-body">
+      <h3>1. Push notifications with Firebase Cloud Messaging (FCM)</h3>
+      <p>Your application identifies a person with its own <code>userId</code>. When the user opens your browser or mobile app, the client registers with Firebase Cloud Messaging (FCM) and receives an <strong>FCM registration token</strong>.</p>
+      <pre>userId → FCM registration token</pre>
+      <p>Your backend stores this mapping. Later, when it needs to notify that user, it finds the token and sends the message to FCM.</p>
+      <pre>Your Backend → FCM → Browser / Android / iOS</pre>
+      <p>FCM uses the token to identify a particular app installation or browser endpoint. It does <strong>not</strong> identify the user, and the token is <strong>not</strong> an IP address. The user's IP or network can change without affecting your stored mapping.</p>
+      <p>The main benefit is background delivery: FCM can use the browser, Android, or iOS push infrastructure even when the app is not actively connected to your server.</p>
+
+      <h3>2. Building your own real-time notification service</h3>
+      <p>For live notifications inside an open app, you can keep a persistent WebSocket connection between each client and your own notification service.</p>
+      <pre>Browser/App ⇄ WebSocket ⇄ Your Notification Service
+                         userId → active connection</pre>
+      <p>When another application service creates an event, it asks Notification Service to notify a user. The service finds that user's active connection and sends the message directly.</p>
+      <pre>Application Service → Notification Service → active WebSocket → Browser/App</pre>
+      <p>If you run multiple notification-server instances, Redis Pub/Sub can share messages between them. This lets the instance that owns the user's connection deliver the notification.</p>
+
+      <h3>3. Important limitation</h3>
+      <p>Your own WebSocket service works only while the client remains connected. It cannot reach a closed browser or disconnected app. For background or operating-system-level push notifications, use FCM, APNs, or Web Push.</p>
+      <p><strong>Simple rule:</strong> use WebSockets for instant updates while a user is online; use Firebase/FCM when a notification must reach them outside the active app session.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Data and Deployment</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">17.</span> Why does each service have its own PostgreSQL database?</summary>
+    <div class="qa-body">
+      <p>This is called <strong>database per service</strong>. Order Service owns <code>order_db</code>, Inventory Service owns <code>inventory_db</code>, and so on. Services communicate changes with Kafka events instead of directly modifying another service's tables.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">18.</span> What are Docker and Render used for?</summary>
+    <div class="qa-body">
+      <p>Docker packages each Java service with its runtime and dependencies into a reproducible container image. Render builds and runs those containers, hosts the React static site, provides private networking and PostgreSQL databases, and supplies configuration through environment variables.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">19.</span> What is Aiven's role?</summary>
+    <div class="qa-body">
+      <p>Aiven hosts the managed Kafka cluster. The services connect securely using SASL over SSL. Aiven stores the Kafka topics and delivers events between Order, Inventory, and Payment Services.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">20.</span> What is intentionally not included?</summary>
+    <div class="qa-body">
+      <p>Redis is not deployed; the gateway's limiter is in-memory and suitable for one instance. Production log aggregation in Grafana is also not configured. Razorpay uses test-mode credentials. These are reasonable future improvements, not blockers for the current project.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Concurrency in Microservices</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">21.</span> How would you handle concurrency in a microservice architecture?</summary>
+    <div class="qa-body">
+      <p>I would handle concurrency at the smallest boundary that owns the data instead of trying to create one distributed lock for the entire system.</p>
+      <ul>
+        <li><strong>Protect each service's database:</strong> use short transactions, unique constraints, and atomic conditional updates. In Spring Boot/JPA, optimistic locking with a <code>@Version</code> field is a good default when concurrent updates are possible; retry or return a conflict when the version has changed.</li>
+        <li><strong>Make operations idempotent:</strong> attach an idempotency key or event ID to requests and messages, store processed IDs, and ensure retries cannot create duplicate orders, payments, or inventory reservations.</li>
+        <li><strong>Serialize related events:</strong> publish Kafka events using the business entity ID, such as <code>orderId</code>, as the partition key. Events for the same entity then remain ordered within one partition, while unrelated entities can be processed concurrently.</li>
+        <li><strong>Use safe messaging patterns:</strong> combine local database changes and outgoing events with the transactional outbox pattern. Consumers should acknowledge messages only after successful processing and use bounded retries plus a dead-letter topic for repeated failures.</li>
+        <li><strong>Coordinate multi-service workflows:</strong> use a Saga with compensating actions rather than a transaction spanning several service databases. For example, release reserved stock if payment fails.</li>
+        <li><strong>Use distributed locks sparingly:</strong> Redis or database locks can protect rare cross-instance critical sections, but require timeouts and ownership tokens. Prefer database constraints, partitioning, or idempotency because locks add failure modes and reduce throughput.</li>
+        <li><strong>Control load:</strong> scale stateless service instances horizontally, use bounded thread/connection pools, rate limiting, timeouts, circuit breakers, and backpressure so a traffic spike does not exhaust downstream services.</li>
+      </ul>
+      <p><strong>Interview example:</strong> if two users try to buy the last item, Inventory Service performs an atomic update such as <code>UPDATE inventory SET quantity = quantity - 1 WHERE product_id = ? AND quantity &gt; 0</code>. Only one update succeeds. The reservation event is processed idempotently, and if payment later fails, the Saga releases the stock.</p>
+      <p><strong>Key point:</strong> concurrency is controlled through data ownership, atomic updates, optimistic locking, message ordering, idempotency, and failure recovery—not by assuming a message will be delivered only once.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Production Scenarios and System Design</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">23.</span> What would you do if the latest database backup were corrupted?</summary>
+    <div class="qa-body">
+      <p>I would not overwrite production or immediately restore an unverified backup. First, I would declare an incident, stop the backup-retention process from deleting older recovery points, identify the corruption window, and preserve database logs and evidence.</p>
+      <ol>
+        <li><strong>Choose a clean recovery point:</strong> verify checksums and restore the newest known-good full backup into an isolated environment.</li>
+        <li><strong>Recover newer changes:</strong> replay incremental backups or PostgreSQL WAL archives to perform point-in-time recovery to just before the corruption occurred.</li>
+        <li><strong>Validate:</strong> run integrity checks, compare important row counts and business totals, execute application smoke tests, and have data owners verify critical records.</li>
+        <li><strong>Restore service safely:</strong> switch traffic only after validation, reconcile any writes made after the recovery point from durable events or audit logs, and closely monitor the system.</li>
+        <li><strong>Prevent recurrence:</strong> determine whether the cause was storage failure, bad backup configuration, or logical corruption. Keep multiple generations and an off-site copy, use immutable retention where possible, alert on failed checksum checks, and regularly perform automated restore drills.</li>
+      </ol>
+      <p><strong>Key point:</strong> a backup is trustworthy only after it has been successfully restored and validated. Recovery objectives such as RPO (acceptable data loss) and RTO (acceptable downtime) determine which recovery strategy to use.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">24.</span> How would you debug a PostgreSQL query that takes five seconds?</summary>
+    <div class="qa-body">
+      <ol>
+        <li><strong>Capture the exact query:</strong> include its real parameters and execution frequency. Use Spring/Hibernate metrics, <code>pg_stat_statements</code>, and slow-query logging rather than guessing from one local run.</li>
+        <li><strong>Inspect the plan:</strong> run <code>EXPLAIN (ANALYZE, BUFFERS)</code> in a safe environment. Look for sequential scans on large tables, inaccurate row estimates, expensive sorts, nested loops processing many rows, disk reads, and temporary-file usage.</li>
+        <li><strong>Check indexes:</strong> ensure columns used by selective <code>WHERE</code>, <code>JOIN</code>, and <code>ORDER BY</code> clauses have suitable indexes. Consider a composite or partial index based on the access pattern, but avoid adding unused indexes because they slow writes.</li>
+        <li><strong>Check query and data shape:</strong> return only required columns and rows, avoid N+1 queries from JPA, paginate large results, simplify unnecessary joins, and check for table bloat or stale statistics. Run <code>ANALYZE</code> or review autovacuum health when estimates are wrong.</li>
+        <li><strong>Check waiting:</strong> determine whether the five seconds is execution time or time waiting for a lock, connection, CPU, memory, or disk I/O. Inspect <code>pg_stat_activity</code>, blocking sessions, connection-pool metrics, and system resources.</li>
+        <li><strong>Verify the improvement:</strong> compare plans and latency under production-like data and concurrency, then monitor p95/p99 latency after deployment.</li>
+      </ol>
+      <pre><code>EXPLAIN (ANALYZE, BUFFERS)
+SELECT id, status
+FROM orders
+WHERE customer_id = 42
+ORDER BY created_at DESC
+LIMIT 20;</code></pre>
+      <p><strong>Interview point:</strong> I would optimize from evidence in the execution plan. “Add an index” is not always the answer—the query may actually be blocked, returning too much data, suffering from an ORM N+1 problem, or using stale planner statistics.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">25.</span> How would you design an e-commerce system?</summary>
+    <div class="qa-body">
+      <p>I would begin with requirements and scale: browsing and search are read-heavy, while inventory and payment require correctness. I would then split the system by business capability rather than creating a service for every table.</p>
+      <pre>Client → CDN / Load Balancer → API Gateway
+                            ├→ Product Service → Product DB / Search Index
+                            ├→ Cart Service → Redis
+                            ├→ Order Service → Order DB
+                            ├→ Inventory Service → Inventory DB
+                            ├→ Payment Service → Payment Provider
+                            └→ User / Notification Services
+
+Order, inventory, payment and notification events ↔ Kafka</pre>
+      <ul>
+        <li><strong>Catalog and search:</strong> cache popular products and images through a CDN; use a search index for text, filtering, and ranking.</li>
+        <li><strong>Cart:</strong> keep active carts in Redis for low latency and persist them when durability or recovery is required.</li>
+        <li><strong>Checkout:</strong> create an order with a price snapshot, atomically reserve inventory, and call the payment provider with an idempotency key.</li>
+        <li><strong>Consistency:</strong> use a Saga for the order workflow. If payment fails, release inventory; if confirmation fails temporarily, retry safely. Use the outbox pattern to avoid losing events after a database commit.</li>
+        <li><strong>Data ownership:</strong> each service owns its data. Strong consistency is used inside inventory and payment boundaries; catalog views and order-status projections can be eventually consistent.</li>
+        <li><strong>Reliability and security:</strong> add timeouts, bounded retries with jitter, circuit breakers, dead-letter topics, rate limiting, authentication and authorization, encrypted secrets, audit logs, metrics, traces, and alerts.</li>
+        <li><strong>Scaling:</strong> keep services stateless where possible, scale hot services independently, partition Kafka by entity ID, add read replicas when appropriate, and prevent overselling with conditional inventory updates.</li>
+      </ul>
+      <p><strong>Key point:</strong> I would first build a modular system with clear domain boundaries and extract independently scalable services only when scale or team ownership justifies the added operational complexity.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">26.</span> What happens if Kafka fails before a message or consumer offset is committed?</summary>
+    <div class="qa-body">
+      <p>The result depends on which commit failed:</p>
+      <ul>
+        <li><strong>Producer failure before Kafka acknowledges the record:</strong> the producer may not know whether Kafka stored it. Retrying can duplicate the event unless the producer is idempotent and the consumer also handles duplicate event IDs.</li>
+        <li><strong>Database commits but event publication fails:</strong> the business data exists but no event is sent. Use the transactional outbox pattern: store the business change and outbox row in one database transaction, then keep retrying publication.</li>
+        <li><strong>Consumer processes the event but crashes before committing its offset:</strong> Kafka delivers that event again after restart or rebalance. This gives at-least-once delivery, so the consumer must be idempotent—for example, store the event ID with a unique constraint in the same transaction as the business update.</li>
+        <li><strong>Consumer commits the offset before processing finishes:</strong> a crash can lose the work because Kafka considers the record consumed. Therefore, commit the offset only after successful processing; in Spring Kafka, configure manual or record-based acknowledgement when the workflow requires it.</li>
+      </ul>
+      <p>Use retries with backoff for temporary errors and send repeatedly failing records to a dead-letter topic. Kafka transactions can atomically combine consumed offsets with records produced back to Kafka, but they do not make a Kafka write and an external PostgreSQL transaction globally atomic.</p>
+      <p><strong>Interview answer:</strong> “If processing finishes but the offset is not committed, Kafka will redeliver the record. I design for that using at-least-once delivery, idempotent consumers, unique event IDs, and offset acknowledgement after the database transaction succeeds. For the database-to-Kafka gap, I use the outbox pattern.”</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Java Fundamentals</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">27.</span> What is the difference between <code>HashMap</code> and <code>Hashtable</code>?</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Area</th><th><code>HashMap</code></th><th><code>Hashtable</code></th></tr>
+        <tr><td>Thread safety</td><td>Not synchronized</td><td>Methods are synchronized</td></tr>
+        <tr><td>Nulls</td><td>Allows one null key and multiple null values</td><td>Allows neither null keys nor null values</td></tr>
+        <tr><td>Performance</td><td>Usually faster without synchronization overhead</td><td>Usually slower because every operation is synchronized</td></tr>
+        <tr><td>API status</td><td>Modern Collections Framework class</td><td>Legacy class</td></tr>
+        <tr><td>Iteration</td><td>Uses fail-fast iterators</td><td>Supports legacy <code>Enumeration</code> and iterators</td></tr>
+      </table>
+      <p>For concurrent access, prefer <code>ConcurrentHashMap</code> rather than <code>Hashtable</code>; it provides better concurrency and atomic operations such as <code>computeIfAbsent</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">28.</span> What is Java, and why is it platform independent?</summary>
+    <div class="qa-body">
+      <p>Java is a strongly typed, object-oriented programming language and runtime platform. The Java compiler converts source code into platform-neutral bytecode. A JVM built for Windows, Linux, or macOS executes the same bytecode, which gives Java its “write once, run anywhere” behavior.</p>
+      <p>Java is therefore platform independent at the bytecode level; the JVM implementation itself is platform specific.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">29.</span> What is the difference between JVM, JRE, and JDK?</summary>
+    <div class="qa-body">
+      <ul>
+        <li><strong>JVM:</strong> executes Java bytecode and manages memory, garbage collection, class loading, and JIT compilation.</li>
+        <li><strong>JRE:</strong> the JVM plus standard libraries and files needed to run Java applications.</li>
+        <li><strong>JDK:</strong> the JRE/runtime plus development tools such as <code>javac</code>, <code>jar</code>, <code>javadoc</code>, and debuggers.</li>
+      </ul>
+      <p>In short: JDK is used to develop and run; the runtime is used to run; the JVM executes the bytecode.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">30.</span> What is method overloading and method overriding?</summary>
+    <div class="qa-body">
+      <p><strong>Overloading</strong> means methods in the same class have the same name but different parameter lists. It is resolved at compile time; changing only the return type is not enough.</p>
+      <p><strong>Overriding</strong> means a subclass supplies a new implementation with the same compatible signature as an inherited method. It is selected at runtime through dynamic dispatch. Use <code>@Override</code> so the compiler can validate it.</p>
+      <pre><code>class Printer {
+  void print(String value) {}       // overloaded
+  void print(String value, int n) {}
+}
+
+class Animal { void speak() {} }
+class Dog extends Animal {
+  @Override void speak() { System.out.println("Bark"); }
+}</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">31.</span> What are the four pillars of OOP?</summary>
+    <div class="qa-body">
+      <ul>
+        <li><strong>Encapsulation:</strong> keep state and behavior together and control access through a class's API.</li>
+        <li><strong>Abstraction:</strong> expose essential behavior while hiding implementation details, often through interfaces.</li>
+        <li><strong>Inheritance:</strong> derive a class from another class to reuse or specialize behavior.</li>
+        <li><strong>Polymorphism:</strong> use one interface or parent type with multiple implementations selected at runtime.</li>
+      </ul>
+      <p>In production code, composition is often preferred over deep inheritance because it creates looser coupling.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">32.</span> How many data types are there in Java, and what are they?</summary>
+    <div class="qa-body">
+      <p>Java types fall into two categories. There are exactly eight primitive types: <code>byte</code>, <code>short</code>, <code>int</code>, <code>long</code>, <code>float</code>, <code>double</code>, <code>char</code>, and <code>boolean</code>. Reference types include classes, interfaces, arrays, enums, records, and <code>String</code>.</p>
+      <p>Primitives store their values directly and cannot be null. Reference variables hold references to objects and may be null.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">33.</span> Which Java data structure stores elements in insertion order?</summary>
+    <div class="qa-body">
+      <p>It depends on the required behavior: <code>ArrayList</code> and <code>LinkedList</code> preserve list order, <code>LinkedHashSet</code> preserves insertion order while removing duplicates, and <code>LinkedHashMap</code> preserves key insertion order. A plain <code>HashSet</code> or <code>HashMap</code> does not guarantee insertion order.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">34.</span> What is shallow cloning versus deep cloning?</summary>
+    <div class="qa-body">
+      <p>A <strong>shallow copy</strong> creates a new outer object but copies references to nested mutable objects. Changing nested state through one copy is visible through the other. A <strong>deep copy</strong> recursively creates independent copies of mutable nested objects, so the two object graphs can change independently.</p>
+      <p>Java's default <code>Object.clone()</code> is shallow and its API is error-prone. Prefer explicit copy constructors, factory methods, immutable value objects, or mapping code. Deep copying costs more CPU and memory and must define how cycles and shared references are handled.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">35.</span> Explain multithreading concepts such as race conditions and deadlocks.</summary>
+    <div class="qa-body">
+      <p>A <strong>race condition</strong> occurs when multiple threads access shared mutable state and the result depends on timing—for example, two threads read the same stock value and both decrement it. Prevent it with immutability, atomic operations, synchronization, database constraints, or by avoiding shared state.</p>
+      <p>A <strong>deadlock</strong> occurs when threads wait forever for locks held by each other. Prevent it by using a consistent lock order, keeping critical sections short, avoiding nested locks, and using timed lock acquisition where appropriate.</p>
+      <p>Also watch for starvation, livelock, visibility problems, and thread-pool exhaustion. In Spring services, thread safety includes singleton bean fields: request-specific mutable state should not be stored in singleton services.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Spring, Security, and Testing</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">36.</span> Explain Dependency Injection and Inversion of Control in Spring.</summary>
+    <div class="qa-body">
+      <p><strong>Inversion of Control (IoC)</strong> is the broader principle that object creation and lifecycle control move from application classes to a container. <strong>Dependency Injection (DI)</strong> is how Spring implements IoC: the container creates beans and supplies their required collaborators.</p>
+      <pre><code>@Service
+class OrderService {
+  private final OrderRepository repository;
+
+  OrderService(OrderRepository repository) {
+    this.repository = repository;
+  }
+}</code></pre>
+      <p>Constructor injection is preferred because dependencies are explicit, can be <code>final</code>, and are easy to replace in tests. It reduces coupling and avoids hidden or partially initialized dependencies.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">37.</span> What is Spring Security, and how does it handle authentication and authorization?</summary>
+    <div class="qa-body">
+      <p>Spring Security is Spring's framework for securing applications. Its filter chain intercepts requests before controllers. <strong>Authentication</strong> establishes who the caller is; <strong>authorization</strong> decides whether that authenticated caller may access a resource.</p>
+      <p>For a JWT API, a bearer-token filter validates the token's signature, issuer, audience, and expiry, converts claims or roles into authorities, and stores an <code>Authentication</code> in the <code>SecurityContext</code>. URL rules such as <code>requestMatchers(...).hasRole(...)</code> and method annotations such as <code>@PreAuthorize</code> enforce authorization. Invalid identity normally returns 401; insufficient permission returns 403.</p>
+      <p>Spring Security also provides defenses and integrations for sessions, CSRF, CORS, password hashing, OAuth 2.0, and OpenID Connect.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">38.</span> What roles do JUnit and Mockito play in unit testing?</summary>
+    <div class="qa-body">
+      <p><strong>JUnit</strong> is the testing framework: it provides <code>@Test</code>, lifecycle hooks, assertions, parameterized tests, and test execution. <strong>Mockito</strong> creates mocks or spies for collaborators and lets a test stub responses and verify interactions.</p>
+      <pre><code>@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
+  @Mock OrderRepository repository;
+  @InjectMocks OrderService service;
+
+  @Test
+  void returnsOrder() {
+    when(repository.findById(1L)).thenReturn(Optional.of(new Order()));
+    assertNotNull(service.find(1L));
+    verify(repository).findById(1L);
+  }
+}</code></pre>
+      <p>Mock external boundaries, not the class under test. A unit test should remain fast and isolated; database, HTTP, and full-context behavior belongs in integration tests.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">39.</span> Which annotation is used for integration testing in Spring Boot?</summary>
+    <div class="qa-body">
+      <p><code>@SpringBootTest</code> is the common answer because it loads the full Spring application context. Combine it with JUnit's <code>@Test</code>; use <code>webEnvironment</code> when testing over HTTP and <code>@Transactional</code> when a database test should roll back afterward.</p>
+      <p>Use smaller test slices when a full context is unnecessary: <code>@WebMvcTest</code> for MVC controllers and <code>@DataJpaTest</code> for JPA repositories. Testcontainers can provide a real PostgreSQL or Kafka dependency for realistic integration tests.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">40.</span> Which annotation is used for unit testing in Spring Boot?</summary>
+    <div class="qa-body">
+      <p>The test method uses JUnit's <code>@Test</code>. A pure unit test normally does not start Spring; use <code>@ExtendWith(MockitoExtension.class)</code> when Mockito annotations such as <code>@Mock</code> and <code>@InjectMocks</code> are needed. <code>@SpringBootTest</code> is not a unit-test annotation because it loads the application context and makes the test an integration test.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">41.</span> What is JDBC used for?</summary>
+    <div class="qa-body">
+      <p>JDBC is Java's standard API for connecting to relational databases, executing parameterized SQL, reading result sets, managing transactions, and calling stored procedures. A JDBC driver translates those calls into the database's protocol.</p>
+      <p>Spring's <code>JdbcTemplate</code> reduces JDBC boilerplate, while JPA/Hibernate provides a higher-level object-relational abstraction. Use prepared statements or framework parameters rather than concatenating user input into SQL.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">42.</span> What is <code>@SpringBootApplication</code> used for?</summary>
+    <div class="qa-body">
+      <p>It marks the main Spring Boot configuration class and combines three annotations: <code>@Configuration</code>, <code>@EnableAutoConfiguration</code>, and <code>@ComponentScan</code>. It enables bean definitions, configures the application based on dependencies and properties, and scans the package containing the main class and its subpackages for components.</p>
+      <p>Place the main class in a sensible root package so controllers, services, and repositories are discovered.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">43.</span> What is the default implementation class of <code>JpaRepository</code>?</summary>
+    <div class="qa-body">
+      <p>Spring Data JPA creates a runtime proxy for the repository interface, and its standard backing implementation is <code>SimpleJpaRepository</code>. You normally declare only the interface; Spring supplies the proxy, query implementation, transaction behavior, and delegates base CRUD operations to <code>SimpleJpaRepository</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">44.</span> Explain JWT and how it works.</summary>
+    <div class="qa-body">
+      <p>A JWT is a compact token containing a Base64URL-encoded header, payload, and cryptographic signature: <code>header.payload.signature</code>. After login, the authorization server signs a token containing claims such as subject, roles, issuer, audience, and expiry. The client sends it in <code>Authorization: Bearer &lt;token&gt;</code>.</p>
+      <p>The resource server verifies the signature and validates claims before trusting the identity and permissions. A signed JWT is not encrypted—its payload can be read—so secrets must not be stored in it. Use short expirations, HTTPS, validated algorithms and keys, and a safe refresh-token strategy. Logout or immediate revocation requires additional state or short-lived access tokens.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">SQL and Data Modeling</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">45.</span> How do you create a schema in SQL?</summary>
+    <div class="qa-body">
+      <p>A schema is a namespace that groups database objects and separates ownership or domains.</p>
+      <pre><code>CREATE SCHEMA commerce AUTHORIZATION app_user;
+
+CREATE TABLE commerce.orders (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  customer_id BIGINT NOT NULL,
+  status VARCHAR(30) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+GRANT USAGE ON SCHEMA commerce TO reporting_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA commerce TO reporting_user;</code></pre>
+      <p>Run schema changes through versioned migrations such as Flyway or Liquibase rather than manually changing production.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">46.</span> How do you model one-to-one, one-to-many, and many-to-many relationships?</summary>
+    <div class="qa-body">
+      <ul>
+        <li><strong>One-to-one:</strong> place a foreign key with a <code>UNIQUE</code> constraint on one table, such as <code>profiles.user_id UNIQUE REFERENCES users(id)</code>.</li>
+        <li><strong>One-to-many:</strong> place the foreign key on the “many” table, such as <code>orders.customer_id REFERENCES customers(id)</code>.</li>
+        <li><strong>Many-to-many:</strong> create a junction table such as <code>product_category(product_id, category_id)</code> with both foreign keys and usually a composite primary key.</li>
+      </ul>
+      <p>In JPA these map to <code>@OneToOne</code>, <code>@OneToMany</code>/<code>@ManyToOne</code>, and <code>@ManyToMany</code>. Define the owning side, fetch strategy, cascade rules, and deletion behavior carefully. If a many-to-many relationship has attributes such as quantity or created date, model the junction row as its own entity.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">47.</span> What is a DBMS, and how is it different from an RDBMS?</summary>
+    <div class="qa-body">
+      <p>A <strong>DBMS</strong> is any software that stores, retrieves, secures, and manages data. An <strong>RDBMS</strong> is a DBMS based on the relational model: data is organized into tables related through keys, queried commonly with SQL, and protected using constraints and transactions.</p>
+      <p>Therefore every RDBMS is a DBMS, but not every DBMS is relational. PostgreSQL and MySQL are RDBMS products; document, key-value, graph, and time-series databases are other DBMS categories.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">APIs, Tools, and DevOps</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">48.</span> What is a Docker container?</summary>
+    <div class="qa-body">
+      <p>A container is an isolated running instance of a container image. The image packages an application, runtime, libraries, and configuration defaults; the container adds a writable runtime layer. Containers share the host OS kernel, so they are generally lighter and start faster than virtual machines.</p>
+      <p>Containers should be disposable and mostly stateless. Persist data in volumes or external services, inject secrets at runtime, run as a non-root user, set resource limits and health checks, and build small pinned images.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">49.</span> Explain Azure CI/CD pipelines.</summary>
+    <div class="qa-body">
+      <p>Azure Pipelines automates build, test, packaging, and deployment from a repository. A YAML pipeline defines triggers, stages, jobs, and steps.</p>
+      <ol>
+        <li><strong>CI:</strong> a pull request or commit triggers checkout, dependency restore, compilation, unit/integration tests, static analysis, and creation of a versioned JAR or container image.</li>
+        <li><strong>Artifact publishing:</strong> publish the verified artifact to Azure Artifacts or push the image to Azure Container Registry.</li>
+        <li><strong>CD:</strong> deploy the same immutable artifact through dev, test, staging, and production environments.</li>
+        <li><strong>Controls:</strong> use service connections, Key Vault-backed secrets, environment approvals, automated smoke tests, health checks, and rolling or blue-green deployment with rollback.</li>
+      </ol>
+      <p>The important principle is to build once, promote the same artifact, keep secrets outside YAML, and block deployment when quality checks fail.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">50.</span> Explain Azure Git version control.</summary>
+    <div class="qa-body">
+      <p>Azure Repos provides hosted Git repositories. Git is distributed: developers clone the repository, commit locally, push branches, and open pull requests into protected branches such as <code>main</code>.</p>
+      <p>A typical workflow uses short-lived feature branches, meaningful commits, pull-request reviews, linked work items, and branch policies requiring a successful build, tests, approvals, and resolved comments. Releases should use immutable tags such as <code>v1.4.0</code>. Git tracks source history; build artifacts and secrets belong in artifact registries and secret stores, not the repository.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">51.</span> How do you debug HTTP errors in REST APIs?</summary>
+    <div class="qa-body">
+      <ol>
+        <li>Reproduce the exact method, URL, headers, body, identity, environment, and timestamp; capture the status code and response.</li>
+        <li>Use a correlation or trace ID to follow the request through the gateway and services. Check structured logs, metrics, and distributed traces without exposing credentials.</li>
+        <li>Classify the result: 400 validation, 401 authentication, 403 authorization, 404 routing/resource, 409 state conflict, 429 rate limit, 5xx server or dependency failure.</li>
+        <li>Check gateway routes, CORS or TLS, payload mapping, controller validation, exception stack traces, database calls, downstream timeouts, and recent deployments.</li>
+        <li>Reproduce with a focused test, fix the root cause, add a regression test, and verify latency and error rates after release.</li>
+      </ol>
+      <p>Return a consistent error body with a safe message, code, timestamp, and correlation ID; do not return internal stack traces to clients.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">52.</span> How and why do you use Postman?</summary>
+    <div class="qa-body">
+      <p>I use Postman to call and inspect APIs independently of the frontend. It helps validate methods, parameters, JSON bodies, authentication tokens, headers, cookies, status codes, response schemas, and latency.</p>
+      <p>I organize requests into collections, use environments for base URLs and credentials, write pre-request scripts and assertions, chain values such as tokens between requests, and run collections as regression checks with the Postman CLI/Newman. Secrets should be kept in protected variables and not committed in exported collections.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">53.</span> How and why do you use Figma?</summary>
+    <div class="qa-body">
+      <p>I use Figma to inspect user flows, layouts, component states, design tokens, spacing, typography, colors, and exported assets before implementing a UI. Dev Mode helps translate measurements and styles into React/CSS, while comments let developers and designers resolve ambiguous behavior.</p>
+      <p>I treat the design as a shared specification, not generated production code. I confirm responsive behavior, loading/empty/error states, accessibility, and reusable component boundaries, then compare the implementation with the design during review.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Production and Collaboration Scenarios</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">54.</span> How would you debug a problem occurring in production?</summary>
+    <div class="qa-body">
+      <p>I follow a stabilize–investigate–fix–learn process:</p>
+      <ol>
+        <li>Assess impact, declare the incident at the correct severity, assign ownership, and communicate a concise status.</li>
+        <li>Mitigate first when users are affected: roll back a recent release, disable a feature flag, fail over, or scale safely. Avoid untested production edits.</li>
+        <li>Use timestamps, correlation IDs, logs, metrics, traces, deployment history, dependency health, and resource graphs to narrow the failing component.</li>
+        <li>Form and test one hypothesis at a time. Reproduce in a safe environment with production-like data while protecting sensitive information.</li>
+        <li>Deploy the smallest reviewed fix, monitor technical and business signals, and keep a rollback ready.</li>
+        <li>Write a blameless root-cause analysis and add tests, alerts, runbooks, or design changes that prevent recurrence.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">55.</span> How would you determine whether a microservice failed?</summary>
+    <div class="qa-body">
+      <p>I would combine symptoms rather than trust one signal: readiness/liveness health checks, request error rate and latency, instance restarts, CPU/memory/thread/connection-pool saturation, dependency failures, Kafka consumer lag, queue depth, and business metrics such as orders stuck in one state.</p>
+      <p>I would trace a failed request using its correlation ID, check the API gateway and service logs, inspect distributed traces, compare the failure time with deployments or configuration changes, and test the service and its dependencies from inside the same network. A healthy process can still be functionally broken, so readiness checks should cover essential capability without making every optional dependency cause a restart loop.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">56.</span> As a backend engineer, how would you collaborate when the problem appears to be in React?</summary>
+    <div class="qa-body">
+      <p>I would treat it as a shared product issue rather than hand it off based on team boundaries. First I would reproduce it and collect the browser console error, network request/response, payload, headers, user steps, environment, and correlation ID. I would verify the API contract and determine whether the frontend sent an invalid request, misunderstood a field, or received a backend response that violates the contract.</p>
+      <p>I would share a minimal reproduction and evidence with the frontend engineer, pair-debug if useful, and help fix either side. We would add contract tests or an OpenAPI-generated client, improve error handling, verify the complete user flow, and document the root cause. Ownership follows the fault, but responsibility for resolution is shared.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">57.</span> Give scenario-based examples related to your previous projects.</summary>
+    <div class="qa-body">
+      <p>Answer with STAR: Situation, Task, Action, and Result. Use real metrics and never invent details. Possible examples from these projects are:</p>
+      <ul>
+        <li><strong>EventFlow concurrency:</strong> two requests could reserve the last item. Explain the atomic inventory update, idempotent event handling, and how you verified that overselling stopped.</li>
+        <li><strong>Kafka reliability:</strong> a service could commit data but fail to publish its event. Explain implementing the outbox pattern, retry monitoring, and the resulting reduction in stuck orders.</li>
+        <li><strong>AgriQA evolution:</strong> adding languages and optional agricultural metadata made a rigid model costly. Explain the document model and indexes, then quantify delivery time or query improvement if you measured it.</li>
+        <li><strong>Production latency:</strong> trace a slow endpoint to an execution plan, N+1 query, missing index, or dependency; explain the fix and give before/after p95 latency.</li>
+      </ul>
+      <p>End each story with what you learned and what safeguard you added.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">58.</span> How should you describe the organizational structure of your previous company?</summary>
+    <div class="qa-body">
+      <p><strong>Personalize this answer with facts:</strong> “The company was organized into [business units/products]. I worked in a cross-functional [team size]-person team containing [backend, frontend, QA, DevOps, product, design]. I reported to [role], worked with [stakeholders], and owned [services/features]. We planned through [Scrum/Kanban], reviewed code through pull requests, and coordinated releases with [team]. My individual responsibility was [specific ownership and result].”</p>
+      <p>Keep the focus on where you fit, who made decisions, how teams collaborated, and what you owned—not on drawing every reporting line.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">59.</span> What is the difference between a service-based and a product-based company?</summary>
+    <div class="qa-body">
+      <p>A <strong>service-based company</strong> primarily earns revenue by delivering expertise or projects for clients. Scope, technology, deadlines, and priorities may vary by client, and engineers often gain exposure to multiple domains.</p>
+      <p>A <strong>product-based company</strong> primarily builds and operates its own product for a market. Teams usually have longer-term ownership of architecture, reliability, customer outcomes, and a product roadmap.</p>
+      <p>These are tendencies, not guarantees: service companies can own platforms and product companies can perform client work. A strong answer explains how your preferred environment matches the role without claiming one model is universally better.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">60.</span> Are you able to work independently?</summary>
+    <div class="qa-body">
+      <p>“Yes. I can turn a defined outcome into smaller tasks, investigate unfamiliar areas, communicate risks early, make documented decisions, test my work, and carry it through deployment and monitoring. Independence does not mean working in isolation: I ask for clarification when a decision affects product scope, security, or another team, and I request review for high-risk changes. For example, [insert a real project where you independently owned a feature], resulting in [measurable result].”</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">61.</span> What is the most recent certification you completed?</summary>
+    <div class="qa-body">
+      <p><strong>Use your real certification—do not invent one:</strong> “My most recent certification was [exact certification] from [issuer], completed in [month/year]. I learned [two relevant skills] and applied them by [real project example]. The most useful part for this role was [specific concept]. I am currently strengthening [next skill or certification].”</p>
+      <p>If you have not completed a certification, say so honestly: explain the course or structured learning you are currently doing and demonstrate the skill through a real project.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">System Design and Coding</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">62.</span> How would you redesign a hotel-booking system using microservices?</summary>
+    <div class="qa-body">
+      <pre>Client → API Gateway
+       ├→ Identity Service
+       ├→ Hotel/Catalog Service → Search Index
+       ├→ Availability Service → Inventory DB
+       ├→ Reservation Service → Booking DB
+       ├→ Pricing Service
+       ├→ Payment Service → Payment Provider
+       └→ Notification Service
+
+Reservation lifecycle events ↔ Kafka</pre>
+      <p>The main correctness problem is preventing double booking. Availability Service owns room inventory and performs an atomic conditional reservation for a room type and date range. Checkout creates a short-lived hold with an expiry, Payment Service charges using an idempotency key, and a Saga confirms the reservation or compensates by releasing the hold when payment fails or times out.</p>
+      <p>Hotel descriptions and search results can be cached and eventually consistent; availability, holds, and payments require stronger consistency. Each service owns its database, publishes changes through an outbox, and consumes events idempotently. Add rate limits, retries with jitter, circuit breakers, audit logs, distributed tracing, reconciliation jobs, and alerts for stuck reservations. Start with domain boundaries and split deployment only where independent scale or ownership warrants it.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">63.</span> Write a Java program to count how many times each character occurs in <code>"Programming"</code>.</summary>
+    <div class="qa-body">
+      <pre><code>import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class CharacterFrequency {
+  public static void main(String[] args) {
+    String str = "Programming";
+    Map&lt;Character, Integer&gt; counts = new LinkedHashMap&lt;&gt;();
+
+    for (char ch : str.toCharArray()) {
+      counts.merge(ch, 1, Integer::sum);
+    }
+
+    counts.forEach((ch, count) -&gt;
+        System.out.println(ch + " = " + count));
+  }
+}</code></pre>
+      <pre>Output:
+P = 1
+r = 2
+o = 1
+g = 2
+a = 1
+m = 2
+i = 1
+n = 1</pre>
+      <p><code>LinkedHashMap</code> keeps characters in their first-seen order. This solution is O(n) time and O(k) space, where k is the number of distinct characters. Convert to lowercase first if counting should be case-insensitive.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">64.</span> Write a selection sort algorithm in Java.</summary>
+    <div class="qa-body">
+      <pre><code>import java.util.Arrays;
+
+public class SelectionSort {
+  static void sort(int[] values) {
+    for (int i = 0; i &lt; values.length - 1; i++) {
+      int minIndex = i;
+
+      for (int j = i + 1; j &lt; values.length; j++) {
+        if (values[j] &lt; values[minIndex]) {
+          minIndex = j;
+        }
+      }
+
+      if (minIndex != i) {
+        int temp = values[i];
+        values[i] = values[minIndex];
+        values[minIndex] = temp;
+      }
+    }
+  }
+
+  public static void main(String[] args) {
+    int[] values = {64, 25, 12, 22, 11};
+    sort(values);
+    System.out.println(Arrays.toString(values));
+  }
+}</code></pre>
+      <p>Selection sort repeatedly finds the smallest value in the unsorted portion and swaps it into the next position. Its time complexity is O(n²) in the best, average, and worst cases; it uses O(1) extra space and performs at most O(n) swaps. This implementation is not stable.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">65.</span> How would you implement an email notification service in Spring Boot?</summary>
+    <div class="qa-body">
+      <p>I would keep email delivery outside the main business request. An Order or User service publishes an event such as <code>OrderConfirmed</code> to Kafka. A Notification Service consumes it, checks the user's notification preferences, renders a template, and sends the email through an SMTP server or provider such as Amazon SES or SendGrid.</p>
+      <pre>Order Service → Kafka → Notification Service → Email Provider
+                         ├→ Template renderer
+                         ├→ Notification database
+                         └→ Retry topic / dead-letter queue</pre>
+      <p>In Spring Boot, add <code>spring-boot-starter-mail</code>, configure the SMTP credentials through environment variables or a secret manager, and inject <code>JavaMailSender</code>. Use <code>MimeMessageHelper</code> for HTML email and attachments:</p>
+      <pre><code>@Service
+public class EmailService {
+  private final JavaMailSender mailSender;
+
+  public EmailService(JavaMailSender mailSender) {
+    this.mailSender = mailSender;
+  }
+
+  public void send(String to, String subject, String html) {
+    MimeMessage message = mailSender.createMimeMessage();
+    try {
+      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+      helper.setTo(to);
+      helper.setSubject(subject);
+      helper.setText(html, true);
+      mailSender.send(message);
+    } catch (MessagingException exception) {
+      throw new EmailDeliveryException("Could not create email", exception);
+    }
+  }
+}</code></pre>
+      <p>For production reliability, persist the business event with the transaction using the <strong>outbox pattern</strong>. Give every notification a unique ID and enforce a unique database constraint so retries cannot send duplicates. Retry temporary failures with exponential backoff and jitter, but send permanent failures such as an invalid address to a dead-letter queue for investigation.</p>
+      <ul>
+        <li><strong>Templates:</strong> use Thymeleaf or provider-managed templates, version them, and keep dynamic values escaped.</li>
+        <li><strong>Security:</strong> keep credentials in a secret manager, validate recipients, avoid sensitive data in messages or logs, and use SPF, DKIM, and DMARC for the sending domain.</li>
+        <li><strong>User experience:</strong> respect opt-in preferences and unsubscribe rules; separate transactional emails from marketing emails.</li>
+        <li><strong>Monitoring:</strong> track accepted, delivered, bounced, rejected, retried, and dead-lettered messages; add correlation IDs, structured logs, metrics, and alerts.</li>
+        <li><strong>Testing:</strong> mock <code>JavaMailSender</code> in unit tests and use MailHog, GreenMail, or a provider sandbox for integration tests.</li>
+      </ul>
+      <p>A small application can initially use <code>@Async</code> with <code>JavaMailSender</code>, but a durable queue is safer when an email must not be lost during a crash or deployment.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Java Collections and Ordering</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">66.</span> What is the difference between <code>Comparable</code> and <code>Comparator</code>?</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th><code>Comparable&lt;T&gt;</code></th><th><code>Comparator&lt;T&gt;</code></th></tr>
+        <tr><td>Defines a class's natural/default ordering.</td><td>Defines an external, custom ordering.</td></tr>
+        <tr><td>The class itself implements <code>compareTo(T other)</code>.</td><td>A separate object implements <code>compare(T first, T second)</code>.</td></tr>
+        <tr><td>Normally provides one natural order.</td><td>Allows multiple orders without changing the class.</td></tr>
+        <tr><td>Used by <code>Collections.sort(list)</code> or <code>list.sort(null)</code>.</td><td>Passed to <code>list.sort(comparator)</code> or <code>Collections.sort(list, comparator)</code>.</td></tr>
+      </table>
+
+      <h3>Small example</h3>
+      <pre><code>class Employee implements Comparable&lt;Employee&gt; {
+  int id;
+  String name;
+
+  Employee(int id, String name) {
+    this.id = id;
+    this.name = name;
+  }
+
+  // Natural order: ascending id
+  @Override
+  public int compareTo(Employee other) {
+    return Integer.compare(this.id, other.id);
+  }
+}
+
+List&lt;Employee&gt; employees = new ArrayList&lt;&gt;();
+employees.add(new Employee(2, "Rishav"));
+employees.add(new Employee(1, "Aman"));
+
+Collections.sort(employees); // Comparable: sort by id
+
+// Custom order: alphabetical name
+employees.sort(Comparator.comparing(employee -&gt; employee.name));</code></pre>
+
+      <h3>Custom Comparator class</h3>
+      <pre><code>class EmployeeNameComparator implements Comparator&lt;Employee&gt; {
+  @Override
+  public int compare(Employee first, Employee second) {
+    return first.name.compareToIgnoreCase(second.name);
+  }
+}
+
+// Use the custom comparator class
+employees.sort(new EmployeeNameComparator());</code></pre>
+      <p>This keeps the name-sorting rule outside <code>Employee</code>. It is useful when the comparison has meaningful business logic, needs reuse in several places, or is too complex for a short lambda.</p>
+
+      <p><strong>Interview rule:</strong> use <code>Comparable</code> when the type has one obvious natural order, such as an employee ID. Use <code>Comparator</code> when sorting rules vary—for example, by name, salary, or joining date. Comparator methods can also be chained:</p>
+      <pre><code>employees.sort(
+    Comparator.comparing((Employee employee) -&gt; employee.name)
+              .thenComparingInt(employee -&gt; employee.id)
+);</code></pre>
+      <p>Prefer <code>Integer.compare(a, b)</code> instead of <code>a - b</code>, because subtraction can overflow.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">Spring AOP</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">67.</span> What is Spring AOP, and how does it work?</summary>
+    <div class="qa-body">
+      <p><strong>Spring AOP (Aspect-Oriented Programming)</strong> is a core Spring module used to separate <strong>cross-cutting concerns</strong>&mdash;logic such as logging, security, caching, auditing, performance measurement, and transaction management that applies across many parts of an application but is not part of its primary business logic. This reduces duplication and keeps business code focused and maintainable.</p>
+
+      <h3>Core terminology</h3>
+      <ul>
+        <li><strong>Aspect:</strong> a class that groups a cross-cutting concern, such as <code>LoggingAspect</code>.</li>
+        <li><strong>Join point:</strong> a point where an aspect may run. In Spring AOP, a join point is always a method execution.</li>
+        <li><strong>Pointcut:</strong> an expression that selects the method executions where advice should run.</li>
+        <li><strong>Advice:</strong> the action executed at a matched join point.</li>
+        <li><strong>Target object:</strong> the business object whose method is being advised.</li>
+        <li><strong>Weaving:</strong> linking an aspect to its target. Spring performs this at runtime by creating a proxy.</li>
+      </ul>
+
+      <h3>Types of advice</h3>
+      <table>
+        <tr><th>Advice</th><th>When it runs</th></tr>
+        <tr><td><code>@Before</code></td><td>Before the target method.</td></tr>
+        <tr><td><code>@After</code></td><td>After the method finishes, whether it succeeds or throws an exception.</td></tr>
+        <tr><td><code>@AfterReturning</code></td><td>Only after the method returns successfully.</td></tr>
+        <tr><td><code>@AfterThrowing</code></td><td>Only when the method throws an exception.</td></tr>
+        <tr><td><code>@Around</code></td><td>Surrounds the call and can run logic before and after it, alter the result, or skip execution.</td></tr>
+      </table>
+
+      <h3>Example: manual logging vs AOP logging</h3>
+      <p>With standard logging, each method contains its own log statements:</p>
+      <pre><code>@Service
+@Slf4j
+public class UserService {
+
+  public void createUser(User user) {
+    log.info("Starting user creation for: {}", user.getName());
+
+    // Primary business logic
+
+    log.info("User created successfully");
+  }
+}</code></pre>
+      <p>This is perfectly valid, but repeating the same start/end logging across many service methods creates boilerplate and can clutter the business logic.</p>
+
+      <p>With AOP, one aspect can apply that logging automatically to every matching service method:</p>
+      <pre><code>@Aspect
+@Component
+public class LoggingAspect {
+
+  private static final Logger log =
+      LoggerFactory.getLogger(LoggingAspect.class);
+
+  // Matches every method in the service package
+  @Before("execution(* com.example.service..*(..))")
+  public void logBeforeMethod(JoinPoint joinPoint) {
+    log.info("Automated log: starting method {}",
+        joinPoint.getSignature().getName());
+  }
+}</code></pre>
+      <p><strong>Key distinction:</strong> Spring AOP is not required for logging. Use normal logger calls for messages that are specific to business events. Use AOP when the same technical behavior&mdash;such as method-entry logging, timing, security checks, or transactions&mdash;must be applied consistently across many classes.</p>
+
+      <h3>Example: measure service execution time</h3>
+      <pre><code>@Aspect
+@Component
+public class PerformanceAspect {
+
+  @Around("execution(* com.example.service..*(..))")
+  public Object measureTime(ProceedingJoinPoint joinPoint) throws Throwable {
+    long start = System.currentTimeMillis();
+    try {
+      return joinPoint.proceed();
+    } finally {
+      long elapsed = System.currentTimeMillis() - start;
+      System.out.println(joinPoint.getSignature() + " took " + elapsed + " ms");
+    }
+  }
+}</code></pre>
+
+      <h3>How it works internally</h3>
+      <p>At startup, the Spring IoC container wraps an eligible bean in a proxy. A call from another bean reaches that proxy, which applies the matching advice and then invokes the target method. Spring can use a <strong>JDK dynamic proxy</strong> for interfaces or a <strong>CGLIB subclass proxy</strong> for classes. Unlike AspectJ compile-time or load-time weaving, Spring AOP is proxy-based and works at runtime.</p>
+      <p>Annotations such as <code>@Transactional</code>, <code>@Cacheable</code>, and <code>@Async</code> commonly rely on this proxy-based interception.</p>
+
+      <p><strong>Important limitation:</strong> self-invocation normally bypasses the proxy. If one method calls another advised method through <code>this</code>, the advice may not run. Move the advised method to another Spring bean or call it through an injected proxy. Also avoid relying on proxying for private or final methods.</p>
+
+      <p><strong>Interview summary:</strong> Spring AOP applies reusable cross-cutting behavior around selected method calls through runtime proxies, allowing the business logic to remain clean.</p>
+      <p><strong>Reference:</strong> <a href="https://docs.spring.io/spring-framework/reference/core/aop.html" target="_blank" rel="noopener noreferrer">Spring Framework AOP documentation</a></p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">68.</span> How does <code>HashMap</code> work internally?</summary>
+    <div class="qa-body">
+      <p>A <code>HashMap</code> stores entries in an array of buckets. It spreads the key's <code>hashCode()</code> and calculates a bucket index. Keys in the same bucket are compared with <code>equals()</code>.</p>
+      <ul>
+        <li><strong>Collision:</strong> colliding entries initially form a linked list in the bucket.</li>
+        <li><strong>Resize:</strong> with the default capacity 16 and load factor 0.75, crossing 12 entries normally doubles the table and redistributes entries.</li>
+        <li><strong>Treeification:</strong> in Java 8+, a bucket may become a red-black tree when it reaches 8 entries and the table capacity is at least 64. It changes back to a list when sufficiently small.</li>
+      </ul>
+      <p>Average <code>get</code>/<code>put</code> is O(1); a treeified collision bucket is O(log n). Correct, stable <code>hashCode()</code> and <code>equals()</code> implementations are essential. <code>HashMap</code> is not thread-safe.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">69.</span> What is the difference between <code>synchronized</code> and <code>ReentrantLock</code>?</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th><code>synchronized</code></th><th><code>ReentrantLock</code></th></tr>
+        <tr><td>A built-in Java keyword.</td><td>A class from <code>java.util.concurrent.locks</code>.</td></tr>
+        <tr><td>The JVM automatically acquires and releases the monitor when the method or block is entered and exited.</td><td>The application must explicitly call <code>lock()</code> and <code>unlock()</code>.</td></tr>
+        <tr><td>Simpler and less error-prone for ordinary mutual exclusion.</td><td>More flexible, but incorrect lock management can cause a deadlock.</td></tr>
+        <tr><td>Does not provide a non-blocking attempt to acquire the monitor.</td><td>Provides <code>tryLock()</code> and timed <code>tryLock(...)</code>.</td></tr>
+        <tr><td>A thread waiting to enter a synchronized block cannot have that lock wait interrupted.</td><td><code>lockInterruptibly()</code> allows interruption while waiting.</td></tr>
+        <tr><td>No configurable fairness policy.</td><td><code>new ReentrantLock(true)</code> requests a fair lock, although fairness may reduce throughput.</td></tr>
+        <tr><td>The monitor is automatically released even if the block exits because of an exception.</td><td><code>unlock()</code> must be called in a <code>finally</code> block.</td></tr>
+        <tr><td>Each monitor has one wait set, used through <code>wait()</code>, <code>notify()</code>, and <code>notifyAll()</code>.</td><td>Can create multiple <code>Condition</code> objects for separate waiting conditions.</td></tr>
+        <tr><td>Best for simple, structured locking.</td><td>Best when advanced acquisition or coordination features are genuinely required.</td></tr>
+      </table>
+
+      <p><strong>Example using <code>synchronized</code>:</strong></p>
+      <pre><code>public class Counter {
+  private int count;
+
+  public synchronized void increment() {
+    count++;
+  }
+}</code></pre>
+
+      <p>Only one thread at a time can execute <code>increment()</code> on the same <code>Counter</code> instance. The object's intrinsic monitor is released automatically when the method returns or throws an exception.</p>
+
+      <p><strong>Equivalent example using <code>ReentrantLock</code>:</strong></p>
+      <pre><code>import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Counter {
+  private int count;
+  private final Lock lock = new ReentrantLock();
+
+  public void increment() {
+    lock.lock();
+    try {
+      count++;
+    } finally {
+      lock.unlock();
+    }
+  }
+}</code></pre>
+
+      <p>The <code>finally</code> block is essential: without it, an exception could leave the lock permanently held.</p>
+
+      <p><strong>Example where <code>ReentrantLock</code> is useful:</strong></p>
+      <pre><code>if (lock.tryLock()) {
+  try {
+    updateSharedState();
+  } finally {
+    lock.unlock();
+  }
+} else {
+  // Do alternative work instead of waiting indefinitely
+}</code></pre>
+
+      <p>Both mechanisms are <strong>reentrant</strong>: a thread that already owns the lock can acquire it again, but it must release it the same number of times. Both also provide mutual exclusion and the required memory-visibility guarantees.</p>
+
+      <p><strong>Interview conclusion:</strong> prefer <code>synchronized</code> for straightforward locking because it is concise and automatically released. Choose <code>ReentrantLock</code> when you specifically need <code>tryLock()</code>, a timeout, interruptible acquisition, optional fairness, or multiple <code>Condition</code> queues.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">70.</span> Using Java Streams, filter employees by salary and group them by department.</summary>
+    <div class="qa-body">
+      <pre><code>double threshold = 80_000;
+
+Map&lt;String, List&lt;Employee&gt;&gt; employeesByDepartment = employees.stream()
+    .filter(employee -&gt; employee.getSalary() &gt; threshold)
+    .collect(Collectors.groupingBy(Employee::getDepartment));</code></pre>
+      <p>To calculate the average qualifying salary per department, use <code>groupingBy(Employee::getDepartment, averagingDouble(Employee::getSalary))</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">71.</span> How does Java garbage collection work, and what is the difference between stack and heap memory?</summary>
+    <div class="qa-body">
+      <p>The JVM identifies heap objects that are no longer reachable from GC roots and reclaims their memory. Generational collectors optimize for the fact that most objects die young; exact phases and pause behavior depend on the collector, such as G1 or ZGC.</p>
+      <table>
+        <tr><th>Stack</th><th>Heap</th></tr>
+        <tr><td>Per-thread method frames, local primitives, and references; automatically removed when a method returns.</td><td>Shared objects and arrays; managed by the garbage collector.</td></tr>
+        <tr><td>Fast and thread-local; exhaustion causes <code>StackOverflowError</code>.</td><td>Larger and shared; exhaustion can cause <code>OutOfMemoryError</code>.</td></tr>
+      </table>
+      <p>GC manages memory, but applications can still leak memory by retaining unwanted references in static collections, caches, listeners, or <code>ThreadLocal</code>s.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">72.</span> What is included in <code>@SpringBootApplication</code>, and how does <code>@RestController</code> differ from <code>@Controller</code>?</summary>
+    <div class="qa-body">
+      <p><code>@SpringBootApplication</code> combines <code>@SpringBootConfiguration</code>, <code>@EnableAutoConfiguration</code>, and <code>@ComponentScan</code>. A <code>@Controller</code> normally returns a view name; add <code>@ResponseBody</code> to serialize a response. <code>@RestController</code> combines <code>@Controller</code> and <code>@ResponseBody</code>, so its methods return response bodies such as JSON by default.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">73.</span> Explain the Spring bean lifecycle and how to resolve multiple qualifying beans.</summary>
+    <div class="qa-body">
+      <p>The Spring IoC container controls a bean from its definition through creation, initialization, use, and destruction. The lifecycle of a typical singleton bean follows this order:</p>
+
+      <ol>
+        <li><strong>Read bean definitions:</strong> during application startup, Spring scans annotations such as <code>@Component</code>, <code>@Service</code>, and <code>@Repository</code>, and processes <code>@Bean</code> methods or XML configuration.</li>
+        <li><strong>Run factory post-processors:</strong> implementations of <code>BeanFactoryPostProcessor</code> can modify bean definitions before normal beans are instantiated. For example, property placeholders are resolved at this stage.</li>
+        <li><strong>Instantiate the bean:</strong> Spring calls the selected constructor or factory method. With constructor injection, required dependencies are resolved and supplied while the object is created.</li>
+        <li><strong>Populate dependencies and properties:</strong> Spring applies field/setter injection, configuration properties, and values such as <code>@Value</code>.</li>
+        <li><strong>Invoke aware callbacks:</strong> if implemented, Spring calls callbacks such as <code>BeanNameAware</code>, <code>BeanFactoryAware</code>, and <code>ApplicationContextAware</code>. These provide container infrastructure and should be used only when the bean genuinely needs it.</li>
+        <li><strong>Run before-initialization post-processors:</strong> every registered <code>BeanPostProcessor</code> receives the bean through <code>postProcessBeforeInitialization()</code>. The processor that recognizes <code>@PostConstruct</code> participates here.</li>
+        <li><strong>Run initialization callbacks:</strong> the usual order is <code>@PostConstruct</code>, then <code>InitializingBean.afterPropertiesSet()</code>, then a custom <code>initMethod</code> configured on <code>@Bean</code>.</li>
+        <li><strong>Run after-initialization post-processors:</strong> Spring calls <code>postProcessAfterInitialization()</code>. A processor may return a proxy instead of the original object; Spring AOP features such as <code>@Transactional</code>, <code>@Async</code>, and <code>@Cacheable</code> commonly rely on proxying.</li>
+        <li><strong>Bean is ready for use:</strong> the initialized bean, or its proxy, is stored in the singleton container and injected into dependent beans.</li>
+        <li><strong>Destroy the bean during shutdown:</strong> when the application context closes normally, Spring calls <code>@PreDestroy</code>, then <code>DisposableBean.destroy()</code>, and then a configured custom <code>destroyMethod</code>.</li>
+      </ol>
+
+      <pre><code>@Component
+public class ReportClient {
+  private final ReportRepository repository;
+
+  // Step 3: construction and constructor injection
+  public ReportClient(ReportRepository repository) {
+    this.repository = repository;
+  }
+
+  // Step 7: validate or initialize resources after injection
+  @PostConstruct
+  void initialize() {
+    System.out.println("ReportClient initialized");
+  }
+
+  public void generateReport() {
+    repository.loadData();
+  }
+
+  // Step 10: release resources during graceful shutdown
+  @PreDestroy
+  void cleanUp() {
+    System.out.println("ReportClient destroyed");
+  }
+}</code></pre>
+
+      <p><strong>Compact flow:</strong></p>
+      <pre><code>Bean definition
+    → instantiate bean and resolve constructor dependencies
+    → populate fields/properties
+    → Aware callbacks
+    → BeanPostProcessor: before initialization
+    → @PostConstruct
+    → afterPropertiesSet()
+    → custom init method
+    → BeanPostProcessor: after initialization / proxy creation
+    → bean ready for use
+    → @PreDestroy
+    → destroy()
+    → custom destroy method</code></pre>
+
+      <p><strong>Scope matters:</strong> singleton beans are normally created during application-context startup and their destruction is managed by Spring. Prototype beans are created whenever requested, but after creation Spring does not automatically call their destruction callbacks. Request- and session-scoped beans follow the lifetime of their web scope. A bean marked <code>@Lazy</code> is usually created only when first requested.</p>
+
+      <p><strong>Resolving multiple qualifying beans:</strong> if two beans implement the same interface and Spring cannot decide which one to inject, it throws <code>NoUniqueBeanDefinitionException</code>.</p>
+      <pre><code>public interface NotificationSender {
+  void send(String message);
+}
+
+@Component("emailSender")
+class EmailSender implements NotificationSender { /* ... */ }
+
+@Component("smsSender")
+class SmsSender implements NotificationSender { /* ... */ }
+
+@Service
+class AlertService {
+  private final NotificationSender sender;
+
+  AlertService(@Qualifier("emailSender") NotificationSender sender) {
+    this.sender = sender;
+  }
+}</code></pre>
+
+      <p>Use <code>@Qualifier</code> when the injection point needs a specific implementation. Use <code>@Primary</code> to define the default implementation, or inject <code>List&lt;NotificationSender&gt;</code> / <code>Map&lt;String, NotificationSender&gt;</code> when all implementations are required. Constructor injection keeps required dependencies explicit, immutable, and easy to test.</p>
+
+      <p><strong>Interview summary:</strong> Spring creates the bean, injects dependencies, invokes container-aware and post-processing callbacks, performs initialization, may wrap the bean in a proxy, and finally manages its destruction according to its scope. Multiple implementations are resolved with <code>@Qualifier</code>, <code>@Primary</code>, or collection injection.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">74.</span> What are lazy and eager fetching in JPA, how can they cause N+1 queries, and how do you resolve it?</summary>
+    <div class="qa-body">
+      <p>JPA uses a relationship's <strong>fetch strategy</strong> to decide when associated data should be loaded:</p>
+      <ul>
+        <li><strong>Lazy fetching:</strong> the relationship is initially represented by a proxy or persistent collection. Hibernate loads it only when the application accesses it. This is the default for <code>@OneToMany</code> and <code>@ManyToMany</code>.</li>
+        <li><strong>Eager fetching:</strong> the relationship must be loaded along with the entity, either in the same query or through additional queries. This is the JPA default for <code>@ManyToOne</code> and <code>@OneToOne</code>.</li>
+      </ul>
+
+      <pre><code>@Entity
+public class Department {
+  @Id
+  private Long id;
+
+  // Loaded only when employees is accessed
+  @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
+  private List&lt;Employee&gt; employees;
+}
+
+@Entity
+public class Employee {
+  @Id
+  private Long id;
+
+  // Explicit LAZY is often preferable to the JPA EAGER default
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Department department;
+}</code></pre>
+
+      <p><strong>How the N+1 problem occurs:</strong> suppose Spring Data executes one query to load 100 departments. If the code then calls <code>department.getEmployees()</code> for every department, Hibernate may execute another query for each department. The result is <strong>1 parent query + N relationship queries</strong>, causing unnecessary database round trips and slow response times.</p>
+
+      <pre><code>List&lt;Department&gt; departments = departmentRepository.findAll(); // 1 query
+
+for (Department department : departments) {
+  department.getEmployees().size(); // potentially N additional queries
+}</code></pre>
+
+      <p>Changing the mapping to <code>FetchType.EAGER</code> is <strong>not a general solution</strong>. Eager fetching applies globally to every load of that entity, can retrieve data an endpoint does not need, may still generate additional select statements, and can create large joins or Cartesian products. Prefer lazy mappings and choose the required fetch plan for each use case.</p>
+
+      <p><strong>Resolution 1 — JPQL fetch join:</strong> load the relationship in the same query for a repository method that needs it.</p>
+      <pre><code>@Query("""
+    select distinct d
+    from Department d
+    left join fetch d.employees
+    """)
+List&lt;Department&gt; findAllWithEmployees();</code></pre>
+      <p><code>distinct</code> prevents duplicate <code>Department</code> objects when the SQL join returns one row per employee.</p>
+
+      <p><strong>Resolution 2 — Spring Data JPA entity graph:</strong> define the fetch plan without writing a fetch-join query.</p>
+      <pre><code>@EntityGraph(attributePaths = {"employees"})
+@Query("select d from Department d")
+List&lt;Department&gt; findAllWithEmployees();</code></pre>
+
+      <p><strong>Resolution 3 — DTO projection:</strong> select only the columns required by the API. This is often the best option for read-only screens and avoids serializing an entire entity graph.</p>
+      <pre><code>@Query("""
+    select new com.example.dto.EmployeeView(e.id, e.name, d.name)
+    from Employee e
+    join e.department d
+    """)
+List&lt;EmployeeView&gt; findEmployeeViews();</code></pre>
+
+      <p><strong>Resolution 4 — batch fetching:</strong> when lazy loading is appropriate but several associations will be accessed, configure <code>@BatchSize(size = 50)</code> or <code>hibernate.default_batch_fetch_size=50</code>. Hibernate can then fetch associations in batches instead of issuing one query per row.</p>
+
+      <p><strong>Important cautions:</strong></p>
+      <ul>
+        <li>Access a required lazy relationship inside a transactional service method, or map it to a DTO there. Accessing an uninitialized proxy after the persistence context closes can cause <code>LazyInitializationException</code>.</li>
+        <li>Do not enable Open Session in View merely to hide poor fetch planning; it can move unexpected database queries into web serialization.</li>
+        <li>A collection fetch join combined directly with pagination can produce incorrect or inefficient results. Page parent IDs first and fetch their relationships in a second query, or use an appropriate entity graph/batching strategy.</li>
+        <li>Verify the fix using Hibernate SQL logs, query statistics, an APM tool, or integration tests that assert the expected query count.</li>
+      </ul>
+
+      <p><strong>Interview answer:</strong> I keep most associations lazy and define the fetch plan per use case. I resolve N+1 with a fetch join or <code>@EntityGraph</code>, use DTO projections for read endpoints, and use batch fetching where multiple lazy associations must be initialized. I do not make everything eager because eager loading can over-fetch data and does not guarantee a single query.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">75.</span> How do you implement global exception handling in Spring Boot?</summary>
+    <div class="qa-body">
+      <pre><code>@RestControllerAdvice
+public class GlobalExceptionHandler {
+  @ExceptionHandler(ResourceNotFoundException.class)
+  ResponseEntity&lt;ProblemDetail&gt; handleNotFound(ResourceNotFoundException ex) {
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+        HttpStatus.NOT_FOUND, ex.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  ResponseEntity&lt;ProblemDetail&gt; handleValidation(MethodArgumentNotValidException ex) {
+    return ResponseEntity.badRequest().body(
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+            "Request validation failed"));
+  }
+}</code></pre>
+      <p>Return a consistent error contract with status, safe message, path, timestamp, and correlation ID. Log unexpected exceptions internally without exposing stack traces or sensitive details.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">76.</span> How do microservices communicate, and what does service discovery do?</summary>
+    <div class="qa-body">
+      <p>Services use synchronous HTTP/gRPC when an immediate response is required and asynchronous brokers such as Kafka for decoupled event workflows. A discovery system such as Eureka or Consul maintains healthy service instances so clients or load balancers can resolve a logical service name without hard-coded addresses. In Kubernetes, Services and internal DNS usually provide this capability.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">77.</span> How do you maintain consistency across microservice databases? Compare Saga and two-phase commit.</summary>
+    <div class="qa-body">
+      <p>In microservices, each service should own its database. Because one ACID transaction cannot normally span those independent databases, I maintain consistency using <strong>eventual consistency</strong> and a <strong>Saga</strong>: the business operation is divided into local transactions, and each successful step triggers the next step through a command or event.</p>
+
+      <p><strong>Example: placing an order</strong></p>
+      <ol>
+        <li>Order Service creates the order with status <code>PENDING_INVENTORY</code>.</li>
+        <li>Inventory Service reserves stock and publishes <code>inventory.reserved</code>.</li>
+        <li>Payment Service charges the customer and publishes <code>payment.completed</code>.</li>
+        <li>Order Service consumes the event and changes the order status to <code>PAID</code>.</li>
+      </ol>
+      <p>If payment fails after inventory has been reserved, the Saga runs a <strong>compensating transaction</strong>: Inventory Service releases the stock and Order Service marks the order as <code>PAYMENT_FAILED</code> or <code>CANCELLED</code>. Compensation is a new business action; it is not a database rollback across services.</p>
+
+      <p>A Saga can be implemented in two ways:</p>
+      <ul>
+        <li><strong>Choreography:</strong> services react to one another's events. It is simple and loosely coupled for short workflows, but a large event chain can become difficult to understand and monitor.</li>
+        <li><strong>Orchestration:</strong> a Saga orchestrator explicitly commands each service and tracks the workflow state. It is easier to reason about for complex flows, although the orchestrator becomes an important component.</li>
+      </ul>
+
+      <p>To make this approach reliable, I also use:</p>
+      <ul>
+        <li><strong>Transactional outbox:</strong> save the business change and outgoing event in the same local database transaction, then publish the outbox record to Kafka. This prevents a database update from succeeding while its event is lost.</li>
+        <li><strong>Idempotent consumers:</strong> attach an <code>eventId</code> and record processed IDs so duplicate deliveries do not charge a customer or reserve stock twice.</li>
+        <li><strong>Retries and dead-letter queues:</strong> retry transient failures with exponential backoff and send repeatedly failing messages to a DLQ for investigation or replay.</li>
+        <li><strong>Optimistic locking:</strong> use a version column or atomic conditional update to prevent concurrent updates from overwriting one another.</li>
+        <li><strong>Observability:</strong> propagate a correlation ID and monitor Saga status, consumer lag, failures, and stuck workflows.</li>
+        <li><strong>Reconciliation:</strong> periodically compare important records, such as orders and payments, to detect and repair inconsistencies that escaped normal processing.</li>
+      </ul>
+
+      <p><strong>Two-phase commit (2PC)</strong> uses a coordinator. In the prepare phase, every participant promises it can commit; in the commit phase, the coordinator tells all participants to commit. It provides strong atomic consistency, but participants may hold locks while waiting, failures can block the transaction, latency increases, and many databases or message brokers do not share a practical distributed transaction manager.</p>
+
+      <p><strong>Interview conclusion:</strong> I normally choose a Saga with a transactional outbox, idempotent consumers, retries, compensation, and monitoring. I consider 2PC only when strict atomic consistency is mandatory, all resources support it, and the availability and performance trade-offs are acceptable.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">78.</span> What cross-cutting concerns does an API Gateway handle?</summary>
+    <div class="qa-body">
+      <p>An API Gateway provides one entry point and handles routing, TLS termination, JWT validation, rate limiting, CORS, request/response transformation, correlation IDs, metrics, and sometimes response aggregation. Keep business rules in the owning services, avoid turning the gateway into a bottleneck, and protect private services from direct public access.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">79.</span> How do you find the second-highest employee salary in SQL?</summary>
+    <div class="qa-body">
+      <pre><code>SELECT MAX(salary) AS second_highest_salary
+FROM employee
+WHERE salary &lt; (SELECT MAX(salary) FROM employee);</code></pre>
+      <p>For ranked distinct salaries—and to return all employees tied at that salary—use <code>DENSE_RANK() OVER (ORDER BY salary DESC)</code> in a CTE and filter where the rank equals 2.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">80.</span> How do B-tree indexes work, and how can poor indexing slow JOINs?</summary>
+    <div class="qa-body">
+      <p>A balanced B-tree keeps sorted keys in shallow pages, supporting equality, range, ordering, and prefix lookups in roughly O(log n). Missing indexes on join/filter columns can force full scans and expensive nested-loop comparisons. Wrong column order, low selectivity, functions on indexed columns, type mismatches, and too many indexes also hurt performance. Confirm with <code>EXPLAIN ANALYZE</code> and index foreign keys or selective join predicates based on the real query pattern.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">81.</span> How do you prevent SQL injection in Spring Data JPA or JDBC?</summary>
+    <div class="qa-body">
+      <p>SQL injection occurs when untrusted input is joined directly into a query and the database interprets that input as SQL syntax. The main defense is to keep the SQL structure separate from its values by using parameterized queries.</p>
+
+      <h3>Unsafe string concatenation</h3>
+      <pre><code>// Never build a query by concatenating user input
+String sql = "SELECT * FROM users WHERE email = '" + email + "'";
+Statement statement = connection.createStatement();
+ResultSet result = statement.executeQuery(sql);</code></pre>
+      <p>If <code>email</code> contains something like <code>' OR '1'='1</code>, it changes the meaning of the query and may return every user.</p>
+
+      <h3>Safe JDBC: PreparedStatement</h3>
+      <pre><code>String sql = "SELECT id, name, email FROM users WHERE email = ?";
+
+try (PreparedStatement statement = connection.prepareStatement(sql)) {
+  statement.setString(1, email);
+
+  try (ResultSet result = statement.executeQuery()) {
+    // Map the result
+  }
+}</code></pre>
+      <p>The driver sends the query structure and parameter value separately. The email is treated as data—even if it contains quotes or SQL keywords.</p>
+
+      <h3>Safe Spring JdbcTemplate</h3>
+      <pre><code>String sql = "SELECT id, name, email FROM users WHERE email = ?";
+
+return jdbcTemplate.queryForObject(
+    sql,
+    userRowMapper,
+    email
+);</code></pre>
+
+      <h3>Safe Spring Data JPA</h3>
+      <pre><code>public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+  // Spring creates a parameterized query
+  Optional&lt;User&gt; findByEmail(String email);
+
+  @Query("SELECT u FROM User u WHERE u.email = :email")
+  Optional&lt;User&gt; findUserByEmail(@Param("email") String email);
+
+  @Query(value = "SELECT * FROM users WHERE status = :status",
+         nativeQuery = true)
+  List&lt;User&gt; findByStatus(@Param("status") String status);
+}</code></pre>
+      <p>Derived repository methods, named JPQL parameters, and named native-query parameters safely bind values. JPA is not automatically safe if application code still concatenates input into JPQL or native SQL.</p>
+
+      <h3>Dynamic column names require an allow-list</h3>
+      <p>Parameters can replace values, but they cannot replace SQL identifiers such as table names, column names, or <code>ASC</code>/<code>DESC</code>. Map client input to a fixed set of permitted values:</p>
+      <pre><code>private static final Map&lt;String, String&gt; SORT_COLUMNS = Map.of(
+    "name", "name",
+    "email", "email",
+    "createdAt", "created_at"
+);
+
+String column = SORT_COLUMNS.get(requestedSort);
+if (column == null) {
+  throw new IllegalArgumentException("Unsupported sort field");
+}
+
+String direction = ascending ? "ASC" : "DESC";
+String sql = "SELECT * FROM users ORDER BY " + column + " " + direction;
+return jdbcTemplate.query(sql, userRowMapper);</code></pre>
+      <p>With Spring Data, prefer a validated property and <code>Sort.by(direction, property)</code> instead of manually constructing an <code>ORDER BY</code> clause.</p>
+
+      <h3>Defense in depth</h3>
+      <ul>
+        <li><strong>Validate input:</strong> check format, length, ranges, and allowed values, but do not use validation as a replacement for parameter binding.</li>
+        <li><strong>Use least privilege:</strong> the application's database user should only have the permissions it needs and normally should not own the schema.</li>
+        <li><strong>Avoid exposing details:</strong> log errors securely and return a generic response instead of database messages or SQL text.</li>
+        <li><strong>Review stored procedures:</strong> they are safe only when their internal SQL is parameterized rather than dynamically concatenated.</li>
+        <li><strong>Test and maintain:</strong> add malicious-input security tests, use code scanning, monitor unusual query failures, and patch drivers/frameworks.</li>
+      </ul>
+      <p><strong>Interview summary:</strong> use prepared or parameterized queries for all values, allow-list any unavoidable dynamic identifiers, and limit the impact of a mistake through validation, least-privilege access, safe error handling, monitoring, and testing.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">82.</span> Solve Two Sum efficiently using a hash map. How does Three Sum differ?</summary>
+    <div class="qa-body">
+      <pre><code>static int[] twoSum(int[] values, int target) {
+  Map&lt;Integer, Integer&gt; seen = new HashMap&lt;&gt;();
+  for (int index = 0; index &lt; values.length; index++) {
+    int needed = target - values[index];
+    if (seen.containsKey(needed)) {
+      return new int[] {seen.get(needed), index};
+    }
+    seen.put(values[index], index);
+  }
+  return new int[0];
+}</code></pre>
+      <p>Two Sum is O(n) time and O(n) space. For Three Sum, sort the array, fix one element, and move two pointers while skipping duplicates: O(n²) time and O(1) auxiliary space apart from the output.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">83.</span> Write a thread-safe Singleton using double-checked locking.</summary>
+    <div class="qa-body">
+      <pre><code>public final class AppConfig {
+  private static volatile AppConfig instance;
+
+  private AppConfig() {}
+
+  public static AppConfig getInstance() {
+    if (instance == null) {
+      synchronized (AppConfig.class) {
+        if (instance == null) {
+          instance = new AppConfig();
+        }
+      }
+    }
+    return instance;
+  }
+}</code></pre>
+      <p><code>volatile</code> prevents unsafe publication and instruction reordering. Double-checked locking creates the object lazily, only when <code>getInstance()</code> is first called.</p>
+
+      <h3>Simpler synchronized lazy initialization</h3>
+      <pre><code>public final class LazySingleton {
+  private static LazySingleton instance;
+
+  private LazySingleton() {}
+
+  public static synchronized LazySingleton getInstance() {
+    if (instance == null) {
+      instance = new LazySingleton();
+    }
+    return instance;
+  }
+}</code></pre>
+      <p>This version is also lazy and thread-safe. The <code>synchronized</code> method allows only one thread at a time to execute <code>getInstance()</code>, so two instances cannot be created concurrently. It is easier to understand than double-checked locking, but synchronization happens on every call, including after the instance has already been created.</p>
+
+      <h3>Can this use eager initialization?</h3>
+      <p>Yes. If creating the singleton is inexpensive and it will almost certainly be used, eager initialization is simpler and inherently thread-safe.</p>
+      <p><strong>Important:</strong> merely declaring or writing a class does not load or initialize it. The JVM generally loads and initializes a class when it is first <em>actively used</em>—for example, when code creates an object with <code>new</code>, invokes a static method, accesses a non-constant static field, or loads the class through reflection.</p>
+      <p>During class initialization, the JVM executes static field initializers exactly once and synchronizes that process. Therefore, the eager singleton instance is created once and safely published to every thread; it does not require <code>synchronized</code> or <code>volatile</code>.</p>
+      <pre><code>public final class AppConfig {
+  // Created once when AppConfig is initialized—not when it is declared
+  private static final AppConfig INSTANCE = new AppConfig();
+
+  private AppConfig() {}
+
+  public static AppConfig getInstance() {
+    return INSTANCE;
+  }
+}</code></pre>
+      <table>
+        <tr><th>Eager initialization</th><th>Double-checked locking</th></tr>
+        <tr><td>Simple, thread-safe, and no synchronization logic.</td><td>Creates the object only when it is first requested.</td></tr>
+        <tr><td>Creates the instance even if it is never used.</td><td>More complex and requires <code>volatile</code>.</td></tr>
+      </table>
+      <p><strong>Interview answer:</strong> prefer eager initialization when construction is cheap and unconditional. For lazy creation, the initialization-on-demand holder idiom is usually simpler than double-checked locking. An enum singleton is strongest when serialization and reflection safety matter.</p>
+      <p>In Spring, singleton is already the default bean scope, so application services normally should not implement this pattern manually.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">84.</span> Find the first non-repeating character in a string.</summary>
+    <div class="qa-body">
+      <pre><code>static Optional&lt;Character&gt; firstNonRepeating(String text) {
+  // Stage 1: create an IntStream of the string's UTF-16 character values
+  return text.chars()
+
+      // Stage 2: convert each int value into a Character object
+      .mapToObj(codePoint -&gt; (char) codePoint)
+
+      // Stage 3: count every character while preserving encounter order
+      .collect(Collectors.groupingBy(
+          Function.identity(),  // Use the character itself as the map key
+          LinkedHashMap::new,   // Retain the original character order
+          Collectors.counting() // Store how many times each character occurs
+      ))
+
+      // Stage 4: stream the ordered character-to-frequency entries
+      .entrySet()
+      .stream()
+
+      // Stage 5: retain only characters that occur exactly once
+      .filter(entry -&gt; entry.getValue() == 1)
+
+      // Stage 6: convert Map.Entry&lt;Character, Long&gt; into Character
+      .map(Map.Entry::getKey)
+
+      // Stage 7: return the first non-repeating character, if one exists
+      .findFirst();
+}</code></pre>
+      <p>The first stream converts the text into characters and builds an encounter-ordered frequency map. The second stream selects the first entry whose count is one. <code>LinkedHashMap</code> is essential because a regular <code>HashMap</code> would not preserve the character order.</p>
+      <p>The solution is O(n) time and O(k) space, where k is the number of distinct characters. It requires imports for <code>Map</code>, <code>LinkedHashMap</code>, <code>Optional</code>, <code>Function</code>, and <code>Collectors</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">85.</span> Move all negative elements to the end while preserving order.</summary>
+    <div class="qa-body">
+      <p><strong>Problem:</strong> Given an integer array containing positive and negative values, move every negative value to the end without changing the relative order of the positive values or the negative values.</p>
+      <p><strong>Example:</strong> <code>[-5, 7, -3, -4, 9, 10, -1, 11]</code> becomes <code>[7, 9, 10, 11, -5, -3, -4, -1]</code>.</p>
+
+      <h3>Stable Java solution</h3>
+      <pre><code>static void moveNegativesToEnd(int[] values) {
+  int[] reordered = new int[values.length];
+  int writeIndex = 0;
+
+  // First pass: copy non-negative values in their original order.
+  for (int value : values) {
+    if (value &gt;= 0) {
+      reordered[writeIndex++] = value;
+    }
+  }
+
+  // Second pass: append negative values in their original order.
+  for (int value : values) {
+    if (value &lt; 0) {
+      reordered[writeIndex++] = value;
+    }
+  }
+
+  // Copy the stable partition back into the input array.
+  System.arraycopy(reordered, 0, values, 0, values.length);
+}</code></pre>
+      <p>The first pass collects all non-negative values, and the second appends all negative values. Because both passes scan from left to right, the relative order inside each group remains unchanged.</p>
+      <ul>
+        <li><strong>Time complexity:</strong> O(n)—the array is traversed twice.</li>
+        <li><strong>Auxiliary space:</strong> O(n)—required by this straightforward stable solution.</li>
+      </ul>
+
+      <h3>Important interview distinction</h3>
+      <p>A two-pointer swap solution can move negatives to the end in O(n) time and O(1) space, but ordinary swapping does <strong>not</strong> preserve relative order. If the interviewer requires both stability and constant auxiliary space, an in-place stable partition is possible through repeated shifting or divide-and-conquer rotation, but it is more complex and may increase runtime.</p>
+
+      <p><strong>Interview answer:</strong> “Because the question requires stable ordering, I use an auxiliary array. I first copy all non-negative values and then all negative values, preserving encounter order in both passes. The algorithm is O(n) time and O(n) space. I would use an O(1)-space two-pointer partition only if changing relative order were allowed.”</p>
+      <p><a href="https://www.geeksforgeeks.org/problems/move-all-negative-elements-to-end1813/1" target="_blank" rel="noopener noreferrer">Practice: Move all negative elements to the end — GeeksforGeeks</a></p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">86.</span> Implement a stack using an array in Java.</summary>
+    <div class="qa-body">
+      <p>A stack follows <strong>LIFO</strong> (Last In, First Out): the most recently inserted element is removed first. An array-backed stack stores elements in an array and maintains a <code>top</code> index. When <code>top == -1</code>, the stack is empty; when <code>top == capacity - 1</code>, a fixed-capacity stack is full.</p>
+
+      <pre><code>import java.util.NoSuchElementException;
+
+public final class ArrayStack&lt;T&gt; {
+  private final Object[] elements;
+  private int top = -1;
+
+  public ArrayStack(int capacity) {
+    if (capacity &lt;= 0) {
+      throw new IllegalArgumentException("Capacity must be positive");
+    }
+    elements = new Object[capacity];
+  }
+
+  // Inserts an element at the top of the stack.
+  public void push(T value) {
+    if (isFull()) {
+      throw new IllegalStateException("Stack overflow");
+    }
+    elements[++top] = value;
+  }
+
+  // Removes and returns the top element.
+  public T pop() {
+    ensureNotEmpty();
+
+    @SuppressWarnings("unchecked")
+    T value = (T) elements[top];
+    elements[top--] = null; // Avoid retaining an unused object reference.
+    return value;
+  }
+
+  // Returns the top element without removing it.
+  public T peek() {
+    ensureNotEmpty();
+
+    @SuppressWarnings("unchecked")
+    T value = (T) elements[top];
+    return value;
+  }
+
+  public boolean isEmpty() {
+    return top == -1;
+  }
+
+  public boolean isFull() {
+    return top == elements.length - 1;
+  }
+
+  public int size() {
+    return top + 1;
+  }
+
+  public int capacity() {
+    return elements.length;
+  }
+
+  private void ensureNotEmpty() {
+    if (isEmpty()) {
+      throw new NoSuchElementException("Stack underflow");
+    }
+  }
+}</code></pre>
+
+      <h3>Example</h3>
+      <pre><code>ArrayStack&lt;Integer&gt; stack = new ArrayStack&lt;&gt;(3);
+
+stack.push(10);
+stack.push(20);
+stack.push(30);
+
+System.out.println(stack.peek()); // 30
+System.out.println(stack.pop());  // 30
+System.out.println(stack.pop());  // 20
+System.out.println(stack.size()); // 1</code></pre>
+
+      <table>
+        <thead><tr><th>Operation</th><th>Time</th><th>Explanation</th></tr></thead>
+        <tbody>
+          <tr><td><code>push</code></td><td>O(1)</td><td>Increment <code>top</code> and write one array element.</td></tr>
+          <tr><td><code>pop</code></td><td>O(1)</td><td>Read the top element, clear it, and decrement <code>top</code>.</td></tr>
+          <tr><td><code>peek</code></td><td>O(1)</td><td>Read <code>elements[top]</code> without changing the stack.</td></tr>
+          <tr><td><code>isEmpty</code>, <code>isFull</code>, <code>size</code></td><td>O(1)</td><td>Use the stored index and array length.</td></tr>
+          <tr><td>Storage</td><td>O(n)</td><td>The backing array holds at most <code>n</code> elements.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Important interview points</h3>
+      <ul>
+        <li><strong>Overflow:</strong> pushing when a fixed-capacity array is full. This implementation throws <code>IllegalStateException</code>.</li>
+        <li><strong>Underflow:</strong> popping or peeking when empty. This implementation throws <code>NoSuchElementException</code> instead of returning a sentinel such as <code>-1</code>, because <code>-1</code> could be valid stack data.</li>
+        <li><strong>Memory cleanup:</strong> <code>pop()</code> sets the removed slot to <code>null</code> so the stack does not retain an object that is no longer logically present.</li>
+        <li><strong>Fixed vs dynamic capacity:</strong> this version is fixed. A dynamic version can double the backing array when full; then <code>push</code> is O(1) amortized but O(n) during resizing.</li>
+        <li><strong>Thread safety:</strong> this implementation is not thread-safe. Concurrent access requires external synchronization or an appropriate concurrent data structure.</li>
+      </ul>
+
+      <p><strong>Interview answer:</strong> “I store values in an array and track the top element with an index initialized to <code>-1</code>. Push increments the index before writing, while pop reads the top, clears the slot, and decrements the index. Push, pop, peek, size, and empty checks are all O(1); the stack uses O(n) storage.”</p>
+      <p><a href="https://www.geeksforgeeks.org/dsa/implement-stack-using-array/" target="_blank" rel="noopener noreferrer">Reference: Implement Stack Using an Array — GeeksforGeeks</a></p>
+    </div>
+  </details>
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html" class="active">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">SQL — Interview Prep</h1>
+  <p class="page-sub">Theory fundamentals, then 29 scenario questions across window functions, CTEs, joins, subqueries, aggregates, and indexing. Examples use ANSI/PostgreSQL syntax, with notes wherever MySQL/SQL Server diverge meaningfully. Priority noted where marked (*** highest).</p>
+
+  <aside class="resource-links" aria-labelledby="sql-interview-resources-heading">
+    <h2 id="sql-interview-resources-heading">SQL Interview Resources</h2>
+    <ol>
+      <li><a href="https://www.geeksforgeeks.org/sql/sql-interview-questions/" target="_blank" rel="noopener noreferrer">GeeksforGeeks — SQL Interview Questions</a></li>
+      <li><a href="https://takeuforward.org/prep-hub/sql---75-frequently-asked-interview-questions" target="_blank" rel="noopener noreferrer">Take U Forward — 75 Frequently Asked SQL Interview Questions</a></li>
+      <li><a href="https://www.reddit.com/r/SQL/comments/191lesk/interview_questions_for_sql/" target="_blank" rel="noopener noreferrer">Reddit r/SQL — Interview Questions Discussion</a></li>
+    </ol>
+  </aside>
+
+  <h2 class="section-heading">1. SQL Theory Fundamentals</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is SQL, and what are its four sub-languages? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>SQL (Structured Query Language) is the standard language for querying and managing data in a relational database. It's conventionally split into four sub-languages by what they operate on:</p>
+      <table>
+        <tr><th>Sub-language</th><th>Purpose</th><th>Commands</th></tr>
+        <tr><td>DDL — Data Definition</td><td>Defines/modifies schema structure</td><td><code>CREATE</code>, <code>ALTER</code>, <code>DROP</code>, <code>TRUNCATE</code></td></tr>
+        <tr><td>DML — Data Manipulation</td><td>Reads/writes the data itself</td><td><code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code></td></tr>
+        <tr><td>DCL — Data Control</td><td>Manages permissions</td><td><code>GRANT</code>, <code>REVOKE</code></td></tr>
+        <tr><td>TCL — Transaction Control</td><td>Manages transactions</td><td><code>COMMIT</code>, <code>ROLLBACK</code>, <code>SAVEPOINT</code></td></tr>
+      </table>
+      <p><strong>Common follow-up:</strong> "is <code>SELECT</code> really DML if it doesn't modify anything?" — strictly it's sometimes bucketed separately as DQL (Data Query Language), but most interview answers fold it into DML since it's still about handling data rather than schema.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> Primary key vs foreign key vs unique key <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>Primary key</th><th>Foreign key</th><th>Unique key</th></tr>
+        <tr><td>Purpose</td><td>Uniquely identifies each row in its own table</td><td>References a primary/unique key in another table</td><td>Enforces uniqueness on a non-primary column</td></tr>
+        <tr><td>Count per table</td><td>Exactly one</td><td>Many allowed</td><td>Many allowed</td></tr>
+        <tr><td>NULLs</td><td>Never allowed</td><td>Allowed (means "no parent")</td><td>Usually one NULL allowed</td></tr>
+        <tr><td>Default index</td><td>Often becomes the clustered index</td><td>Not automatically indexed in every engine</td><td>Always backed by an index</td></tr>
+      </table>
+      <p>A foreign key's whole job is enforcing <strong>referential integrity</strong> — the database physically refuses an <code>INSERT</code>/<code>UPDATE</code> that would leave a foreign key pointing at a parent row that doesn't exist, and by default blocks deleting a parent row that's still referenced.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> What is normalization? Briefly explain 1NF, 2NF, 3NF <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Normalization is the process of structuring tables to reduce data redundancy and prevent update/insert/delete anomalies, typically by splitting one wide table into several related ones.</p>
+      <table>
+        <tr><th>Form</th><th>Rule</th></tr>
+        <tr><td>1NF</td><td>Every column holds a single, atomic value — no comma-separated lists or repeating groups crammed into one field</td></tr>
+        <tr><td>2NF</td><td>1NF, plus every non-key column depends on the <em>entire</em> primary key — only matters when the key is composite (eliminates partial dependency)</td></tr>
+        <tr><td>3NF</td><td>2NF, plus no non-key column depends on another non-key column — every non-key column depends on the key, the whole key, and nothing but the key (eliminates transitive dependency)</td></tr>
+      </table>
+      <p><strong>Common follow-up:</strong> "is more normalization always better?" — no. Highly normalized schemas minimize redundancy but require more joins to reassemble data, which can hurt read-heavy analytics workloads. Deliberately reintroducing redundancy (denormalization) is a common, valid tradeoff for reporting tables and read replicas.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> <code>WHERE</code> vs <code>HAVING</code> <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p><code>WHERE</code> filters individual rows <em>before</em> grouping/aggregation happens, and can't reference an aggregate function. <code>HAVING</code> filters <em>groups</em> after <code>GROUP BY</code> has run, and is the only place you can filter on an aggregate like <code>COUNT()</code>/<code>SUM()</code>.</p>
+      <pre><code>SELECT dept_id, COUNT(*) AS headcount
+FROM employees
+WHERE is_active = true        -- filters rows first
+GROUP BY dept_id
+HAVING COUNT(*) &gt; 5;          -- then filters the resulting groups</code></pre>
+      <p><strong>Common pitfall:</strong> trying to filter on an aggregate inside <code>WHERE</code> — <code>WHERE COUNT(*) &gt; 5</code> is a syntax error, because at the point <code>WHERE</code> runs, grouping hasn't happened yet and no aggregate value exists.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> <code>UNION</code> vs <code>UNION ALL</code> <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p><code>UNION</code> combines the result sets of two queries and removes duplicate rows — it implicitly runs a <code>DISTINCT</code> pass, which costs a sort/hash step. <code>UNION ALL</code> combines them and keeps every row, duplicates included, with no dedup pass.</p>
+      <p><strong>Common pitfall:</strong> reaching for <code>UNION</code> out of habit when duplicates are actually impossible (e.g., the two queries pull from mutually exclusive ID ranges) or simply don't matter — that's paying for a dedup pass that changes nothing except performance. Default to <code>UNION ALL</code> unless you specifically need deduplication.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> <code>DELETE</code> vs <code>TRUNCATE</code> vs <code>DROP</code> <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th></th><th>DELETE</th><th>TRUNCATE</th><th>DROP</th></tr>
+        <tr><td>Type</td><td>DML</td><td>DDL</td><td>DDL</td></tr>
+        <tr><td>Removes</td><td>Rows matching <code>WHERE</code> (or all, if omitted)</td><td>All rows, at once</td><td>The entire table structure and its data</td></tr>
+        <tr><td>Logging</td><td>Row-by-row, fully logged</td><td>Minimally logged (deallocates pages)</td><td>Schema change, logged as metadata</td></tr>
+        <tr><td>Rollback</td><td>Yes, within a transaction</td><td>Often not, or engine-dependent</td><td>Not once committed</td></tr>
+        <tr><td>Triggers</td><td>Fire normally</td><td>Row-level triggers don't fire</td><td>N/A</td></tr>
+      </table>
+      <p><code>TRUNCATE</code> is dramatically faster than an unqualified <code>DELETE</code> for clearing a whole table precisely because it skips row-by-row logging — it just deallocates the data pages, rather than recording each individual row deletion the way <code>DELETE</code> does.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> What is an index? Clustered vs non-clustered <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>An index is an auxiliary data structure — almost always a B-tree — that lets the engine locate matching rows without scanning the whole table, at the cost of extra storage and slower writes (every <code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> must also update the index).</p>
+      <table>
+        <tr><th></th><th>Clustered index</th><th>Non-clustered index</th></tr>
+        <tr><td>Storage</td><td>Determines the physical on-disk order of the table's rows</td><td>A separate structure holding the indexed column(s) plus a pointer back to the row</td></tr>
+        <tr><td>Count per table</td><td>Exactly one (the table data <em>is</em> the index)</td><td>Many allowed</td></tr>
+        <tr><td>Default</td><td>Often the primary key, by default</td><td>Anything explicitly created with <code>CREATE INDEX</code></td></tr>
+      </table>
+      <p><strong>Common follow-up:</strong> "why is a lookup via a non-clustered index sometimes still slow?" — unless the index <em>covers</em> the query (contains every column the query needs), matching it still triggers a second lookup back to the actual table row to fetch the remaining columns — this "key lookup" step is exactly what a covering index is designed to eliminate.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q8.</span> ACID properties <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Property</th><th>Guarantee</th></tr>
+        <tr><td>Atomicity</td><td>A transaction is all-or-nothing — if any part fails, the whole thing rolls back</td></tr>
+        <tr><td>Consistency</td><td>A transaction moves the database from one valid state to another, never violating constraints</td></tr>
+        <tr><td>Isolation</td><td>Concurrent transactions don't observe each other's uncommitted, in-progress changes (degree governed by isolation level)</td></tr>
+        <tr><td>Durability</td><td>Once committed, changes survive even a crash immediately afterward</td></tr>
+      </table>
+      <p><strong>Common follow-up:</strong> "what actually enforces Isolation?" — isolation levels (Read Uncommitted, Read Committed, Repeatable Read, Serializable), which trade off strictness against concurrency. Lower levels allow anomalies like dirty reads or non-repeatable reads in exchange for less locking overhead and higher throughput.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q9.</span> View vs table vs materialized view <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A <strong>table</strong> stores actual data on disk. A <strong>view</strong> stores no data of its own — it's a saved, named <code>SELECT</code> that re-runs live against the underlying tables every time it's queried, useful for simplifying/reusing a complex query or restricting which columns a user can see. A <strong>materialized view</strong> behaves like a view but its result set is physically stored, so reads are much faster — the tradeoff is that it goes stale and needs an explicit <code>REFRESH</code>, since it doesn't automatically re-run on access.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q10.</span> Stored procedure vs function <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>A <strong>stored procedure</strong> is a precompiled, named block of SQL/procedural logic invoked with <code>CALL</code>/<code>EXEC</code>. It can perform side effects (<code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code>, transaction control), doesn't have to return anything, and generally can't be used inline inside a <code>SELECT</code>.</p>
+      <p>A <strong>function</strong> must return a value, is typically restricted from having side effects, and can be called inline as part of a larger expression — <code>SELECT id, calculate_tax(amount) FROM orders</code> — which is exactly what a procedure can't do.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q11.</span> Types of JOINs — quick overview <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Join</th><th>Returns</th></tr>
+        <tr><td>INNER JOIN</td><td>Only rows with a match in both tables</td></tr>
+        <tr><td>LEFT (OUTER) JOIN</td><td>All rows from the left table; unmatched right-side columns come back <code>NULL</code></td></tr>
+        <tr><td>RIGHT (OUTER) JOIN</td><td>Mirror of LEFT — all rows from the right table</td></tr>
+        <tr><td>FULL (OUTER) JOIN</td><td>All rows from both sides; <code>NULL</code>s wherever there's no match</td></tr>
+        <tr><td>CROSS JOIN</td><td>Every row from the left paired with every row from the right — no <code>ON</code> condition (Cartesian product)</td></tr>
+        <tr><td>SELF JOIN</td><td>Not a distinct join type — any of the above, applied to a table joined against itself</td></tr>
+      </table>
+      <p>This is the primer — the <a href="#joins">Joins section</a> below works through a full example of each.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q12.</span> Window functions vs <code>GROUP BY</code> <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p><code>GROUP BY</code> collapses multiple rows into one row per group — the individual row detail is gone, only the aggregated value remains. A <strong>window function</strong> computes an aggregate, ranking, or offset-based value <em>per row</em> while keeping every row in the output, computed "over a window" of related rows (defined by <code>PARTITION BY</code>) rather than collapsing them.</p>
+      <pre><code>-- GROUP BY: one row per department, detail lost
+SELECT dept_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY dept_id;
+
+-- Window function: every employee row kept, each annotated with their dept's average
+SELECT emp_id, dept_id, salary,
+       AVG(salary) OVER (PARTITION BY dept_id) AS dept_avg_salary
+FROM employees;</code></pre>
+      <p>This is the primer — the <a href="#window-functions">Window Functions section</a> below works through five full scenarios.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading" id="window-functions">2. Window Functions</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q13.</span> Calculate the moving average of sales for the past 3 months <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>sales(sale_date, amount)</code>.</p>
+      <pre><code>WITH monthly_sales AS (
+  SELECT
+    DATE_TRUNC('month', sale_date) AS month,
+    SUM(amount) AS total_sales
+  FROM sales
+  GROUP BY DATE_TRUNC('month', sale_date)
+)
+SELECT
+  month,
+  total_sales,
+  AVG(total_sales) OVER (
+    ORDER BY month
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+  ) AS moving_avg_3mo
+FROM monthly_sales
+ORDER BY month;</code></pre>
+      <p>The CTE first collapses raw sales into one row per calendar month. The window frame <code>ROWS BETWEEN 2 PRECEDING AND CURRENT ROW</code> then includes the current row plus the two before it — a trailing 3-month window that slides forward and recalculates at every row as <code>ORDER BY month</code> advances.</p>
+      <p><strong>Dialect note:</strong> <code>DATE_TRUNC</code> is Postgres; MySQL's equivalent is <code>DATE_FORMAT(sale_date, '%Y-%m-01')</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q14.</span> Assign a dense rank to employees based on their salary <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>employees(emp_id, name, department, salary)</code>.</p>
+      <pre><code>SELECT
+  emp_id,
+  name,
+  department,
+  salary,
+  DENSE_RANK() OVER (ORDER BY salary DESC) AS salary_rank
+FROM employees;</code></pre>
+      <p><code>DENSE_RANK()</code> is the one to reach for whenever ties should share a rank without leaving a gap afterward — two employees tied for the top salary both get rank 1, and the next distinct salary gets rank 2 (not 3). <code>RANK()</code> would instead skip to 3, and <code>ROW_NUMBER()</code> would arbitrarily split the tie into 1 and 2.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q15.</span> Retrieve the first and last order date for each customer <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>orders(order_id, customer_id, order_date)</code>.</p>
+      <pre><code>SELECT DISTINCT
+  customer_id,
+  MIN(order_date) OVER (PARTITION BY customer_id) AS first_order_date,
+  MAX(order_date) OVER (PARTITION BY customer_id) AS last_order_date
+FROM orders;</code></pre>
+      <p>For just this result, a plain <code>GROUP BY customer_id</code> with <code>MIN</code>/<code>MAX</code> would be simpler and is the more natural tool. The window-function version earns its keep when you need the first/last date sitting alongside <em>other</em> per-order detail columns in the same row (e.g., every individual order annotated with that customer's overall first/last date) — something a collapsing <code>GROUP BY</code> can't give you without a self-join back to the raw rows.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q16.</span> Find the Nth highest salary for each department using window functions <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>employees(emp_id, dept_id, salary)</code>.</p>
+      <pre><code>WITH ranked_salaries AS (
+  SELECT
+    dept_id,
+    emp_id,
+    salary,
+    DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) AS rnk
+  FROM employees
+)
+SELECT dept_id, emp_id, salary
+FROM ranked_salaries
+WHERE rnk = 3;  -- swap 3 for any N</code></pre>
+      <p><code>PARTITION BY dept_id</code> restarts the ranking from scratch inside each department, so "rank 3" always means the third-highest salary within that specific department, not company-wide. <code>DENSE_RANK</code> is deliberately used over <code>ROW_NUMBER</code> here — if two employees in the same department are tied for 2nd place, both should count as rank 2, and neither should be silently excluded or double-counted by an arbitrary tie-break.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q17.</span> Determine the percentage of total sales contributed by each employee <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>sales(emp_id, amount)</code>.</p>
+      <pre><code>SELECT
+  emp_id,
+  SUM(amount) AS employee_sales,
+  SUM(amount) * 100.0 / SUM(SUM(amount)) OVER () AS pct_of_total
+FROM sales
+GROUP BY emp_id;</code></pre>
+      <p>This mixes a regular aggregate with a window function on top of it: the inner <code>SUM(amount)</code> rolls sales up per employee (the normal <code>GROUP BY</code> aggregate); the outer <code>SUM(SUM(amount)) OVER ()</code> is a window function with an empty <code>OVER ()</code> — no <code>PARTITION BY</code> — so it sums across <em>every</em> group to get the grand total, letting each row divide its own total against the whole in a single pass, with no self-join or extra subquery needed.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading" id="ctes">3. Common Table Expressions (CTEs)</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q18.</span> Use a CTE to split a full name into first and last names <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>customers(customer_id, full_name)</code>.</p>
+      <pre><code>WITH split_names AS (
+  SELECT
+    customer_id,
+    full_name,
+    SPLIT_PART(full_name, ' ', 1) AS first_name,
+    SPLIT_PART(full_name, ' ', 2) AS last_name
+  FROM customers
+)
+SELECT * FROM split_names;</code></pre>
+      <p><strong>Dialect note:</strong> <code>SPLIT_PART</code> is Postgres. MySQL has no direct equivalent for the "Nth part" case, but a two-part first/last split works with <code>SUBSTRING_INDEX</code>: <code>SUBSTRING_INDEX(full_name, ' ', 1)</code> for the first name, <code>SUBSTRING_INDEX(full_name, ' ', -1)</code> for the last.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q19.</span> Write a CTE to find the longest consecutive streak of sales for an employee <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>sales(emp_id, sale_date)</code>. This is the classic "islands and gaps" problem.</p>
+      <pre><code>WITH sales_days AS (
+  SELECT DISTINCT emp_id, sale_date
+  FROM sales
+),
+numbered AS (
+  SELECT
+    emp_id,
+    sale_date,
+    ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY sale_date) AS rn
+  FROM sales_days
+),
+grouped AS (
+  SELECT
+    emp_id,
+    sale_date,
+    sale_date - (rn * INTERVAL '1 day') AS streak_group
+  FROM numbered
+)
+SELECT
+  emp_id,
+  COUNT(*) AS streak_length,
+  MIN(sale_date) AS streak_start,
+  MAX(sale_date) AS streak_end
+FROM grouped
+GROUP BY emp_id, streak_group
+ORDER BY emp_id, streak_length DESC;</code></pre>
+      <p>The trick: for a run of <em>consecutive</em> calendar dates, <code>sale_date minus row_number</code> is a constant — every date in the run shifts down by exactly one more day than the row number increases, so they all land on the same computed value. Any gap in sales breaks that pattern and starts a new constant, which means grouping by that computed value naturally clusters each unbroken streak together, ready to <code>COUNT()</code>.</p>
+      <p><strong>Common follow-up:</strong> "how do I get only the single longest streak per employee, not every streak?" — wrap this whole query in one more CTE and add <code>ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY streak_length DESC) = 1</code> in an outer <code>WHERE</code>, the same top-1-per-group pattern used in Q16.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q20.</span> Generate Fibonacci numbers up to a given limit using a recursive CTE <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>WITH RECURSIVE fibonacci (n, current_val, next_val) AS (
+  SELECT 1, 0, 1                        -- anchor: seeds the sequence
+  UNION ALL
+  SELECT n + 1, next_val, current_val + next_val
+  FROM fibonacci
+  WHERE current_val &lt; 100              -- the "given limit"
+)
+SELECT n, current_val AS fibonacci_number
+FROM fibonacci
+ORDER BY n;</code></pre>
+      <p>Every recursive CTE has the same two-part shape: an <strong>anchor member</strong> (the base case, run once) <code>UNION ALL</code> a <strong>recursive member</strong> that references the CTE's own name — each pass runs against the previous pass's output, not the original table, and the engine keeps iterating until a run produces zero rows (here, once <code>current_val</code> reaches the limit and the <code>WHERE</code> stops matching). Each iteration shifts the <code>(current, next)</code> pair forward by exactly one Fibonacci step.</p>
+      <p><strong>Dialect note:</strong> Postgres and MySQL 8+ both use <code>WITH RECURSIVE</code>; SQL Server just uses <code>WITH</code> without the keyword, but the anchor/recursive-member structure is identical everywhere.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q21.</span> Use a CTE to identify duplicate records in a table <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>customers(customer_id, email)</code>.</p>
+      <pre><code>WITH duplicates AS (
+  SELECT
+    customer_id,
+    email,
+    ROW_NUMBER() OVER (PARTITION BY email ORDER BY customer_id) AS rn,
+    COUNT(*) OVER (PARTITION BY email) AS occurrences
+  FROM customers
+)
+SELECT customer_id, email, occurrences
+FROM duplicates
+WHERE occurrences &gt; 1
+ORDER BY email, customer_id;</code></pre>
+      <p><code>COUNT(*) OVER (PARTITION BY email)</code> tags every row with how many rows share its email, without collapsing anything — so rows belonging to a duplicate group can still be filtered individually with a plain <code>WHERE</code>, which a <code>GROUP BY</code> + <code>HAVING</code> version couldn't do without losing the individual <code>customer_id</code>s.</p>
+      <p><strong>Common follow-up:</strong> "now delete the duplicates, keeping one copy" — swap the filter to <code>WHERE rn &gt; 1</code> instead: that isolates every row <em>except</em> the first (by whatever <code>ORDER BY</code> you chose) in each duplicate group, which is exactly the set you'd feed into a <code>DELETE</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q22.</span> Find the total sales for each category and filter categories with sales greater than a threshold using a CTE <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>sales(category_id, amount)</code>.</p>
+      <pre><code>WITH category_sales AS (
+  SELECT
+    category_id,
+    SUM(amount) AS total_sales
+  FROM sales
+  GROUP BY category_id
+)
+SELECT category_id, total_sales
+FROM category_sales
+WHERE total_sales &gt; 100000;</code></pre>
+      <p><strong>Common follow-up:</strong> "why not just use <code>HAVING SUM(amount) &gt; 100000</code> directly and skip the CTE?" — for exactly this query, <code>HAVING</code> is more concise and does the same job in one step. A CTE starts earning its keep once the aggregated result needs to be joined against other tables, referenced more than once, or filtered by a second, unrelated condition afterward — situations where naming the intermediate result makes the query easier to read and reuse.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading" id="joins">4. Joins (Inner, Outer, Cross, Self)</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q23.</span> Retrieve customers who have placed orders and those who have not (Full Outer Join) <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>customers(customer_id, name)</code>, <code>orders(order_id, customer_id, order_date)</code>.</p>
+      <pre><code>SELECT
+  c.customer_id,
+  c.name,
+  o.order_id,
+  o.order_date
+FROM customers c
+FULL OUTER JOIN orders o
+  ON c.customer_id = o.customer_id;</code></pre>
+      <p>A <code>FULL OUTER JOIN</code> keeps every row from both sides — customers with orders get matched normally, customers with zero orders appear with <code>NULL</code> order columns, and (if it can happen in this schema) any orphaned order with no matching customer would also still appear, with <code>NULL</code> customer columns.</p>
+      <p><strong>Dialect note:</strong> MySQL has no native <code>FULL OUTER JOIN</code>. It's emulated as <code>LEFT JOIN ... UNION ... RIGHT JOIN ...</code> (or a <code>LEFT JOIN</code> unioned with a <code>RIGHT JOIN ... WHERE left.key IS NULL</code> to avoid duplicating the matched rows).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q24.</span> Find employees working on multiple projects using a self join <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>employee_projects(emp_id, project_id)</code>.</p>
+      <pre><code>SELECT DISTINCT
+  a1.emp_id
+FROM employee_projects a1
+JOIN employee_projects a2
+  ON a1.emp_id = a2.emp_id
+ AND a1.project_id &lt;&gt; a2.project_id;</code></pre>
+      <p>Joining the assignment table to itself on the same employee but a <em>different</em> project produces a row only when that employee has at least two distinct project assignments — matching (project A, project B) and (project B, project A) as two separate pairings, which is why <code>DISTINCT</code> is needed to collapse them back down to one row per employee.</p>
+      <p><strong>Worth noting:</strong> a plain aggregate is actually the more natural tool for this specific question — <code>SELECT emp_id FROM employee_projects GROUP BY emp_id HAVING COUNT(DISTINCT project_id) &gt; 1</code> gets the same answer without a join at all. The self join is shown here because the question specifically asks for one; self joins earn their keep more clearly in Q27, where you need to pull back a manager's *name*, not just detect a relationship.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q25.</span> Match orders with customers, and display unmatched orders too (Left Join) <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>-- all orders, matched customer info where it exists
+SELECT
+  o.order_id,
+  o.order_date,
+  c.customer_id,
+  c.name
+FROM orders o
+LEFT JOIN customers c
+  ON o.customer_id = c.customer_id;
+
+-- isolate just the unmatched ("orphaned") orders
+SELECT o.*
+FROM orders o
+LEFT JOIN customers c ON o.customer_id = c.customer_id
+WHERE c.customer_id IS NULL;</code></pre>
+      <p><code>LEFT JOIN</code> keeps every row from <code>orders</code> (the "left" table) regardless of whether a match exists in <code>customers</code>; when it doesn't, every selected customer column comes back <code>NULL</code>. That's what makes <code>WHERE c.customer_id IS NULL</code> a reliable way to isolate exactly the unmatched rows — it's only <code>NULL</code> when the join found nothing to attach.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q26.</span> Generate a product pair list, excluding pairs of identical products (Cross Join with condition) <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  p1.product_id AS product_1,
+  p2.product_id AS product_2
+FROM products p1
+CROSS JOIN products p2
+WHERE p1.product_id &lt;&gt; p2.product_id;</code></pre>
+      <p>A bare <code>CROSS JOIN</code> produces every possible combination — N × N rows, including a product paired with itself — since it has no <code>ON</code> condition at all. The <code>WHERE</code> clause filters those self-pairs out afterward.</p>
+      <p><strong>Common follow-up:</strong> "this still returns both (A, B) and (B, A) — how do I get only unique unordered pairs?" — swap the condition to <code>p1.product_id &lt; p2.product_id</code>. That one change does two things at once: it still excludes self-pairs (a value is never less than itself), and it also keeps only one direction of each pair instead of both mirrored copies.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q27.</span> Retrieve employees and their managers using a self join <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Schema: <code>employees(emp_id, name, manager_id)</code> — <code>manager_id</code> points back to another row's <code>emp_id</code>.</p>
+      <pre><code>SELECT
+  e.emp_id,
+  e.name AS employee_name,
+  m.name AS manager_name
+FROM employees e
+LEFT JOIN employees m
+  ON e.manager_id = m.emp_id;</code></pre>
+      <p>The classic self join for adjacency-list hierarchies: the same table plays two roles at once — <code>e</code> is "the employee row," <code>m</code> is "that employee's manager," found by matching <code>e.manager_id</code> back to <code>m.emp_id</code> in a second copy of the same table. <code>LEFT JOIN</code> (not <code>INNER</code>) matters here specifically so that whoever has no manager — the CEO, <code>manager_id IS NULL</code> — still shows up in the results instead of being silently dropped.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">5. Subqueries</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q28.</span> Find customers whose total order amount is greater than the average order amount <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  customer_id,
+  SUM(amount) AS total_order_amount
+FROM orders
+GROUP BY customer_id
+HAVING SUM(amount) &gt; (
+  SELECT AVG(amount) FROM orders
+);</code></pre>
+      <p>This reads "the average order amount" as the average of every <em>individual</em> order (a single number computed once by the subquery), compared against each customer's <em>summed</em> total. That's a genuinely ambiguous phrase in real interviews, though — the other common reading is "the average of customers' totals," which changes the subquery to <code>SELECT AVG(customer_total) FROM (SELECT SUM(amount) AS customer_total FROM orders GROUP BY customer_id) t</code>. Worth stating out loud which interpretation you're using before writing the query.</p>
+      <p>The subquery here is <strong>uncorrelated</strong> — it doesn't reference anything from the outer query, so the engine only needs to evaluate it once and reuse the result for every group's comparison.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q29.</span> Retrieve employees who earn the lowest salary in their department <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  e.emp_id,
+  e.name,
+  e.dept_id,
+  e.salary
+FROM employees e
+WHERE e.salary = (
+  SELECT MIN(e2.salary)
+  FROM employees e2
+  WHERE e2.dept_id = e.dept_id
+);</code></pre>
+      <p>This one is <strong>correlated</strong> — the inner subquery references <code>e.dept_id</code> from the outer row, so conceptually it re-runs once per outer row, recomputing "the minimum salary in this employee's specific department" each time. Comparing with <code>=</code> against that per-row minimum naturally handles ties correctly: if two employees in the same department are both at the department floor, both are returned, unlike an <code>ORDER BY salary LIMIT 1</code> approach which would arbitrarily cut one of them.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q30.</span> Identify products that have been ordered more than 10 times using a subquery <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>-- direct, using HAVING — the natural way to write this alone
+SELECT product_id
+FROM order_items
+GROUP BY product_id
+HAVING COUNT(*) &gt; 10;
+
+-- as an explicit subquery/derived table
+SELECT product_id
+FROM (
+  SELECT product_id, COUNT(*) AS times_ordered
+  FROM order_items
+  GROUP BY product_id
+) counts
+WHERE times_ordered &gt; 10;</code></pre>
+      <p>Both return identical results. The plain <code>HAVING</code> form is simpler whenever nothing else needs to happen — the derived-table form becomes necessary the moment that count needs to be joined back to a <code>products</code> table for names, or combined with another filter that itself needs the alias <code>times_ordered</code> to already exist.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q31.</span> Find regions where the maximum sales are below a given threshold <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT region_id, max_sale
+FROM (
+  SELECT region_id, MAX(amount) AS max_sale
+  FROM sales
+  GROUP BY region_id
+) region_max
+WHERE max_sale &lt; 5000;</code></pre>
+      <p>Same shape as Q30: the inner query computes the per-region ceiling, the outer query filters on the now-materialized alias. The equivalent one-step version, <code>GROUP BY region_id HAVING MAX(amount) &lt; 5000</code>, is just as correct and more common in practice — this derived-table form is worth knowing because it's what you fall back to once the filtered aggregate needs to be joined against something else.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">6. Aggregate Functions</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q32.</span> Calculate the median salary for each department <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  dept_id,
+  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median_salary
+FROM employees
+GROUP BY dept_id;</code></pre>
+      <p><code>PERCENTILE_CONT(0.5)</code> asks for the value at the 50th percentile — the median, by definition — interpolating between the two middle values when a group has an even count. It's supported by Postgres, Oracle, and SQL Server.</p>
+      <p><strong>Common pitfall:</strong> assuming MySQL has the same function — it doesn't (no native <code>MEDIAN</code>/<code>PERCENTILE_CONT</code> before very recent versions). The manual fallback uses <code>ROW_NUMBER()</code>/<code>COUNT()</code> per department to find the middle row (or average the two middle rows for an even count) — a good one to know exists even if you don't memorize the full syntax, since interviewers often ask specifically because it's a well-known MySQL gap.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q33.</span> Find the total sales for each month and rank them in descending order <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  DATE_TRUNC('month', sale_date) AS month,
+  SUM(amount) AS total_sales,
+  RANK() OVER (ORDER BY SUM(amount) DESC) AS sales_rank
+FROM sales
+GROUP BY DATE_TRUNC('month', sale_date)
+ORDER BY sales_rank;</code></pre>
+      <p>This is the common combo point between the two topics: <code>GROUP BY</code> collapses rows down to one per month first, and only then does the window function <code>RANK() OVER (...)</code> run on top of that already-aggregated result — window functions are logically evaluated after grouping, so they can freely reference the grouped/aggregated values like <code>SUM(amount)</code> directly.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q34.</span> Count the number of distinct customers for each product <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  oi.product_id,
+  COUNT(DISTINCT o.customer_id) AS distinct_customers
+FROM order_items oi
+JOIN orders o ON oi.order_id = o.order_id
+GROUP BY oi.product_id;</code></pre>
+      <p><code>COUNT(DISTINCT ...)</code> matters here specifically because a single customer can buy the same product across multiple separate orders — without <code>DISTINCT</code>, that customer would be counted once per order instead of once per product, inflating the number.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q35.</span> Retrieve the top 5 regions by total sales <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  region_id,
+  SUM(amount) AS total_sales
+FROM sales
+GROUP BY region_id
+ORDER BY total_sales DESC
+LIMIT 5;</code></pre>
+      <p><strong>Dialect note:</strong> <code>LIMIT 5</code> is MySQL/Postgres syntax. SQL Server uses <code>SELECT TOP 5 ...</code> (goes in the <code>SELECT</code> clause instead, before the columns); the ANSI-standard form, supported by Oracle and others, is <code>FETCH FIRST 5 ROWS ONLY</code> after the <code>ORDER BY</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q36.</span> Calculate the average order value for each customer <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  customer_id,
+  AVG(amount) AS avg_order_value
+FROM orders
+GROUP BY customer_id;</code></pre>
+      <p>Straightforward <code>GROUP BY</code> + <code>AVG</code>. Worth distinguishing in an interview from a lifetime-value style metric: this is the average size of a single order, not a customer's total spend (<code>SUM</code>) or their order frequency (<code>COUNT</code>) — three different, commonly conflated numbers that are all one aggregate function apart from each other on the exact same table.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading">7. Indexing &amp; Performance</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q37.</span> Write a query to find duplicate values in an indexed column <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  email,
+  COUNT(*) AS occurrences
+FROM customers
+GROUP BY email
+HAVING COUNT(*) &gt; 1;</code></pre>
+      <p>The query itself is the same shape as Q21 — the "indexed column" part is about <em>why</em> it's fast: a B-tree index on <code>email</code> already stores values in sorted order, so the engine can walk it sequentially to group matching values instead of sorting the entire table from scratch in memory to perform the <code>GROUP BY</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q38.</span> Analyze the impact of adding a composite index on query performance <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <pre><code>EXPLAIN ANALYZE
+SELECT * FROM orders
+WHERE customer_id = 42 AND order_date &gt; '2025-01-01';
+
+CREATE INDEX idx_orders_customer_date ON orders (customer_id, order_date);
+
+EXPLAIN ANALYZE
+SELECT * FROM orders
+WHERE customer_id = 42 AND order_date &gt; '2025-01-01';</code></pre>
+      <p>Methodology: run <code>EXPLAIN ANALYZE</code> (Postgres/MySQL) before and after adding the index, and compare the plan and the actual timing — specifically, whether the step changes from a <code>Seq Scan</code>/full table scan to an <code>Index Scan</code> or <code>Index Only Scan</code>, and whether the reported execution time and rows-examined count both drop.</p>
+      <p>A <strong>composite</strong> (multi-column) index is only useful when a query's filter/sort columns match its <strong>leftmost prefix</strong>, in order — an index on <code>(customer_id, order_date)</code> speeds up a filter on <code>customer_id</code> alone or on both columns together, but does nothing for a query that filters on <code>order_date</code> alone.</p>
+      <p><strong>Common follow-up:</strong> "so is adding an index always a win?" — no. Every index speeds up matching reads but adds overhead to every write (the index itself must be kept up to date) and consumes extra disk space — it's a read/write tradeoff, not a free upgrade, which is exactly why this question asks you to <em>measure</em> the impact rather than assume it.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q39.</span> Identify columns with high cardinality that could benefit from indexing <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>SELECT
+  COUNT(DISTINCT customer_id) AS distinct_customers,
+  COUNT(*) AS total_rows,
+  COUNT(DISTINCT customer_id) * 1.0 / COUNT(*) AS cardinality_ratio
+FROM orders;</code></pre>
+      <p>Cardinality = how many distinct values a column has relative to its total row count. A ratio close to <code>1.0</code> (e.g., an email, an order ID, a UUID) is high cardinality — an index lookup can narrow the result down to very few rows, which is exactly what makes an index worth having. A ratio close to <code>0</code> (e.g., a boolean flag, or a status column with 3–4 possible values) is low cardinality — a B-tree index there often isn't selective enough for the optimizer to prefer over a full scan, since matching any one value still means fetching a large fraction of the table.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q40.</span> Compare query execution times before and after adding a clustered index <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <pre><code>-- before: baseline timing
+EXPLAIN ANALYZE
+SELECT * FROM orders WHERE order_id BETWEEN 1000 AND 2000;
+
+-- add a clustered index (SQL Server syntax — a table's PK is clustered by default in many engines)
+CREATE CLUSTERED INDEX idx_orders_id ON orders (order_id);
+
+-- after: re-run the identical query and compare
+EXPLAIN ANALYZE
+SELECT * FROM orders WHERE order_id BETWEEN 1000 AND 2000;</code></pre>
+      <p>See Q7 for what a clustered index is; the relevant point for <em>this</em> question is why range scans specifically benefit so much: a clustered index physically reorders the table's rows on disk to match the index key, so a <code>BETWEEN</code>/range condition reads one contiguous block of storage instead of jumping around the table to fetch each matching row individually — which is what a non-clustered index lookup still has to do afterward, unless it happens to be a covering index.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q41.</span> Write a query that avoids the use of an index to test performance differences <span class="priority">*</span></summary>
+    <div class="qa-body">
+      <pre><code>-- wrapping an indexed column in a function defeats a standard B-tree index,
+-- forcing a full scan instead:
+SELECT * FROM orders WHERE UPPER(customer_email) = 'JANE@EXAMPLE.COM';
+
+-- a leading wildcard also defeats a standard B-tree index:
+SELECT * FROM orders WHERE customer_email LIKE '%@example.com';
+
+-- or, explicitly (MySQL):
+SELECT * FROM orders IGNORE INDEX (idx_customer_email)
+WHERE customer_email = 'jane@example.com';</code></pre>
+      <p>These are exactly the patterns to <em>avoid</em> in production for the same reason they're useful here: transforming the column (<code>UPPER(...)</code>) or anchoring a <code>LIKE</code> pattern with a leading wildcard both prevent the optimizer from using a standard index range scan, giving a reliable, deliberate full-scan baseline to compare against. Postgres also supports a blunter, connection-level override for testing — <code>SET enable_seqscan = off/on</code> — without touching the query text at all.</p>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

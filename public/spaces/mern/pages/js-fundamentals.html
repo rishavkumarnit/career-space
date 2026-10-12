@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS Fundamentals — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html" class="active">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">JavaScript Interview Preparation Notes</h1>
+  <p class="page-sub">49 core JS concepts, from hoisting to the critical rendering path.</p>
+
+  <details class="qa">
+    <summary><span class="q-num">1.</span> What is hoisting?</summary>
+    <div class="qa-body">
+      <p>Hoisting is JavaScript's behavior of moving declarations to the top of their scope before execution. In reality nothing physically "moves" — during the Memory Creation Phase (before any line runs), the JS engine scans the scope and pre-allocates memory for every var, let, const, function, and class declaration it finds. What differs between them is <em>how</em> that memory gets initialized, which is where most of the interview confusion lives — declarations are hoisted, but expressions are not, and that distinction trips people up constantly.</p>
+
+      <h3>var declarations</h3>
+      <p>Hoisted and initialized with <code>undefined</code>. Accessing a var before its declaration gives <code>undefined</code>, not an error.</p>
+      <pre><code>console.log(a); // undefined
+var a = 10;
+
+// Internally:
+var a;          // declaration hoisted, initialized to undefined
+console.log(a); // undefined
+a = 10;         // assignment stays here</code></pre>
+      <p><strong>Practical note:</strong> a common interview follow-up is "why does var hoisting cause bugs?" — because var is function-scoped, not block-scoped, a var declared inside an if/for block leaks into the whole function and silently overwrites outer values. This is one of the main reasons let/const are preferred today.</p>
+
+      <h3>Example: a hoisted local variable shadows the outer variable</h3>
+      <pre><code>var status = "Active";
+
+function checkStatus() {
+  // The local `var status` declaration is hoisted to the top
+  // of this function and shadows the outer variable.
+  console.log("Status is: " + status);
+
+  // ... complex logic ...
+
+  var status = "Inactive";
+}
+
+checkStatus(); // "Status is: undefined"</code></pre>
+      <p>The result is <code>undefined</code>, not <code>"Active"</code>. Because <code>var</code> is function-scoped, the local declaration applies to the entire <code>checkStatus</code> function. Only the declaration is hoisted; the assignment remains in its original position.</p>
+      <pre><code>// A useful mental model for how JavaScript executes checkStatus:
+function checkStatus() {
+  var status; // initialized to undefined and shadows the outer status
+
+  console.log("Status is: " + status);
+  status = "Inactive";
+}</code></pre>
+
+      <h3>Function declarations</h3>
+      <p>Hoisted with the function itself — not just the name, but the entire function body — so it's fully callable before its textual position in the file.</p>
+      <pre><code>hello(); // works — logs "hello"
+function hello() {
+  console.log("hello");
+}</code></pre>
+
+      <h3>Function expressions</h3>
+      <p>This is where people often get confused. Assigning a function to a variable makes it a <strong>function expression</strong>, not a function declaration — and only declarations get hoisted with their value intact. Here, only the <code>var hello</code> binding is hoisted; the function itself is not.</p>
+      <pre><code>hello(); // TypeError: hello is not a function
+var hello = function () {
+  console.log("hello");
+};
+
+// Internally:
+var hello; // hello = undefined
+hello();   // undefined() → TypeError
+hello = function () {
+  console.log("hello");
+};</code></pre>
+      <p>The same applies to an arrow function assigned with var — it's still just a value being assigned to a binding that was already hoisted as <code>undefined</code>:</p>
+      <pre><code>hello(); // TypeError
+var hello = () => {
+  console.log("hello");
+};</code></pre>
+
+      <h3>Class declarations</h3>
+      <p>Classes are hoisted too, but — like let/const — they land in the Temporal Dead Zone rather than being initialized to anything usable. You can't instantiate a class before its declaration is evaluated.</p>
+      <pre><code>const obj = new User(); // ReferenceError
+class User {}</code></pre>
+
+      <h3>Interview cheat sheet</h3>
+      <table>
+        <tr><th>Declaration</th><th>Hoisted?</th><th>Initialized during scope setup?</th><th>Usable before the line runs?</th></tr>
+        <tr><td><code>var a</code></td><td>Yes</td><td>Yes → <code>undefined</code></td><td>Yes, reads as <code>undefined</code></td></tr>
+        <tr><td><code>let a</code></td><td>Yes</td><td>No (TDZ)</td><td>No → ReferenceError</td></tr>
+        <tr><td><code>const a</code></td><td>Yes</td><td>No (TDZ)</td><td>No → ReferenceError</td></tr>
+        <tr><td><code>function foo(){}</code></td><td>Yes</td><td>Yes → the function itself</td><td>Yes, fully callable</td></tr>
+        <tr><td><code>var foo = function(){}</code></td><td>Yes (binding only)</td><td>Yes → <code>undefined</code></td><td>No → TypeError if called</td></tr>
+        <tr><td><code>var foo = () =&gt; {}</code></td><td>Yes (binding only)</td><td>Yes → <code>undefined</code></td><td>No → TypeError if called</td></tr>
+        <tr><td><code>class Foo {}</code></td><td>Yes</td><td>No (TDZ)</td><td>No → ReferenceError</td></tr>
+      </table>
+
+      <p><strong>Mental model:</strong> hoisting applies to bindings/declarations, not to arbitrary assignments or expressions. For <code>var x = 10</code>, think of it as two separate steps: <code>var x;</code> (binding created and initialized during scope setup) then <code>x = 10;</code> (the assignment executes later, in place). A plain <code>function foo(){}</code> declaration is the special case — its binding is initialized with the actual function object during scope setup itself, which is why it's callable immediately. A function <em>expression</em> never gets that early treatment, no matter whether it's assigned with <code>var</code>, <code>let</code>, or <code>const</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">2.</span> Are let and const also hoisted?</summary>
+    <div class="qa-body">
+      <p>Yes. They are hoisted but remain in the Temporal Dead Zone (TDZ) until initialization.</p>
+      <pre><code>console.log(a); // ReferenceError
+let a = 10;</code></pre>
+      <p>The engine still allocates memory for let/const during the Memory Creation Phase (that's the "hoisted" part), but unlike var it does not initialize them to undefined — the binding exists but is unreachable until the actual declaration line executes. This is a deliberate design choice: it turns a whole class of "used before assignment" bugs that var allowed silently into loud, immediate ReferenceErrors.</p>
+      <p><strong>Practical note:</strong> const additionally requires an initializer at declaration time and cannot be reassigned after — but note that const only freezes the binding, not the value; a const object's properties can still be mutated.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">3.</span> Temporal Dead Zone (TDZ)</summary>
+    <div class="qa-body">
+      <p>The time between variable (let/const) hoisting and initialization.</p>
+      <pre><code>{
+  // TDZ starts
+  console.log(a);
+  let a = 10;
+  // TDZ ends
+}</code></pre>
+      <p>Accessing a variable inside the TDZ throws a ReferenceError.</p>
+      <p>The TDZ isn't tied to physical position in the file so much as execution order relative to the declaration statement — the binding is created when the scope is entered, but stays in an "uninitialized" state until the `let`/`const` line actually runs. It exists purely as a safety mechanism: it makes reading a variable before its declaration a hard error instead of silently returning undefined (as var would).</p>
+      <p><strong>Practical note:</strong> `typeof` does not protect you from the TDZ — `typeof x` throws a ReferenceError if x is in the TDZ, unlike a truly undeclared variable where `typeof` safely returns "undefined". This trips people up in interviews.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">4.</span> == vs ===</summary>
+    <div class="qa-body">
+      <p><strong>== (Loose Equality):</strong> performs type conversion.</p>
+      <pre><code>'5' == 5
+// true</code></pre>
+      <p><strong>=== (Strict Equality):</strong> checks value and type.</p>
+      <pre><code>'5' === 5
+// false</code></pre>
+      <p>Use === in production code.</p>
+      <p>Under the hood, == runs the Abstract Equality Comparison Algorithm: if the two operands are different types, JS coerces one side (usually the non-number to a number) before comparing. This is what causes surprising results like `null == undefined` being true (they're only equal to each other, and to nothing else) and `'' == 0` being true, while `NaN == NaN` is always false regardless of operator — you must use `Number.isNaN()` or `Object.is()` to test for NaN.</p>
+      <p><strong>Practical note:</strong> a common interview trap is `[] == false` → true (empty array coerces to `""` then to `0`). This kind of implicit coercion is exactly why teams enforce === via linting.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">5.</span> Synchronous vs asynchronous code</summary>
+    <div class="qa-body">
+      <p>Synchronous code executes sequentially — each operation must complete before the next starts. Asynchronous code allows long-running operations (timers, API calls, file operations) to run in the background, so JavaScript continues executing other code without blocking the main thread.</p>
+      <p>JavaScript remains single-threaded; async behavior is managed through the Event Loop and callback/microtask queues.</p>
+      <pre><code>// Synchronous
+console.log(1);
+console.log(2);
+// Output: 1  2
+
+// Asynchronous
+console.log(1);
+setTimeout(() => {
+  console.log(2);
+}, 0);
+console.log(3);
+// Output: 1  3  2</code></pre>
+      <p>The reason setTimeout(fn, 0) doesn't run immediately is that it's still handed off to the Web API/timer thread and queued as a macrotask — it only runs once the current synchronous call stack is completely empty, no matter how small the delay is. This is why "0ms" really means "as soon as possible after the current script finishes", not "instantly".</p>
+      <p><strong>Practical note:</strong> a common follow-up is "what actually makes JS non-blocking if it's single-threaded?" — the JS engine itself (call stack + heap) is single-threaded, but the surrounding runtime (browser Web APIs or Node's libuv) is multi-threaded and handles timers, I/O, and network requests in the background, only handing the *callback* back to the single JS thread via the event loop.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">6.</span> Event loop (in browsers)</summary>
+    <div class="qa-body">
+      <p>The event loop is a core mechanism that allows JS to perform non-blocking, asynchronous operations even though JS itself is single-threaded.</p>
+      <p>Event Loop coordinates:</p>
+      <ul>
+        <li><strong>Execute Synchronous Code:</strong> the main script runs first; every function call is pushed onto the Call Stack (LIFO) and executed immediately.</li>
+        <li><strong>Offload Asynchronous Tasks:</strong> setTimeout, fetch, event listeners are handed to the browser's Web APIs (or Node APIs) to run in the background.</li>
+        <li><strong>Queue the Callbacks:</strong> once the background task finishes, its callback is placed into a queue.</li>
+        <li><strong>Monitor the Call Stack:</strong> the event loop checks if the Call Stack is empty.</li>
+        <li><strong>Push to Stack:</strong> if empty, the event loop takes the first queued task and pushes it onto the stack.</li>
+      </ul>
+      <pre><code>console.log(1);
+setTimeout(() => console.log(2));
+Promise.resolve()
+.then(() => console.log(3));
+console.log(4);
+// Output: 1  4  3  2</code></pre>
+      <pre><code>Run Sync Code
+      ↓
+Execute all Microtasks
+      ↓
+Render (if needed)
+      ↓
+Execute one Macrotask
+      ↓
+Repeat</code></pre>
+      <p>The precise ordering matters a lot in interviews: the <strong>microtask queue</strong> (Promise .then/.catch/.finally, queueMicrotask, MutationObserver) is fully drained — including any new microtasks scheduled while draining — before the event loop even looks at the <strong>macrotask/callback queue</strong> (setTimeout, setInterval, I/O, UI events). That's why in the example above, `3` (a microtask) always logs before `2` (a macrotask) even though the Promise resolved instantly and the timer was scheduled first. The optional "Render" step only happens on the browser's own schedule, typically once per macrotask/animation frame, which is also why requestAnimationFrame callbacks run right before a repaint rather than as a normal macrotask.</p>
+      <p><strong>Practical note:</strong> a classic bug this causes is UI feeling "frozen" — because the event loop can't repaint or process clicks until the call stack is empty, a synchronous long-running loop (or, more subtly, an infinite chain of microtasks, see next topic) blocks rendering entirely.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">7.</span> Starvation of the callback queue</summary>
+    <div class="qa-body">
+      <p>Occurs when microtasks continuously execute and prevent callback queue execution.</p>
+      <pre><code>function infinite() {
+ Promise.resolve().then(infinite);
+}
+infinite();
+setTimeout(() => console.log("Timer"));
+// "Timer" never executes.</code></pre>
+      <p>This happens because the event loop's rule is strict: drain the microtask queue completely before touching the macrotask queue. If a microtask keeps scheduling another microtask, the queue never empties, so the loop never advances to macrotasks — the timer callback, any click handlers, and even rendering all get starved indefinitely.</p>
+      <p><strong>Practical note:</strong> this is a real production bug pattern — a recursive `.then()` chain (e.g., a retry loop implemented with promises instead of setTimeout) can freeze a page or hang a Node process. The fix is to break the recursion out via a macrotask (setTimeout/setImmediate) periodically, or restructure with async/await plus an explicit await of a timer.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">8.</span> Proxy object</summary>
+    <div class="qa-body">
+      <p>Proxy is an object that wraps another object (the "target") and allows you to intercept and redefine fundamental operations for it.</p>
+      <pre><code>const user = {
+   name: "John"
+};
+const proxy = new Proxy(user, {
+   get(target, prop) {
+      console.log(`Accessing property: ${prop}`);
+      return target[prop];
+   }
+});
+
+console.log(proxy.name);</code></pre>
+      <p><strong>Output:</strong></p>
+      <pre><code>Accessing property: name
+John</code></pre>
+      <p>Reading <code>proxy.name</code> invokes the <code>get</code> trap first. The trap logs the property name and then returns <code>user.name</code>, which is why the two lines appear in that order.</p>
+      <p>Used for: validation, logging, reactive frameworks.</p>
+      <p>A Proxy works by defining "traps" — handler functions that intercept fundamental operations on the target object. Besides get/set, common traps include has (intercepts the `in` operator), deleteProperty (intercepts `delete`), and apply (intercepts function calls). The companion built-in `Reflect` object provides default implementations of these same operations, so a trap typically calls `Reflect.get(target, prop)` internally instead of `target[prop]` to correctly preserve default behavior (including edge cases like inherited getters).</p>
+      <p><strong>Practical note:</strong> this is exactly the mechanism Vue 3's reactivity system uses under the hood — instead of Object.defineProperty per-property (Vue 2's approach), Vue 3 wraps a whole object in a Proxy so it can also react to new property additions and array index/length changes.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">9.</span> Callback hell</summary>
+    <div class="qa-body">
+      <p>A callback is a function passed as an argument to another function, to be executed later. Callback hell ("Pyramid of Doom") arises from nesting multiple callbacks to manage sequential async operations, producing code that is hard to read, debug, and maintain.</p>
+      <pre><code>function getData(dataId, getNextData) {
+  setTimeout(() => {
+    console.log("data", dataId);
+    if (getNextData) {
+      getNextData();
+    }
+  }, 2000);
+}
+getData(1, () => {
+  getData(2, () => {
+    getData(3, () => {
+      getData(4);
+    });
+  });
+});</code></pre>
+      <p><strong>Solution:</strong> Promises, Async/Await.</p>
+      <p>Beyond readability, nested callbacks create real structural problems: error handling has to be duplicated at every level (each callback needs its own error-first check), and it's easy to accidentally call a callback twice or never — this is sometimes called the "inversion of control" problem, because once you hand your callback to another function, you're trusting that function to call it correctly. Promises fix this by giving you a single object you control that is guaranteed to settle exactly once.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">10.</span> Promises</summary>
+    <div class="qa-body">
+      <p>A Promise represents the eventual completion (or failure) of an asynchronous operation and its resulting value.</p>
+      <p><strong>States:</strong> Pending, Fulfilled, Rejected.</p>
+      <pre><code>const promise = new Promise((resolve,reject)=>{
+   resolve("Success");
+});</code></pre>
+      <h3>How Promises improve on callback hell</h3>
+      <p>Promises provide a standardized abstraction for representing and composing the eventual results of asynchronous operations. Instead of deeply nesting callbacks, each operation can return a Promise and be connected into a readable, predictable chain.</p>
+      <ul>
+        <li><strong>Flatter control flow:</strong> sequential operations can be chained with <code>.then()</code> instead of creating a pyramid of nested callbacks.</li>
+        <li><strong>Centralized error handling:</strong> one <code>.catch()</code> can handle errors from any earlier step in the chain.</li>
+        <li><strong>Reliable settlement:</strong> a Promise can settle only once, preventing the multiple-callback problem.</li>
+        <li><strong>Easy composition:</strong> methods such as <code>Promise.all()</code>, <code>Promise.allSettled()</code>, and <code>Promise.race()</code> coordinate multiple asynchronous tasks.</li>
+        <li><strong>Better readability:</strong> Promises support <code>async</code>/<code>await</code>, allowing asynchronous code to resemble synchronous code.</li>
+      </ul>
+      <pre><code>// Nested callbacks
+getUser(userId, (error, user) =&gt; {
+  if (error) return handleError(error);
+  getOrders(user.id, (error, orders) =&gt; {
+    if (error) return handleError(error);
+    displayOrders(orders);
+  });
+});
+
+// Promise chain
+getUser(userId)
+  .then(user =&gt; getOrders(user.id))
+  .then(displayOrders)
+  .catch(handleError);</code></pre>
+      <p>The executor function passed to `new Promise()` runs synchronously and immediately — before the constructor even returns — but any `.then`/`.catch` callbacks attached to the promise are always scheduled as microtasks, even if the promise is already resolved by the time you attach them. Once a promise settles (fulfilled or rejected), it is locked into that state and value forever — calling resolve()/reject() again afterward has no effect.</p>
+      <p><strong>Practical note:</strong> an unhandled rejection (a rejected promise with no .catch) doesn't crash sync code but does trigger an "unhandledrejection" event/warning — always attach error handling, especially in async functions.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">11.</span> Promise chaining</summary>
+    <div class="qa-body">
+      <p>A technique to execute a sequence of async operations one after another. It works because every call to .then() or .catch() returns a new promise, which can be used to call the next .then().</p>
+      <pre><code>fetchUser()
+.then(user => fetchOrders(user.id))
+.then(orders => console.log(orders))
+.catch(console.error);</code></pre>
+      <p>Avoids callback hell.</p>
+      <p>The key mechanic: whatever a `.then()` callback returns becomes the resolved value of the new promise it returns. If that return value is itself a promise, the chain automatically "unwraps"/flattens it and waits for it to settle before continuing — this is what lets `fetchOrders(user.id)` inside a `.then` feed cleanly into the next `.then` instead of producing a nested promise-of-a-promise. A single `.catch()` at the end will catch a rejection from any step earlier in the chain, since a rejection skips all intermediate `.then()`s and jumps straight to the nearest `.catch`.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">12.</span> All Promise methods</summary>
+    <div class="qa-body">
+      <ul>
+        <li><strong>Promise.all()</strong> — fails immediately if any promise rejects.</li>
+        <li><strong>Promise.allSettled()</strong> — returns result of all promises.</li>
+        <li><strong>Promise.race()</strong> — returns first settled promise.</li>
+        <li><strong>Promise.any()</strong> — returns first successful promise; fails only if all fail.</li>
+      </ul>
+      <p><code>process.nextTick()</code> is a Node.js-specific API that schedules a callback to run immediately after the current operation finishes, before the event loop continues to the next phase.</p>
+      <p>These four combinators exist because "run several async operations concurrently" needs different failure semantics depending on the use case: use <code>Promise.all</code> when every result is required and any single failure should abort everything (e.g., loading required page data); use <code>allSettled</code> when you want the outcome of every operation regardless of failures (e.g., batch-uploading files where some may fail); use <code>race</code> for timeouts (race a real request against a timer promise); use <code>any</code> when you just need the first success from redundant sources (e.g., querying multiple mirrors/CDNs).</p>
+      <p><strong>Practical note:</strong> `process.nextTick()` callbacks run even before the regular microtask (Promise) queue in Node, which occasionally causes ordering confusion when mixing the two.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">13.</span> Async / await</summary>
+    <div class="qa-body">
+      <p>async and await provide a more synchronous-looking way to write and manage asynchronous code, particularly with Promises. Syntactic sugar over promises.</p>
+      <pre><code>async function getData() {
+   const result = await fetch(url);
+   return result;
+}</code></pre>
+      <p>When await is encountered: the function pauses, control returns to the event loop, and the function resumes when the promise resolves.</p>
+      <p>Under the hood an async function always returns a Promise, and `await` is essentially sugar for chaining `.then()` — the rest of the function body after `await` runs as a microtask callback once the awaited promise settles. Error handling uses regular try/catch instead of `.catch()`, because a rejected awaited promise throws inside the async function.</p>
+      <pre><code>async function load() {
+  try {
+    const res = await fetch(url);
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+  }
+}</code></pre>
+      <p><strong>Practical note:</strong> a very common performance bug is awaiting independent promises sequentially (`await a(); await b();`) when they don't depend on each other — this serializes work that could run in parallel. Prefer `const [x, y] = await Promise.all([a(), b()]);` when the calls are independent.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">14.</span> Debouncing &amp; throttling</summary>
+    <div class="qa-body">
+      <p><strong>Execution frequency:</strong> debouncing postpones execution until after a period of inactivity — the function only runs once calls have stopped coming in for the set delay. Throttling instead caps execution to a fixed number of times per interval, running immediately and then ignoring further calls until the interval elapses.</p>
+      <p><strong>Use cases:</strong> debouncing suits tasks that shouldn't fire repeatedly in quick succession, e.g. an API call triggered by a search input. Throttling suits controlling the rate of handlers on high-frequency events like scroll or resize, where you still want periodic updates rather than silence until the user stops.</p>
+
+      <h3>Debounce</h3>
+      <pre><code>const input1 = document.querySelector("#input1");
+
+input1.addEventListener("input", () => {
+  console.log("input..."); // runs hundreds of times!
+});
+
+function debounce(func, delay) {
+  let timeout;
+  return function() {
+    clearTimeout(timeout);   // clear previous timer
+    timeout = setTimeout(() => {
+      func();                // run after delay
+    }, delay);
+  };
+}
+
+// Example usage:
+const searchHandler = debounce(() => {
+  console.log("Searching...");
+}, 3000);
+
+input1.addEventListener("input", searchHandler);</code></pre>
+      <p>Every keystroke resets the timer, so <code>func</code> only fires once the user has stopped typing for the full delay — ideal for search-as-you-type API calls where you don't want a request per keystroke.</p>
+
+      <h3>Throttle</h3>
+      <pre><code>window.addEventListener("scroll", () => {
+  console.log("scrolling");
+});
+
+function throttle(func, limit) {
+  let inThrottle;
+  return function() {
+    if (!inThrottle) {
+      func();                 // run immediately
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+}
+
+// Example usage:
+const scrollHandler = throttle(() => {
+  console.log("fetching...");
+}, 1000);
+
+window.addEventListener("scroll", scrollHandler);</code></pre>
+      <p>The first call runs immediately, then a cooldown flag blocks further calls until the limit expires — so <code>func</code> runs at most once per interval no matter how many scroll events fire in between.</p>
+      <p><strong>Practical note:</strong> both implementations rely on a closure over <code>timeout</code>/<code>inThrottle</code> to persist state between calls, so the wrapped function "remembers" the timer or flag from one invocation to the next — see Q20 for why that's possible at all.</p>
+      <p><strong>Source:</strong> <a href="https://www.geeksforgeeks.org/javascript/difference-between-debouncing-and-throttling/" target="_blank" rel="noopener">GeeksforGeeks — Difference between Debouncing and Throttling</a></p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">15.</span> Polyfills</summary>
+    <div class="qa-body">
+      <p>A polyfill is a custom implementation of a modern feature for older browsers/environments that don't natively support it.</p>
+      <p>Examples: Promise, Array.map, Array.filter.</p>
+      <p>Polyfills differ from a <strong>transpiler</strong> (like Babel): a transpiler rewrites new syntax (e.g., arrow functions, optional chaining) into older equivalent syntax at build time, whereas a polyfill adds a missing runtime API/method by attaching it to the relevant global or prototype so the rest of the code can call it as if it were native. In practice both are used together — Babel transpiles syntax and pulls in polyfills (via core-js) for missing built-ins.</p>
+      <p><strong>Practical note:</strong> interviewers often ask you to implement one from scratch (see next topic) specifically to test whether you understand what the built-in method does internally, not just how to call it.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">16.</span> Polyfill implementations</summary>
+    <div class="qa-body">
+      <p>Each polyfill below attaches its method onto the relevant prototype so it can be called on any instance exactly like the native version, and each accepts a callback plus reads `this` as the array/value it's invoked on.</p>
+      <pre><code>// Array.map
+Array.prototype.myMap = function(cb){
+   const result = [];
+   for(let i=0;i<this.length;i++){
+      result.push(cb(this[i],i,this));
+   }
+   return result;
+};
+
+// Array.filter
+Array.prototype.myFilter = function(cb){
+   const result = [];
+   for(let i=0;i<this.length;i++){
+      if(cb(this[i],i,this)){
+         result.push(this[i]);
+      }
+   }
+   return result;
+};
+
+// Array.includes
+Array.prototype.myIncludes = function(value){
+   for(let item of this){
+      if(item === value){
+         return true;
+      }
+   }
+   return false;
+};
+
+// Array.find
+Array.prototype.myFind = function(cb){
+   for(let item of this){
+      if(cb(item)) return item;
+   }
+};
+
+// Promise.all
+Promise.myAll = function (promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let completed = 0;
+    if (promises.length === 0) {
+      resolve([]);
+      return;
+    }
+    promises.forEach((promise, index) => {
+      Promise.resolve(promise)
+        .then((value) => {
+          results[index] = value;
+          completed++;
+          if (completed === promises.length) {
+            resolve(results);
+          }
+        })
+        .catch(reject);
+    });
+  });
+};</code></pre>
+      <p><strong>myMap/myFilter</strong> loop the array once, calling the callback with (element, index, array) and either pushing every transformed value (map) or only values that pass the test (filter) into a new result array — neither mutates the original. <strong>myIncludes/myFind</strong> both do a linear scan and return early the moment they find a match, the only difference being includes returns a boolean while find returns the actual element (or undefined). <strong>Promise.myAll</strong> wraps every item in `Promise.resolve()` (so plain, non-promise values are handled too), tracks a `completed` counter, writes each result into `results` at its original index (not push order) so ordering is preserved even if promises settle out of order, and resolves only once `completed` reaches the total count — while any single rejection immediately rejects the whole thing via `.catch(reject)`.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">17.</span> Custom setInterval</summary>
+    <div class="qa-body">
+      <pre><code>function mySetInterval(fn, delay){
+   let cancelled = false;
+   function run(){
+      if(cancelled) return;
+      fn();
+      setTimeout(run, delay);
+   }
+   setTimeout(run, delay);
+   return () => cancelled = true;
+}</code></pre>
+      <p>Native `setInterval` fires on a fixed cadence regardless of how long the callback takes, which can cause overlapping executions if `fn` is slow. This implementation instead chains recursive `setTimeout` calls — each call to `run()` only schedules the *next* call after `fn()` finishes — so it self-corrects and never overlaps. The returned function closes over the `cancelled` flag, letting the caller stop the loop (mimicking `clearInterval`) without needing to store or expose the underlying timer ID.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">18.</span> Variable scope</summary>
+    <div class="qa-body">
+      <p>Global Scope, Function Scope, Block Scope.</p>
+      <p><strong>var:</strong> function scoped.<br><strong>let/const:</strong> block scoped.</p>
+      <p>Scope determines where a variable is visible and how long it lives. Every function call creates a new function scope; every `{}` block (if, for, while, or a bare block) creates a new block scope for let/const, but not for var — which is why a var declared inside a for-loop body is still accessible after the loop ends. Scopes nest: a lookup for a variable walks outward from the current scope through each enclosing scope up to global (the scope chain), stopping at the first match — this is the mechanism that both lexical scope and closures rely on.</p>
+      <p><strong>Practical note:</strong> the classic `var` vs `let` loop bug — `for (var i = 0; i < 3; i++) setTimeout(() => console.log(i))` logs 3, 3, 3 because all callbacks share the one function-scoped `i`; swapping to `let` logs 0, 1, 2 because `let` creates a fresh binding per iteration.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">19.</span> Event delegation &amp; propagation</summary>
+    <div class="qa-body">
+      <p>Event Propagation is the process by which an event travels through the DOM tree when it occurs on an element.</p>
+      <p><strong>Phases:</strong></p>
+      <ul>
+        <li><strong>Capturing Phase</strong> (Top → Down): Document → Parent → Child. Runs only for listeners registered with capture: true.</li>
+        <li><strong>Target Phase:</strong> event reaches the clicked element.</li>
+        <li><strong>Bubbling Phase</strong> (Bottom → Up): Child → Parent → Document. Default behavior of addEventListener().</li>
+      </ul>
+      <pre><code>parent.addEventListener("click", () => {
+  console.log("parent");
+});
+child.addEventListener("click", () => {
+  console.log("child");
+});
+// Clicking child:
+// child
+// parent</code></pre>
+      <p><strong>Event Delegation:</strong> a technique where a parent handles events for its children using event bubbling. Fewer listeners, better performance, works for dynamically added elements.</p>
+      <pre><code>document.getElementById("list")
+  .addEventListener("click", (e) => {
+    if (e.target.tagName === "LI") {
+      console.log(e.target.textContent);
+    }
+  });
+
+// Instead of:
+// li1.addEventListener(...)
+// li2.addEventListener(...)
+// li3.addEventListener(...)</code></pre>
+      <p>Event Propagation is how an event moves through the DOM (capturing, target, bubbling). Event Delegation is a pattern that leverages event bubbling by attaching a single listener to a parent element to handle events from its children.</p>
+      <p><strong>Practical note:</strong> the most common interview follow-up is "why is delegation better for dynamic lists?" — because the listener lives on the stable parent, elements added later (e.g., after an API call re-renders a list) are automatically handled with zero extra wiring, whereas per-element listeners would need to be re-attached to every new node.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">20.</span> Closure</summary>
+    <div class="qa-body">
+      <p>A closure is a function bundled together with references to its surrounding state (the lexical environment). A closure gives a function access to its outer scope. Closures are created every time a function is created, at function creation time.</p>
+      <p>Closure = function remembers variables from outer scope even after the outer function finishes.</p>
+      <pre><code>function outer(){
+   let count = 0;
+   return function(){
+      count++;
+      return count;
+   };
+}
+const increment = outer();</code></pre>
+      <p><strong>Practical example: a bank account with private balance</strong></p>
+      <pre><code>function createBankAccount(initialBalance) {
+  let balance = initialBalance;
+
+  return {
+    deposit(amount) {
+      balance += amount;
+    },
+
+    withdraw(amount) {
+      if (amount &lt;= balance) {
+        balance -= amount;
+      }
+    },
+
+    getBalance() {
+      return balance;
+    }
+  };
+}
+
+const account = createBankAccount(1000);
+
+account.deposit(500);
+account.withdraw(200);
+
+console.log(account.getBalance()); // 1300</code></pre>
+      <p>The returned methods form closures over <code>balance</code>. Code outside <code>createBankAccount</code> cannot access or change that variable directly; it can only interact with it through <code>deposit</code>, <code>withdraw</code>, and <code>getBalance</code>.</p>
+      <p>The reason this works — and the "why" behind closures — is that a function in JS doesn't just carry its code, it carries a hidden reference to the lexical environment it was created in. When `outer()` finishes running, its execution context would normally be popped off the call stack and garbage collected, but because the returned inner function still holds a reference to `outer`'s variable environment (via the scope chain), that environment is kept alive in memory instead of being collected. Each call to `outer()` creates a brand new, independent environment, so `increment` and a second call `outer()` don't share state.</p>
+      <p><strong>Practical note:</strong> closures are the mechanism behind private state (module pattern, memoization, debounce/throttle) but they're also a common source of memory leaks if a closure unintentionally keeps a large object or DOM node alive longer than needed — long-lived closures (e.g., attached to global event listeners) should be cleaned up when no longer needed.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">21.</span> Constructor function</summary>
+    <div class="qa-body">
+      <p>A specialized function used to create and initialize multiple objects with the same structure — a blueprint for creating instances of an object type.</p>
+      <pre><code>function Person(name){
+   this.name = name;
+}
+const p1 = new Person("John");</code></pre>
+      <p>Used before ES6 classes.</p>
+      <p>The `new` keyword is what makes this work, and it performs four implicit steps: (1) creates a brand-new empty object, (2) sets that object's internal `[[Prototype]]` to `Person.prototype` (so instances can find shared methods), (3) calls `Person` with `this` bound to the new object, and (4) returns that object automatically (unless the constructor explicitly returns a different object). Any function can technically be called with `new`, which is why constructor functions are conventionally PascalCased as a signal to callers.</p>
+      <p><strong>Practical note:</strong> calling a constructor function without `new` silently sets `this` to the global object (or `undefined` in strict mode) instead of throwing, which is a classic source of bugs — ES6 classes fix this by throwing a TypeError if called without `new`.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">22.</span> Class</summary>
+    <div class="qa-body">
+      <p>A blueprint/template used to create objects with shared properties and methods.</p>
+      <pre><code>class Person{
+   constructor(name){
+      this.name = name;
+   }
+   greet(){
+   console.log(this.name);
+   }
+}</code></pre>
+      <p>An object is an instance of a class.</p>
+      <p>Under the hood, a class is not a new object model — it's syntactic sugar over the existing prototype-based system. Methods defined in a class body (like `greet`) are placed on `Person.prototype`, not copied onto each instance, so all instances share one copy in memory. Two behaviors set classes apart from constructor functions, though: class bodies always execute in strict mode, and classes are hoisted but left in the Temporal Dead Zone — you can't use a class before its declaration, unlike a hoisted function declaration.</p>
+      <p><strong>Practical note:</strong> class methods are not automatically bound to the instance — passing `instance.greet` as a callback (e.g., to an event listener) loses its `this` unless you `.bind()` it or use an arrow-function class field.</p>
+
+      <h3>Arrow-function class field preserves <code>this</code></h3>
+      <pre><code>class Person {
+  constructor(name) {
+    this.name = name;
+  }
+
+  greet = () =&gt; {
+    console.log(this.name);
+  };
+}
+
+const person = new Person("rishav");
+setTimeout(person.greet, 2000); // "rishav" after 2 seconds</code></pre>
+      <p>The arrow function does not create its own <code>this</code>. When the instance field is initialized, it captures that instance as <code>this</code>, so passing <code>person.greet</code> as a detached callback still works.</p>
+
+      <h3>A regular class method can lose <code>this</code></h3>
+      <pre><code>class Person {
+  constructor(name) {
+    this.name = name;
+  }
+
+  greet() {
+    console.log(this.name);
+  }
+}
+
+const person = new Person("rishav");
+setTimeout(person.greet, 2000); // does not reliably print "rishav"
+
+// Fix: explicitly bind the method to the instance
+setTimeout(person.greet.bind(person), 2000); // "rishav"</code></pre>
+      <p>The regular method lives on <code>Person.prototype</code> and receives <code>this</code> from its call site. Passing it as a plain callback removes the <code>person.</code> receiver, so it is no longer called with the instance as <code>this</code>.</p>
+
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">23.</span> OOP concepts</summary>
+    <div class="qa-body">
+      <p>JavaScript supports the four classic OOP pillars, but implements them on top of prototypes/closures rather than dedicated language keywords like `private`/`interface` in Java — that distinction ("JS fakes OOP via prototypes") is worth mentioning if asked to compare languages.</p>
+      <pre><code>class Car {
+  constructor(brand, color) {
+    this.brand = brand;
+    this.color = color;
+  }
+  drive() {
+    console.log(`${this.brand} is driving`);
+  }
+}
+const car1 = new Car("BMW", "Black");
+const car2 = new Car("Audi", "White");
+car1.drive();</code></pre>
+      <p><strong>Encapsulation:</strong> binding related properties/methods together, hiding internal data, allowing access only through controlled methods.</p>
+      <pre><code>class BankAccount {
+  #balance = 0;
+  deposit(amount) {
+    this.balance += amount;
+  }
+  getBalance() {
+    return this.balance;
+  }
+}
+const account = new BankAccount();
+account.deposit(1000);
+console.log(account.getBalance());</code></pre>
+      <p>The `#balance` syntax is a true private class field (ES2022) — unlike the old convention of prefixing with `_balance`, it's actually enforced by the engine and inaccessible from outside the class, even via bracket notation.</p>
+      <p><strong>Inheritance:</strong> one class reuses properties/methods of another.</p>
+      <pre><code>class Vehicle {
+  start() {
+    console.log("Vehicle Started");
+  }
+}
+class Car extends Vehicle {}
+class Bike extends Vehicle {}
+const car = new Car();
+car.start();</code></pre>
+      <p>`extends` sets up prototype-chain delegation: `Car.prototype.__proto__` becomes `Vehicle.prototype`, so an instance of Car that doesn't find `start` on its own prototype falls back to Vehicle's. `super()` inside a subclass constructor must be called before using `this`, because until it runs, the parent class hasn't finished initializing the object.</p>
+      <p><strong>Abstraction:</strong> hiding implementation details, showing only what's necessary.</p>
+      <pre><code>class PaymentService {
+  pay(amount) {
+    this.validatePayment(amount);
+    console.log("Payment Successful");
+  }
+  #validatePayment(amount) {
+    console.log("Validating...");
+  }
+}
+const payment = new PaymentService();
+payment.pay(500);</code></pre>
+      <p>The caller only ever needs to know about `pay(amount)` — the validation details are marked private and inaccessible from outside, so the class's public surface stays small and the internals can change freely without breaking consumers.</p>
+      <p><strong>Polymorphism:</strong> the same method call behaves differently depending on the object.</p>
+      <pre><code>class Animal {
+  sound() {
+    console.log("Animal Sound");
+  }
+}
+class Dog extends Animal {
+  sound() {
+    console.log("Bark");
+  }
+}
+class Cat extends Animal {
+  sound() {
+    console.log("Meow");
+  }
+}
+const dog = new Dog();
+const cat = new Cat();
+dog.sound();
+cat.sound();</code></pre>
+      <p>This works because method lookup happens dynamically at call time via the prototype chain: `dog.sound()` finds `sound` on `Dog.prototype` before ever checking `Animal.prototype`, so the overriding method "wins" — the calling code doesn't need to know or care which subclass it's dealing with. This is sometimes called dynamic dispatch or method overriding.</p>
+      <p><strong>Practical note:</strong> a frequent interview question is "does JS support method overloading (same name, different params)?" — no, unlike Java/C++; a later function/method definition simply replaces an earlier one with the same name, so JS relies on default parameters, rest params, or manual argument checks instead.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">24.</span> Execution context &amp; call stack</summary>
+    <div class="qa-body">
+      <p>The execution context is the environment where code is evaluated and executed. The Call Stack is a data structure used by JS to manage execution contexts.</p>
+      <p><strong>Types:</strong> Global Execution Context (GEC), Function Execution Context (FEC).</p>
+      <p><strong>Two phases:</strong> Memory Creation Phase, Execution Phase.</p>
+      <p>Execution Context contains: Variable Environment, Scope Chain, this value.</p>
+      <pre><code>function one() {
+  two();
+}
+function two() {
+  three();
+}
+function three() {
+  console.log("Hello");
+}
+one();
+
+┌─────────┐
+│ three() │
+├─────────┤
+│ two()   │
+├─────────┤
+│ one()   │
+├─────────┤
+│ Global  │
+└─────────┘</code></pre>
+      <p>The Global Execution Context is created first when the script loads, and a new Function Execution Context is pushed onto the stack every time a function is invoked, then popped off when it returns. Within each context's <strong>Memory Creation Phase</strong>, the engine pre-scans the code and allocates memory for variables/functions (this is what produces hoisting); the <strong>Execution Phase</strong> then runs the code line by line, assigning actual values. Each context also holds a reference to its outer environment, forming the scope chain used for variable lookups.</p>
+      <p><strong>Practical note:</strong> because the stack has a finite size, deep uncontrolled recursion (a function calling itself without a proper base case) throws a "Maximum call stack size exceeded" RangeError — a classic interview question is how to avoid it (iterative rewrite, trampolining, or tail-call patterns, though JS engines don't reliably optimize tail calls).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">25.</span> Lexical scope</summary>
+    <div class="qa-body">
+      <p>A function can access variables based on where it is <em>defined</em> in the code, not where it is called. JS decides variable accessibility during the code-writing (lexical) phase.</p>
+      <pre><code>function outer(){
+   let a = 10;
+   function inner(){
+      console.log(a);
+   }
+}</code></pre>
+      <p>JS searches: Current Scope → Parent Scope → Global Scope. The fundamental rule: inner scopes can look out, but outer scopes cannot look in.</p>
+      <p>A lexical environment is the runtime structure that stores variables/functions for an execution context and references its outer lexical environment. Lexical scope is the <em>rule</em> of variable accessibility; a lexical environment is the runtime object that implements those rules.</p>
+      <p><strong>Practical note:</strong> lexical scope is what makes closures possible at all — a closure is just a function retaining a live reference to the lexical environment(s) it was defined within, even after the outer function has returned.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">26.</span> This keyword</summary>
+    <div class="qa-body">
+      <p>this refers to the context where a piece of code is supposed to run. Most typically used in object methods, where this refers to the object the method is attached to. The value of this depends on how a function is invoked (runtime binding).</p>
+      <p>"Normal functions have dynamic this determined by how they're called, whereas arrow functions don't have their own this and instead lexically capture it from their surrounding scope."</p>
+      <ul>
+        <li><strong>Object Method:</strong> obj.show() → this = obj</li>
+        <li><strong>Regular Function:</strong> this = window (non-strict)</li>
+        <li><strong>Arrow Function:</strong> no own this, uses parent's this</li>
+      </ul>
+      <pre><code>class Counter {
+  constructor() {
+    this.count = 0;
+  }
+  start() {
+    setTimeout(function () {
+      console.log(this.count);
+    }, 1000);
+  }
+}
+// output: undefined
+
+class Counter {
+  constructor() {
+    this.count = 0;
+  }
+  start() {
+    setTimeout(() => {
+      console.log(this.count);
+    }, 1000);
+  }
+}
+// output: 0</code></pre>
+      <p>The reason: a regular function's `this` is determined entirely by its <em>call-site</em> — how it's invoked, not where it's defined. `setTimeout` invokes the callback as a plain function call, so inside it `this` defaults to the global object (undefined in strict mode), losing the connection to the class instance. An arrow function has no `this` binding of its own at all; it looks up `this` in its enclosing lexical scope at definition time, which here is `start()`, where `this` correctly refers to the Counter instance.</p>
+      <p><strong>Practical note:</strong> `this` resolution follows a precedence order worth memorizing for interviews — new binding (constructor call) &gt; explicit binding (call/apply/bind) &gt; implicit binding (obj.method()) &gt; default binding (plain function call, global/undefined). Arrow functions opt out of this entirely by using lexical `this` instead.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">27.</span> Prototype inheritance</summary>
+    <div class="qa-body">
+      <p>JavaScript's mechanism for sharing properties/methods between objects. When a property isn't found on an object, JS looks in its prototype, then that prototype's prototype, and so on — the prototype chain.</p>
+      <p><strong>prototype:</strong> exists on constructor functions/classes; used as the prototype of objects created by that constructor.<br>
+      <strong>__proto__:</strong> exists on objects; points to the object's prototype.</p>
+      <pre><code>const arr = [];
+console.log(arr.__proto__ === Array.prototype); // true</code></pre>
+      <p>Every object has __proto__. Functions have prototype.</p>
+      <pre><code>Lookup:
+obj
+↓
+obj.__proto__
+↓
+Object.prototype
+↓
+null</code></pre>
+      <p>Classes internally use prototype — methods are stored on ClassName.prototype and shared by all instances. Classes are syntactic sugar over prototype-based inheritance.</p>
+      <p>The lookup itself is a linked-list style walk: when you access `obj.someProp`, the engine checks `obj`'s own properties first, and only if not found does it follow the internal `[[Prototype]]` link to check the next object up the chain, continuing until it either finds the property or reaches `null` (the end of the chain, typically after `Object.prototype`). This is also how you can create an object with no prototype at all — `Object.create(null)` — useful for a "pure" dictionary object with no inherited methods like `toString`.</p>
+      <p><strong>Practical note:</strong> mutating a shared object on `Array.prototype` or `Object.prototype` directly (monkey-patching built-ins) affects every object in the program and is generally considered unsafe — this is why polyfills are careful to check `if (!Array.prototype.myMap)` style guards before adding new methods.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">28.</span> Shadowing &amp; illegal shadowing</summary>
+    <div class="qa-body">
+      <p>Shadowing occurs when an inner scope declares a variable with the same name as an outer scope, temporarily hiding the outer variable. Illegal Shadowing happens when a var declaration attempts to shadow a let/const variable in the same scope, causing a syntax error.</p>
+      <pre><code>// Shadowing
+let a = 10;
+{
+   let a = 20;
+}
+
+// Illegal Shadowing
+let a = 10;
+{
+   var a = 20;
+}
+// SyntaxError</code></pre>
+      <p>Shadowing is legal because `let`/`const` create a new binding scoped to the block, which simply takes precedence over the outer variable of the same name for lookups inside that block — the outer variable is untouched and reappears once the block ends. Illegal shadowing is a syntax error specifically because `var` is function-scoped: a `var a` inside the block isn't actually creating a new block-scoped binding, it's trying to redeclare the exact same `let a` binding that TDZ rules and let's "no redeclaration" rule forbid — the engine can detect this at parse time, which is why it's a SyntaxError rather than a runtime error.</p>
+      <p><strong>Practical note:</strong> the reverse — shadowing a `var` with an inner `let` — is legal, since the inner `let` simply creates a separate block-scoped binding on top of the function-scoped var.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">29.</span> Currying</summary>
+    <div class="qa-body">
+      <p>Converting a function with multiple arguments into nested functions.</p>
+      <pre><code>function add(a){
+   return function(b){
+      return a+b;
+   };
+}
+add(2)(3);</code></pre>
+      <p>Currying is only possible because of closures: each nested function remembers the arguments already supplied by the outer calls (`a` remains accessible inside the returned function even after `add(2)` has returned), so the chain progressively builds up the full argument list before the final computation runs. It's closely related to but distinct from <strong>partial application</strong>, where you pre-fill some arguments of a normal multi-arg function and get back a function expecting the rest — currying specifically transforms an n-ary function into a chain of unary (single-argument) functions.</p>
+      <p><strong>Practical note:</strong> a common real-world use is building reusable, pre-configured functions, e.g. `const withTax = curry(applyTax)(0.18)` — useful in functional-style pipelines and libraries like Lodash (`_.curry`) or Ramda.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">30.</span> Shallow copy vs deep copy</summary>
+    <div class="qa-body">
+      <p><strong>Shallow Copy:</strong> copies first level only — Object.assign(), spread operator.</p>
+      <p><strong>Deep Copy:</strong> copies nested objects — structuredClone(obj).</p>
+      <p>The distinction matters because objects and arrays in JS are stored and assigned <em>by reference</em>. A shallow copy creates a new top-level object, but any property whose value is itself an object/array is copied as a reference, not a new object — so mutating a nested object through the copy still mutates the original. A deep copy recursively creates brand-new objects at every level, fully severing that shared reference.</p>
+      <pre><code>// 1. JSON approach
+const clone = JSON.parse(JSON.stringify(original));
+// Cons: loses functions, undefined, and Symbol; converts Dates to ISO
+// strings; fails on circular references
+
+// 2. structuredClone() — current standard for deep cloning
+// Pros: native, handles circular references, supports Date, Set, Map,
+// RegExp, ArrayBuffer
+// Cons: cannot clone functions, DOM nodes, getters/setters — throws
+
+// 3. Manual
+function deepClone(obj) {
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map((item) => deepClone(item));
+  }
+  const clonedObj = {};
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      clonedObj[key] = deepClone(obj[key]);
+    }
+  }
+  return clonedObj;
+}</code></pre>
+      <p><strong>Practical note:</strong> a frequent real-world bug is `const copy = {...original}` followed by mutating `copy.nested.field`, unknowingly also mutating `original.nested.field` — this is exactly why state-management libraries (Redux, React state) insist on treating nested state as immutable and require deep/structural copies when updating.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">31.</span> Spread, rest, and destructuring</summary>
+    <div class="qa-body">
+      <h3>Spread — expanding a collection into individual elements</h3>
+      <p>Takes an iterable (array, string) or, since ES2018, an object, and expands it into individual elements or key-value pairs wherever several are expected.</p>
+      <pre><code>const arr1 = [1, 2, 3];
+const arr2 = [...arr1, 4, 5];       // [1, 2, 3, 4, 5] — copy + append
+console.log(Math.max(...arr1));      // 3 — spread into individual arguments
+
+const base = { a: 1, b: 2 };
+const merged = { ...base, c: 3 };    // { a: 1, b: 2, c: 3 }
+const overridden = { ...base, b: 99 }; // { a: 1, b: 99 } — later keys win</code></pre>
+      <p>This is exactly the "spread operator" already named back in Q30 as a shallow-copy tool — spreading an array/object only copies one level deep, so the same shallow-copy caveat applies: a nested object inside the spread result is still shared by reference with the original.</p>
+
+      <h3>Rest — collecting individual elements into a collection</h3>
+      <p>The identical <code>...</code> syntax, doing the opposite job: gathering multiple remaining values into a single array or object instead of expanding one.</p>
+      <pre><code>// rest parameters — collects remaining arguments into an array
+function sum(first, ...rest) {
+  return first + rest.reduce((a, b) => a + b, 0);
+}
+sum(1, 2, 3, 4); // first = 1, rest = [2, 3, 4]
+
+// rest in array destructuring — collects remaining elements
+const [head, ...tail] = [1, 2, 3, 4];
+// head = 1, tail = [2, 3, 4]
+
+// rest in object destructuring — collects remaining properties
+const { id, ...otherFields } = { id: 1, name: 'A', active: true };
+// id = 1, otherFields = { name: 'A', active: true }</code></pre>
+      <p><strong>How to tell them apart:</strong> same three dots, opposite meaning — position is the only signal. Rest always sits on the <em>left</em> side of an assignment or in a parameter list (collecting), and must always come last in that pattern, since it greedily claims everything remaining. Spread always sits on the <em>right</em> side, inside a call or a literal (expanding), and can appear anywhere, even multiple times.</p>
+      <p><strong>Common pitfall:</strong> <code>function f(...rest, last) {}</code> is a <code>SyntaxError</code> — a rest parameter has to be the last parameter, since anything after it would have no elements left to receive.</p>
+
+      <h3>Destructuring — unpacking into named variables</h3>
+      <pre><code>// array destructuring — positional
+const [first, second] = [10, 20];
+
+// object destructuring — matched by key, order doesn't matter
+const { name, age } = { age: 30, name: 'Alice' };
+
+// default values (only kick in when the value is strictly undefined)
+const { role = 'guest' } = {};
+
+// renaming while destructuring
+const { name: userName } = { name: 'Alice' };
+
+// nested destructuring
+const { address: { city } } = { address: { city: 'Delhi', zip: '110001' } };
+
+// function parameter destructuring — very common for React props
+function Greeting({ name, age = 18 }) {
+  return `${name} is ${age}`;
+}</code></pre>
+      <p><strong>Common pitfall:</strong> assuming object destructuring is positional like array destructuring — it isn't. <code>{ age, name }</code> and <code>{ name, age }</code> pull from the exact same object identically, since matching is by property name, not declaration order; only array destructuring cares about position. Also, defaults follow the same "strictly <code>undefined</code> only" rule covered in the <a href="js-quirks.html">JS &amp; React Quirks</a> page's Destructuring defaults question — <code>null</code> does not trigger a default.</p>
+      <p>All three ultimately share one theme: syntax for moving between "several loose values" and "one collection," in both directions. Destructuring and rest both take a collection apart — into named variables, or into a smaller leftover collection — while spread does the reverse, rebuilding or merging collections back up from loose values.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">32.</span> Generator function</summary>
+    <div class="qa-body">
+      <p>A special function declared with function* that can pause execution using yield and resume later using next(). Returns a generator object — useful for lazy iteration, producing sequences, and managing stateful execution without storing all values in memory at once.</p>
+      <pre><code>function* counter() {
+  yield 1;
+  yield 2;
+  yield 3;
+}
+const gen = counter();
+console.log(gen.next()); // { value: 1, done: false }
+console.log(gen.next()); // { value: 2, done: false }
+console.log(gen.next()); // { value: 3, done: false }
+console.log(gen.next()); // { value: undefined, done: true }</code></pre>
+      <p>What makes generators special is that they can suspend execution mid-function and hand control back to the caller — each `yield` pauses the function exactly where it is (preserving all local variables and its position), and calling `.next()` again resumes from that exact point rather than restarting. Because the object returned by calling the generator conforms to the iterator protocol (it has a `.next()` method returning `{value, done}`), generators are also directly usable in a `for...of` loop and with the spread operator.</p>
+      <p><strong>Practical note:</strong> generators are the classic way to model infinite or lazy sequences (e.g., an infinite ID generator) without pre-computing all values up front, and they were the mechanism async/await was historically built on top of (an async function is conceptually a generator auto-driven by a promise-aware runner).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">33.</span> Memoization</summary>
+    <div class="qa-body">
+      <p>An optimization technique where we cache the result of expensive function calls and return the cached result when the same inputs occur again.</p>
+      <pre><code>function memoize(fn){
+   const cache = {};
+   return function(...args){
+      const key = JSON.stringify(args);
+      if(cache[key]){
+         return cache[key];
+      }
+      cache[key] = fn(...args);
+      return cache[key];
+   };
+}
+function square(n) {
+  console.log("Computing...");
+  return n * n;
+}
+const memoizedSquare = memoize(square);
+console.log(memoizedSquare(5));
+console.log(memoizedSquare(5));
+console.log(memoizedSquare(5));</code></pre>
+      <p>The technique relies on a closure over the `cache` object: the returned function persists across calls and keeps reading/writing the same `cache`, keyed by a serialized form of the arguments (`JSON.stringify(args)` here is a simple but imperfect key — it breaks down for arguments containing functions, undefined, or objects with different key ordering). It's a specific case of the broader time-space tradeoff — trading memory (storing every past result) for speed (skipping recomputation), and works best for pure functions where the same input always produces the same output.</p>
+      <p><strong>Practical note:</strong> memoization is commonly demonstrated with recursive Fibonacci, where naive recursion is exponential (`O(2^n)`) but memoizing collapses it to linear time by caching overlapping subproblem results — a good example of dynamic programming in JS. Unbounded caches can also leak memory over a long-running process, so production memoizers often cap size (LRU) or use a `WeakMap` when keys are objects.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">34.</span> Set</summary>
+    <div class="qa-body">
+      <p>A collection of unique values. Duplicates are automatically ignored. Maintains insertion order. Can store primitives and objects.</p>
+      <pre><code>const set = new Set();
+set.add(1);
+set.add(1);
+// Result: {1}
+
+set.add([1]);
+set.add([1]);
+// Result: two entries (different array references)</code></pre>
+      <p>Uniqueness is determined using SameValueZero equality — essentially like `===` but treating `NaN` as equal to itself (so a Set can only ever contain one `NaN`). Because objects/arrays are compared by reference rather than by value, two structurally identical arrays are still treated as distinct members, as shown above. Common methods: `.has(value)`, `.delete(value)`, `.size` (not `.length`), and Sets are iterable directly with `for...of` or spread (`[...set]`), which is the standard one-liner for deduplicating an array: `[...new Set(arr)]`.</p>
+      <p><strong>Practical note:</strong> a related structure, `WeakSet`, only stores objects (not primitives) and holds them weakly — meaning entries don't prevent garbage collection if there are no other references, which is useful for tracking objects (e.g., "has this DOM node been processed?") without causing memory leaks.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">35.</span> Object.defineProperty()</summary>
+    <div class="qa-body">
+      <p>Lets you define or customize an object's property with fine-grained control.</p>
+      <pre><code>const user = {};
+Object.defineProperty(user, "name", {
+  value: "Rishav",
+  writable: false,
+  enumerable: true,
+  configurable: true,
+});
+console.log(user.name);</code></pre>
+      <p>This is the same low-level API that ordinary object literal properties use implicitly — writing `{ name: "Rishav" }` is roughly equivalent to defining that property with `writable: true, enumerable: true, configurable: true` by default. Using `Object.defineProperty` explicitly lets you flip those defaults: `writable: false` makes a property read-only (assignments silently fail, or throw in strict mode), `enumerable: false` hides it from `for...in`/`Object.keys()`, and `configurable: false` prevents it from being deleted or redefined again.</p>
+      <p>Using get and set, you can create computed properties, perform validation, control access, or execute logic whenever a property is read or written. Getters run on access, setters run on assignment.</p>
+      <pre><code>const user = {
+  firstName: "Rishav",
+  lastName: "Sharma",
+};
+Object.defineProperty(user, "fullName", {
+  get() {
+    return `${this.firstName} ${this.lastName}`;
+  },
+  set(value) {
+    const [first, last] = value.split(" ");
+    this.firstName = first;
+    this.lastName = last;
+  },
+});
+console.log(user.fullName);</code></pre>
+      <p><strong>Practical note:</strong> `Object.freeze()` is a shortcut built partly on this idea — it makes every existing property non-writable and non-configurable in one call (shallow only — nested objects remain mutable), which is why "deep freeze" utilities recursively call `Object.freeze` on nested objects too.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">36.</span> Optional chaining &amp; nullish coalescing</summary>
+    <div class="qa-body">
+      <p><strong>Optional chaining</strong> lets you safely access nested properties without an error if a value is null/undefined.</p>
+      <pre><code>user?.address?.city</code></pre>
+      <p><strong>Nullish Coalescing:</strong> provides a default only when the left side is null or undefined.</p>
+      <pre><code>value ?? "Default"</code></pre>
+      <p>Only checks: null, undefined.</p>
+      <p>Optional chaining short-circuits: the moment any link in the chain (`user`, `user.address`) is null/undefined, evaluation stops immediately and the whole expression returns `undefined` — it never throws, and it never evaluates the remaining chain. This is different from `??`, which only cares about its immediate left-hand value being null/undefined, unlike `||` which also falls back on any falsy value (0, "", NaN, false) — a common bug when using `||` to set a default for a numeric quantity like `count || 10`, which incorrectly overrides a legitimate `0`. `??` fixes exactly that case.</p>
+      <p><strong>Practical note:</strong> optional chaining also works with function calls (`obj.method?.()`) and bracket notation (`obj?.[key]`), and the two operators combine naturally: `user?.address?.city ?? "Unknown"`.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">37.</span> call, apply, bind</summary>
+    <div class="qa-body">
+      <p>All three let you explicitly set what `this` refers to inside a function, overriding whatever the call-site would normally determine — this is "explicit binding" and it takes priority over implicit binding (obj.method()).</p>
+      <pre><code>// call()
+fn.call(obj,arg1,arg2);
+
+// apply()
+fn.apply(obj,[arg1,arg2]);
+
+// bind()
+const newFn = fn.bind(obj);
+// Returns new function.</code></pre>
+      <p>The difference between the three: `call` and `apply` both invoke the function immediately, differing only in how arguments are passed (comma-separated vs. an array — handy when arguments already exist as an array); `bind` doesn't invoke anything, it instead returns a brand-new function permanently bound to the given `this` (and optionally pre-set leading arguments), which you can call later — commonly used for detaching a method from its object (e.g., passing `obj.method.bind(obj)` as an event handler) without losing its `this`.</p>
+      <p><strong>Practical note:</strong> arrow functions ignore call/apply/bind entirely for `this` purposes — since they have no own `this` binding, trying to rebind it has no effect on the lexically-captured value.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">38.</span> map vs filter vs reduce</summary>
+    <div class="qa-body">
+      <p><strong>Map:</strong> transforms array.<br><strong>Filter:</strong> returns matching elements.<br><strong>Reduce:</strong> produces a single value.</p>
+      <pre><code>const cart = [10, 20, 30];
+const total = cart.reduce((a, c) =>{
+   return a + c
+} , 0);</code></pre>
+      <p>All three are higher-order functions that take a callback and iterate the array without mutating the original — this immutability is a big reason they're preferred in functional/React-style code over manual for-loops that mutate in place. `reduce`'s callback receives an accumulator and the current element on every iteration, folding the whole array down to a single value (a number, object, or even another array) — it's the most general of the three, and `map`/`filter` can technically both be implemented in terms of `reduce`.</p>
+      <p><strong>Practical note:</strong> all three can be chained (`arr.filter(...).map(...).reduce(...)`), but each pass iterates the array separately — for very large arrays or hot code paths, a single manual loop or a single `reduce` doing everything can be more performant than chaining several separate passes.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">39.</span> Garbage collection</summary>
+    <div class="qa-body">
+      <p>The automatic process of freeing memory occupied by objects no longer reachable in the program. JS uses the Mark-and-Sweep algorithm. An object is alive if it can be reached from a root.</p>
+      <p>Roots include: global variables, current function's local variables, function call stack, closures. Unreachable objects are removed automatically.</p>
+      <p>Mark-and-sweep works in two phases: starting from the roots, the collector "marks" every object it can reach by following references (objects, then their properties, then those objects' properties, and so on); anything left unmarked afterward is considered garbage and is "swept" (its memory reclaimed). This correctly handles reference cycles (two objects referencing each other) that a simpler reference-counting approach would leak, since neither object is reachable from a root even though they reference each other.</p>
+      <p><strong>Practical note:</strong> despite automatic GC, JS apps can still leak memory when something unintentionally keeps a reference alive — common culprits are forgotten event listeners/timers holding closures over large objects, detached DOM nodes still referenced from JS variables, and growing global caches/arrays with no eviction. DevTools' heap snapshot comparison is the standard tool for tracking these down.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">40.</span> Normal function vs arrow function</summary>
+    <div class="qa-body">
+      <p>Arrow functions were introduced primarily to solve the recurring `this`-loses-context problem in callbacks (see the `this` keyword topic), by deliberately omitting several features a normal function has — no own `this`, no own `arguments`, and no ability to act as a constructor. Because they don't create their own binding for these, they transparently defer to whatever scope they're written inside, which is exactly what makes them ideal for short callbacks but unsuitable for object methods that rely on dynamic `this`.</p>
+      <pre><code>const user = {
+  name: "Rishav",
+  greet() {
+    console.log(this.name);
+  }
+};
+
+user.greet();                 // "Rishav" — called as user.greet(), so this = user
+
+setTimeout(user.greet, 1000); // undefined — only the function value is passed;
+                               // the timer calls it back with no receiver, so this = undefined</code></pre>
+      <p><code>setTimeout</code> only ever receives whatever <code>user.greet</code> evaluates to — a bare function reference. The `user.` in front of it is not part of that value, so when the timer fires, it's effectively just `greet()` with nothing supplying `this`. Swap in an arrow function at the call site and the problem disappears, because an arrow function has no `this` of its own to lose: `setTimeout(() => user.greet(), 1000)` still calls it back as `user.greet()`, so `this` resolves to `user` as normal.</p>
+      <table>
+        <tr><th>Feature</th><th>Normal Function</th><th>Arrow Function</th></tr>
+        <tr><td>this</td><td>Dynamic — depends on how it's called</td><td>Lexically inherited from surrounding scope</td></tr>
+        <tr><td>Syntax</td><td>function add(a, b) {}</td><td>(a, b) =&gt; {}</td></tr>
+        <tr><td>arguments object</td><td>Has its own arguments</td><td>No own arguments; use ...args</td></tr>
+        <tr><td>Constructor</td><td>Can be used with new</td><td>Cannot be used with new</td></tr>
+        <tr><td>Prototype</td><td>Has a prototype property</td><td>No prototype property</td></tr>
+        <tr><td>Hoisting</td><td>Function declarations fully hoisted</td><td>Behaves like a variable (const/let/var)</td></tr>
+        <tr><td>super</td><td>Own binding rules</td><td>Inherits from surrounding scope</td></tr>
+        <tr><td>Best use case</td><td>Object methods, constructors, prototypes</td><td>Callbacks, array methods, preserving this</td></tr>
+      </table>
+      <p><strong>Practical note:</strong> a common gotcha is defining an object method as an arrow function — `const obj = { value: 1, get: () => this.value }` — this fails because the arrow captures `this` from the surrounding (often global/module) scope, not from `obj`, so always use a normal function (or method shorthand) for object methods that need `this`.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">41.</span> Reflow vs repaint</summary>
+    <div class="qa-body">
+      <p>Reflow (Layout) occurs when the browser recalculates size/position of elements due to layout-related changes (width, height, display, DOM modifications). Repaint occurs when only visual appearance changes (color, background) without affecting layout.</p>
+      <p>Reflow is more expensive — it may impact other elements and always triggers a repaint. A repaint does not necessarily trigger a reflow.</p>
+      <p>Layout thrashing is a performance anti-pattern that occurs when JS repeatedly reads and writes to the DOM in a loop.</p>
+      <p>Layout thrashing specifically happens when code alternates reads (like `el.offsetHeight`, which forces the browser to flush any pending layout changes to answer accurately) with writes (like `el.style.width = ...`) inside a loop — each read-after-write pair forces a synchronous, unbatched reflow, multiplying cost. The fix is to batch all reads first, then all writes, so the browser can compute layout once.</p>
+      <p><strong>Practical note:</strong> the browser normally batches multiple style changes and reflows only once per frame — but reading certain "layout-triggering" properties (offsetTop/Left/Width/Height, getComputedStyle, getBoundingClientRect) forces it to do that work immediately, which is the root cause of thrashing.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">42.</span> Document fragment</summary>
+    <div class="qa-body">
+      <p>A lightweight, tagless DOM object that exists entirely in memory — a temporary holding area for HTML elements. Because it's detached from the active document tree, you can manipulate its contents without triggering expensive repaints/layout recalculations.</p>
+      <pre><code>const fragment = document.createDocumentFragment();</code></pre>
+      <p>Inserting elements directly into the live DOM inside a loop forces the browser to recalculate styles/layout/paint on every insertion. Using a DocumentFragment batches all modifications in memory and triggers only one layout pass when appending to the active tree.</p>
+      <p>Another subtlety worth knowing: when you append a DocumentFragment to the real DOM, only the fragment's <em>children</em> are moved over — the fragment node itself is never inserted and becomes empty again afterward, ready to be reused or discarded.</p>
+      <p><strong>Practical note:</strong> this is essentially what virtual-DOM libraries like React conceptually do at a higher level — batch many logical changes and apply them to the real DOM in as few operations as possible — DocumentFragment is the vanilla-JS equivalent for manual DOM building (e.g., rendering a large list from an array).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">43.</span> innerHTML vs textContent</summary>
+    <div class="qa-body">
+      <p>The core difference is that `innerHTML` runs its input through the browser's HTML parser and builds real DOM nodes from it (tags become elements), while `textContent` never parses anything — it just sets/reads the raw text of all descendant text nodes, so any `&lt;`/`&gt;` characters stay literal text on screen instead of becoming markup.</p>
+      <pre><code>// innerHTML — parses HTML
+div.innerHTML = "&lt;h1&gt;Hello&lt;/h1&gt;";
+
+// textContent — treats as plain text
+div.textContent = "&lt;h1&gt;Hello&lt;/h1&gt;";
+// Safer and faster.</code></pre>
+      <table>
+        <tr><th>Feature</th><th>innerHTML</th><th>textContent</th></tr>
+        <tr><td>Primary use</td><td>Gets/sets HTML markup</td><td>Gets/sets plain text</td></tr>
+        <tr><td>HTML parsing</td><td>Parses HTML tags</td><td>Treats everything as text</td></tr>
+        <tr><td>Security</td><td>Can cause XSS with untrusted input</td><td>Safe from HTML injection</td></tr>
+        <tr><td>Performance</td><td>Slower (HTML parsing)</td><td>Faster (text only)</td></tr>
+        <tr><td>Setting value</td><td>Creates actual DOM elements</td><td>Inserts literal text</td></tr>
+      </table>
+      <p><strong>Practical note:</strong> a related property, `innerText`, differs from `textContent` in that it's aware of CSS rendering (it skips hidden elements and collapses whitespace like the visible page does) and triggers a reflow to compute that, making it slightly slower — `textContent` is generally preferred when you just need to read/write raw text.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">44.</span> DOM tree &amp; nodes</summary>
+    <div class="qa-body">
+      <p>The DOM (Document Object Model) Tree is a hierarchical representation of an HTML document created by the browser. The browser parses HTML and converts it into a tree of nodes.</p>
+      <p><strong>Node Types:</strong> Document, Element, Text, Comment.</p>
+      <p>DOM is a programming interface provided by the browser representing an HTML document as a tree of objects. It allows JS to: read HTML content, modify elements, change styles, handle events, add/remove elements dynamically.</p>
+      <p>Every node in this tree implements a shared `Node` interface (giving properties like `parentNode`, `childNodes`, `nextSibling`) — Element nodes additionally implement the richer `Element`/`HTMLElement` interfaces (attributes, classList, style, etc.), which is why not every node type supports every DOM method. The DOM is intentionally kept separate from the HTML source text: once parsed, it's a live, mutable object tree, so JS changes to it are immediately reflected without needing to re-parse any HTML string.</p>
+      <p><strong>Practical note:</strong> the DOM tree is distinct from the CSSOM (the parsed styles) — the two are combined into the "render tree" as part of the critical rendering path before layout can happen.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">45.</span> Stop propagation methods</summary>
+    <div class="qa-body">
+      <p><strong>event.stopPropagation()</strong> — stops the event from propagating (bubbling/capturing) to parent elements.</p>
+      <p><strong>event.stopImmediatePropagation()</strong> — stops propagation to parents AND execution of any remaining listeners on the same element.</p>
+      <p><strong>event.preventDefault()</strong> — prevents browser default behavior (e.g., form submission).</p>
+      <pre><code>parent.addEventListener("click", () => console.log("parent"));
+child.addEventListener("click", (e) => {
+  e.stopPropagation();
+  console.log("child");
+});
+// Clicking child logs only "child" — bubbling to parent is halted.</code></pre>
+      <p>These three are independent and commonly confused: `stopPropagation` only affects whether the event continues traveling to other elements — it does not stop other listeners on the *same* element from running, nor does it stop the browser's default action (e.g., a link still navigates). `stopImmediatePropagation` is the stronger version, also skipping remaining listeners on the current element. `preventDefault` is unrelated to propagation entirely — it only cancels the browser's built-in behavior for that event (form submit, checkbox toggle, link navigation) and can be combined with either of the other two, or used alone.</p>
+      <p><strong>Practical note:</strong> a frequent bug is calling `stopPropagation()` too aggressively inside a component, which can silently break outer event delegation (e.g., a modal-close-on-outside-click handler attached to `document` never fires because an inner click stopped propagation).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">46.</span> target vs currentTarget</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Property</th><th>Meaning</th></tr>
+        <tr><td>event.target</td><td>The element that originally triggered the event</td></tr>
+        <tr><td>event.currentTarget</td><td>The element whose event listener is currently executing</td></tr>
+      </table>
+      <p>During event bubbling, target remains the same, but currentTarget changes as the event moves through different elements. Commonly used in event delegation.</p>
+      <pre><code>list.addEventListener("click", (e) => {
+  console.log(e.target);        // the actual &lt;li&gt; (or nested element) clicked
+  console.log(e.currentTarget); // always the &lt;ul&gt; the listener is attached to
+});</code></pre>
+      <p>This distinction is exactly what makes event delegation practical: `currentTarget` is fixed by where you attached the listener (the parent `list`), while `target` tells you which specific descendant actually triggered the event, letting the single parent handler figure out what was clicked and act accordingly (e.g., via `e.target.tagName` or `closest()`).</p>
+      <p><strong>Practical note:</strong> `e.currentTarget` becomes `null` once the event has finished dispatching (e.g., if you log it later asynchronously) — capture the value you need synchronously inside the handler if you plan to use it after an await or a callback.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">47.</span> How the browser renders a web page</summary>
+    <div class="qa-body">
+      <p>The Critical Rendering Path (CRP) is the sequence of steps the browser follows to convert HTML, CSS, and JS into pixels on the screen.</p>
+      <pre><code>1. Download HTML
+        ↓
+2. Parse HTML → DOM Tree
+        ↓
+3. Download & Parse CSS → CSSOM
+        ↓
+4. DOM + CSSOM → Render Tree
+        ↓
+5. Layout (Reflow)
+        ↓
+6. Paint
+        ↓
+7. Composite
+        ↓
+Page appears on screen</code></pre>
+      <p>Two steps are worth calling out for interviews: the <strong>Render Tree</strong> only includes visually rendered nodes (elements with `display: none` are excluded, though `visibility: hidden` elements are still included since they still take up space), and <strong>Layout</strong> computes the exact size/position of every render-tree node before <strong>Paint</strong> fills in actual pixels (colors, borders, text, shadows) onto layers, which are then <strong>Composited</strong> together by the GPU in the correct stacking order.</p>
+      <p><strong>Practical note:</strong> both `&lt;script&gt;` and CSS `&lt;link&gt;` tags are render-blocking by default — the parser pauses building the DOM to fetch and execute a plain `&lt;script&gt;`, which is why scripts are traditionally placed before `&lt;/body&gt;` or loaded with `defer`/`async` attributes to avoid delaying first render.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">48.</span> Why is innerHTML unsafe? (XSS)</summary>
+    <div class="qa-body">
+      <p>innerHTML is unsafe because it parses a string as HTML and inserts it into the DOM. If that string comes from an untrusted source (user input, API response, URL params), malicious code can be injected and executed.</p>
+      <pre><code>div.innerHTML =
+"&lt;img src=x onerror='alert(1)'&gt;";</code></pre>
+      <p>This is Cross-Site Scripting (XSS).</p>
+      <p><strong>Prevention:</strong> textContent, input sanitization, CSP policies.</p>
+      <p>The <code>onerror</code> attribute above fires because the browser attempts to load <code>src=x</code> as an image, fails, and invokes the inline handler — demonstrating that the danger isn't limited to <code>&lt;script&gt;</code> tags; many attributes and elements (<code>onerror</code>, <code>onload</code>, <code>&lt;a href="javascript:..."&gt;</code>, <code>&lt;svg onload&gt;</code>) can execute arbitrary JS once inserted via <code>innerHTML</code>. Once injected, that script runs with the same origin and privileges as the rest of the page — meaning it can read cookies (unless HttpOnly), make authenticated requests, or manipulate the DOM to phish the user.</p>
+      <p><strong>Practical note:</strong> modern frameworks (React, Vue, Angular) auto-escape interpolated text by default specifically to prevent this class of bug, which is why they require an explicit, deliberately-named opt-out (`dangerouslySetInnerHTML` in React, `v-html` in Vue) to render raw HTML — a strong signal in code review that the surrounding input needs to be trusted or sanitized (e.g., with DOMPurify).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">49.</span> Give five important changes introduced in ES6</summary>
+    <div class="qa-body">
+      <p>ES6, also called ECMAScript 2015, was a major JavaScript update. Five commonly discussed changes are:</p>
+      <ol>
+        <li><strong><code>let</code> and <code>const</code>:</strong> introduced block-scoped variables as safer alternatives to function-scoped <code>var</code>.</li>
+        <li><strong>Arrow functions:</strong> added shorter function syntax and lexical <code>this</code> binding.</li>
+        <li><strong>Template literals:</strong> added backtick strings with interpolation and multiline support.</li>
+        <li><strong>Destructuring:</strong> made it possible to extract values from arrays and objects into variables concisely.</li>
+        <li><strong>Modules:</strong> introduced standardized <code>export</code> and <code>import</code> syntax for sharing code between files.</li>
+      </ol>
+      <pre><code>// 1. Block-scoped declarations
+let count = 1;
+const appName = "Interview Notes";
+
+// 2. Arrow function
+const double = number =&gt; number * 2;
+
+// 3. Template literal
+const message = `${appName}: ${double(count)}`;
+
+// 4. Destructuring
+const user = { name: "John", role: "Developer" };
+const { name, role } = user;
+
+// 5. Modules
+export { double };
+// import { double } from "./utils.js";</code></pre>
+      <p><strong>Important:</strong> ES6 introduced the <code>class</code> keyword, but under the hood a JavaScript class is a special type of function built on the existing prototype-based inheritance system.</p>
+      <pre><code>class Person {}
+
+console.log(typeof Person); // "function"
+console.log(Person.prototype); // object containing class methods</code></pre>
+      <p>Class syntax is more than a simple visual rewrite: class bodies always run in strict mode, class constructors must be called with <code>new</code>, and class declarations remain in the Temporal Dead Zone until evaluated.</p>
+      <p>Other notable ES6 features include classes, Promises, default parameters, rest and spread syntax, enhanced object literals, iterators, generators, <code>Map</code>, <code>Set</code>, and <code>Symbol</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">50.</span> What happens to <code>this</code> in a detached method passed to <code>setTimeout</code>?</summary>
+    <div class="qa-body">
+      <pre><code>const user = {
+  name: "hkdhk",
+  printname() {
+    console.log(this.name);
+  }
+};
+
+setTimeout(user.printname, 1000);
+// The method is called without user as its receiver.</code></pre>
+      <p>A method's <code>this</code> value is determined by how the function is called. Passing <code>user.printname</code> gives <code>setTimeout</code> a detached function reference, so the later call no longer has <code>user</code> as its receiver. Depending on the runtime, strictness, and timer implementation, <code>this</code> will not be the original <code>user</code> object.</p>
+      <p>Preserve the receiver with an arrow wrapper or <code>bind</code>:</p>
+      <pre><code>setTimeout(() =&gt; user.printname(), 1000);
+setTimeout(user.printname.bind(user), 1000);</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">51.</span> What does <code>arr.filter(Boolean)</code> do?</summary>
+    <div class="qa-body">
+      <p>It removes every falsy value from an array. Passing <code>Boolean</code> is equivalent to <code>arr.filter(value =&gt; Boolean(value))</code>.</p>
+      <pre><code>const arr = [1, 0, "hello", "", null, undefined, false, NaN, 42];
+const result = arr.filter(Boolean);
+
+console.log(result);
+// [1, "hello", 42]</code></pre>
+      <p>The removed falsy values are <code>false</code>, <code>0</code>, <code>-0</code>, <code>0n</code>, <code>""</code>, <code>null</code>, <code>undefined</code>, and <code>NaN</code>. Be careful when values such as <code>0</code> or an empty string are valid data and should be retained.</p>
+      <pre><code>const className = [
+  "button",
+  isActive &amp;&amp; "active",
+  isDisabled &amp;&amp; "disabled"
+].filter(Boolean).join(" ");</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">52.</span> What are the different types of functions in JavaScript?</summary>
+    <div class="qa-body">
+      <p>JavaScript functions can be classified by their syntax or by how they are used. These categories can overlap—for example, an arrow function can also be a callback.</p>
+      <ol>
+        <li><strong>Function declaration:</strong> declared with a name and fully hoisted, so it can be called before its definition.</li>
+        <li><strong>Function expression:</strong> a function stored in a variable; the variable's declaration rules determine when it can be accessed.</li>
+        <li><strong>Arrow function:</strong> concise ES6 syntax with lexical <code>this</code>; it has no own <code>arguments</code> and cannot be used as a constructor.</li>
+        <li><strong>Anonymous function:</strong> a function without an explicit name, commonly used as a callback.</li>
+        <li><strong>Immediately Invoked Function Expression (IIFE):</strong> a function expression that runs as soon as it is created.</li>
+        <li><strong>Method:</strong> a function stored as an object or class property and called through that object.</li>
+        <li><strong>Constructor function:</strong> a regular function called with <code>new</code> to create objects.</li>
+        <li><strong>Callback function:</strong> passed to another function to be invoked later or when an operation completes.</li>
+        <li><strong>Higher-order function:</strong> accepts a function, returns a function, or both.</li>
+        <li><strong>Generator function:</strong> declared with <code>function*</code>; it can pause with <code>yield</code> and resume later.</li>
+        <li><strong>Async function:</strong> declared with <code>async</code>; it always returns a Promise and can use <code>await</code>.</li>
+      </ol>
+      <pre><code>// Function declaration
+function add(a, b) { return a + b; }
+
+// Function expression
+const subtract = function (a, b) { return a - b; };
+
+// Arrow function
+const multiply = (a, b) =&gt; a * b;
+
+// IIFE
+(function () { console.log("Runs immediately"); })();
+
+// Method
+const user = { greet() { console.log("Hello"); } };
+
+// Constructor function
+function Person(name) { this.name = name; }
+const person = new Person("Rishav");
+
+// Callback and higher-order function
+[1, 2, 3].map(number =&gt; number * 2);
+
+// Generator function
+function* ids() { yield 1; yield 2; }
+
+// Async function
+async function loadUser() {
+  const response = await fetch("/api/user");
+  return response.json();
+}</code></pre>
+      <p><strong>Interview point:</strong> declaration, expression, and arrow describe how a function is written, while callback and higher-order describe the role it plays.</p>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

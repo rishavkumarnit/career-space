@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Interview Question Bank — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html" class="active">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="behavioral-interview.html">Behavioral Interview</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <details class="qa" open><summary><span class="q-num">1.</span> Core Java</summary><div class="qa-body"><ul>
+    <li>Explain the four pillars of OOP with practical examples.</li><li>What is the difference between abstraction and encapsulation?</li><li>Interface vs abstract class?</li><li>Method overloading vs method overriding?</li><li>What is runtime polymorphism?</li><li>Why is <code>String</code> immutable in Java?</li><li><code>String</code> vs <code>StringBuilder</code> vs <code>StringBuffer</code>?</li><li>What is the difference between <code>==</code> and <code>equals()</code>?</li><li>Why should <code>hashCode()</code> be overridden when <code>equals()</code> is overridden?</li><li>What are checked and unchecked exceptions?</li><li><code>throw</code> vs <code>throws</code>?</li><li>What is the purpose of <code>final</code>, <code>finally</code>, and <code>finalize</code>?</li><li>What is an immutable class, and how would you create one?</li><li>What are access modifiers in Java?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>OOP pillars:</strong> encapsulation hides state behind methods; abstraction exposes only essential behavior; inheritance reuses or specializes behavior; polymorphism lets one interface invoke different implementations. For example, several <code>PaymentProcessor</code> implementations can process different payment methods.</li>
+    <li><strong>Abstraction vs encapsulation:</strong> abstraction focuses on what an object does and hides implementation complexity. Encapsulation bundles data with behavior and controls access to protect valid state.</li>
+    <li><strong>Interface vs abstract class:</strong>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Feature</th><th>Abstract Class</th><th>Interface</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Inheritance</strong></td><td>Supports single class inheritance—a class can extend only one class.</td><td>Supports multiple contracts—a class can implement multiple interfaces.</td></tr>
+            <tr><td><strong>Methods</strong></td><td>Can contain both abstract methods without bodies and concrete methods with implementations.</td><td>Originally supported abstract methods only. Java 8 added <code>default</code> and <code>static</code> methods; Java 9 added <code>private</code> helper methods.</td></tr>
+            <tr><td><strong>Variables / state</strong></td><td>Can contain instance variables, including non-static and non-final fields, and therefore maintain object state.</td><td>Fields are implicitly <code>public static final</code>, so they are constants rather than per-object state.</td></tr>
+            <tr><td><strong>Constructors</strong></td><td>Allowed and used to initialize the inherited state when a concrete subclass is instantiated.</td><td>Not allowed because an interface is not instantiated and does not maintain instance state.</td></tr>
+            <tr><td><strong>Access modifiers</strong></td><td>Members can use <code>private</code>, package-private, <code>protected</code>, or <code>public</code>, where applicable.</td><td>Abstract methods are implicitly <code>public</code>. Interface methods may also be <code>public default</code>, <code>public static</code>, or <code>private</code> in modern Java.</td></tr>
+            <tr><td><strong>Keywords</strong></td><td>Declared with <code>abstract class</code> and inherited using <code>extends</code>.</td><td>Declared with <code>interface</code> and adopted by a class using <code>implements</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>When to use:</strong> use an interface to define a capability or contract that unrelated classes can implement. Use an abstract class when closely related classes need shared state, construction logic, or a common partial implementation.</p>
+    </li>
+    <li><strong>Overloading vs overriding:</strong> overloading uses the same method name with different parameter lists and is resolved at compile time. Overriding replaces inherited behavior with the same signature and is selected at runtime.</li>
+    <li><strong>Runtime polymorphism:</strong> a parent/interface reference calls the overridden method of the actual object, such as <code>PaymentProcessor p = new CardProcessor(); p.pay();</code>.</li>
+    <li><strong>String immutability:</strong> it enables safe sharing, string pooling, cached hash codes, thread safety, and security for values used in paths, class loading, and networking. Operations create a new string instead of changing the original.</li>
+    <li><strong>String classes:</strong> <code>String</code> is immutable. <code>StringBuilder</code> is mutable and fastest for single-threaded construction; <code>StringBuffer</code> is synchronized and usually slower.</li>
+    <li><strong><code>==</code> vs <code>equals()</code>:</strong> for objects, <code>==</code> compares references while <code>equals()</code> compares logical equality when overridden. For primitives, <code>==</code> compares values.</li>
+    <li><strong><code>equals</code>/<code>hashCode</code> contract:</strong> equal objects must return the same hash code so hash collections can locate them in the correct bucket. Override both together.</li>
+    <li><strong>Checked vs unchecked exceptions:</strong> checked exceptions must be caught or declared. Unchecked <code>RuntimeException</code>s usually indicate programming errors or invalid state and need not be declared.</li>
+    <li><strong><code>throw</code> vs <code>throws</code>:</strong> <code>throw</code> raises one exception object; <code>throws</code> declares possible exceptions in a method signature.</li>
+    <li><strong><code>final</code>, <code>finally</code>, <code>finalize</code>:</strong> <code>final</code> prevents reassignment, overriding, or inheritance; <code>finally</code> runs cleanup after try/catch. <code>finalize()</code> was unreliable and is deprecated—use try-with-resources or cleaners.</li>
+    <li><strong>Immutable class:</strong> make the class final, fields private and final, initialize them in the constructor, provide no setters, and defensively copy mutable inputs and outputs.</li>
+    <li><strong>Access modifiers:</strong> <code>private</code> is class-only, default is package-only, <code>protected</code> adds subclasses, and <code>public</code> is accessible everywhere.</li>
+  </ol>
+  <h3>Practical OOP example</h3>
+  <pre><code>interface PaymentProcessor {                 // abstraction/contract
+    void pay(BigDecimal amount);
+}
+
+final class CardProcessor implements PaymentProcessor {
+    private BigDecimal dailyTotal = BigDecimal.ZERO; // encapsulated state
+
+    @Override
+    public void pay(BigDecimal amount) {     // runtime polymorphism
+        if (amount.signum() &lt;= 0) throw new IllegalArgumentException();
+        dailyTotal = dailyTotal.add(amount);
+    }
+}</code></pre>
+  <p>An interview answer should define the concept, show how Java implements it, give a real use case, and mention a limitation—for example, prefer composition over inheritance when there is no genuine “is-a” relationship.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">2.</span> Collections</summary><div class="qa-body"><ul>
+    <li>What is the difference between <code>List</code>, <code>Set</code>, and <code>Map</code>?</li><li><code>ArrayList</code> vs <code>LinkedList</code>?</li><li><code>HashMap</code> vs <code>Hashtable</code>?</li><li>How does <code>HashMap</code> work internally?</li><li>What happens when two keys have the same hash?</li><li><code>HashMap</code> vs <code>ConcurrentHashMap</code>?</li><li><code>HashSet</code> vs <code>TreeSet</code>?</li><li><code>Comparable</code> vs <code>Comparator</code>?</li><li>What is the time complexity of common <code>HashMap</code> operations?</li><li>How would you remove duplicates from a <code>List</code>?</li><li>How would you sort a list of custom objects?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><code>List</code> is ordered and allows duplicates; <code>Set</code> stores unique elements; <code>Map</code> associates unique keys with values.</li>
+    <li><code>ArrayList</code> offers O(1) indexed access and is usually the default. <code>LinkedList</code> has O(n) access and helps only for frequent insertions/removals through an existing iterator or at the ends.</li>
+    <li><code>HashMap</code> is unsynchronized and permits one null key; legacy <code>Hashtable</code> synchronizes whole operations and permits no nulls. Prefer <code>ConcurrentHashMap</code> for concurrency.</li>
+    <li><code>HashMap</code> spreads a key hash into an array bucket, then uses <code>equals()</code> to find the key. It resizes after its load threshold and may treeify heavily collided buckets in Java 8+.</li>
+    <li>Same-bucket keys form a collision chain, initially a list and potentially a red-black tree. Both hash and equality are checked, so distinct keys remain distinct.</li>
+    <li><code>HashMap</code> is not thread-safe. <code>ConcurrentHashMap</code> supports concurrent reads and fine-grained updates and provides atomic methods such as <code>computeIfAbsent</code>.</li>
+    <li><code>HashSet</code> provides average O(1) unordered membership. <code>TreeSet</code> keeps elements sorted with O(log n) operations and requires comparable elements or a comparator.</li>
+    <li><code>Comparable</code> defines a type's natural order through <code>compareTo</code>; <code>Comparator</code> supplies reusable external ordering rules through <code>compare</code>.</li>
+    <li><code>HashMap</code> get/put/remove average O(1); a treeified collision bucket is O(log n). Resizing is O(n), and malicious or poor hashes degrade performance.</li>
+    <li>Use <code>new ArrayList&lt;&gt;(new LinkedHashSet&lt;&gt;(items))</code> to preserve encounter order, or <code>stream().distinct().toList()</code>.</li>
+    <li>Use <code>list.sort(Comparator.comparing(Employee::getSalary).thenComparing(Employee::getName))</code>, or implement <code>Comparable</code> for one natural ordering.</li>
+  </ol>
+  <h3>Collection selection example</h3>
+  <pre><code>List&lt;Order&gt; orderedResults = new ArrayList&lt;&gt;();       // ordered, duplicates allowed
+Set&lt;String&gt; uniqueEmails = new HashSet&lt;&gt;();          // fast uniqueness checks
+Map&lt;Long, User&gt; usersById = new HashMap&lt;&gt;();         // key-based lookup
+Map&lt;String, LongAdder&gt; counters = new ConcurrentHashMap&lt;&gt;(); // concurrent access</code></pre>
+  <p>Choose a collection from required behavior—ordering, uniqueness, lookup pattern, concurrency, and memory—not merely from familiarity. State expected time complexity, but note that hashing quality, resizing, and contention affect real performance.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">3.</span> Java 8+ and Streams</summary><div class="qa-body"><ul>
+    <li>What is the Java Streams API?</li><li>What are the important features introduced in Java 8?</li><li>What is a functional interface?</li><li>What is a lambda expression?</li><li>What is the difference between <code>map()</code> and <code>flatMap()</code>?</li><li>What are intermediate and terminal operations?</li><li><code>filter()</code> vs <code>map()</code>?</li><li>How does <code>reduce()</code> work?</li><li>What is <code>Optional</code>, and why is it used?</li><li>What are method references?</li><li>Find duplicate elements using Streams.</li><li>Find the second-highest number using Streams.</li><li>Group objects based on a particular field.</li><li>Find the frequency of elements using Streams.</li>
+  </ul><h3>Answers</h3><ol>
+    <li>
+      <p><strong>Java Streams API:</strong> a Stream is a single-use pipeline that processes data from a source such as a collection, array, file, or generated sequence. A stream does not store elements and normally does not modify its source. It describes <em>what</em> should happen through operations such as filtering, mapping, sorting, and aggregation.</p>
+      <pre><code>List&lt;String&gt; result = names.stream()
+    .filter(name -&gt; name.startsWith("A")) // keep matching names
+    .map(String::toUpperCase)             // transform each name
+    .sorted()                             // order the results
+    .collect(Collectors.toList());        // terminal operation</code></pre>
+      <p>Intermediate operations are lazy; processing begins only when a terminal operation runs. A consumed stream cannot be reused. Parallel streams can split work across threads, but should be used only after measuring performance and confirming that operations are stateless, associative, and thread-safe.</p>
+    </li>
+    <li>
+      <p><strong>Important Java 8 features:</strong></p>
+      <ul>
+        <li><strong>Lambda expressions and functional interfaces</strong> for passing behavior as data.</li>
+        <li><strong>Streams API</strong> for declarative collection processing.</li>
+        <li><strong>Method references</strong> as concise alternatives to simple lambdas.</li>
+        <li><strong>Default and static interface methods</strong> for evolving interfaces without breaking implementations.</li>
+        <li><strong><code>Optional</code></strong> for explicitly representing a possibly absent result.</li>
+        <li><strong><code>java.time</code></strong>, an immutable and thread-safe date/time API.</li>
+        <li><strong><code>CompletableFuture</code></strong> for composing asynchronous operations.</li>
+        <li>Collection and <code>Map</code> enhancements such as <code>forEach</code>, <code>removeIf</code>, <code>computeIfAbsent</code>, and <code>merge</code>, plus Base64 utilities and repeating/type annotations.</li>
+      </ul>
+      <p>The main shift was support for a functional, declarative programming style alongside Java's object-oriented model.</p>
+    </li>
+    <li>
+      <p><strong>Functional interface:</strong> an interface with exactly one abstract method. It can still contain any number of <code>default</code>, <code>static</code>, and inherited <code>Object</code> methods. Lambdas and method references provide implementations of functional interfaces. <code>@FunctionalInterface</code> is optional, but makes the compiler enforce the rule.</p>
+      <pre><code>@FunctionalInterface
+interface Calculator {
+    int calculate(int a, int b);
+
+    default String description() { return "Performs a calculation"; }
+}
+
+Calculator add = (a, b) -&gt; a + b;
+System.out.println(add.calculate(4, 3)); // 7</code></pre>
+      <p>Common built-in types are <code>Predicate&lt;T&gt;</code>, <code>Function&lt;T,R&gt;</code>, <code>Consumer&lt;T&gt;</code>, and <code>Supplier&lt;T&gt;</code>.</p>
+    </li>
+    <li>
+      <p><strong>Lambda expression:</strong> a compact implementation of a functional interface. Its syntax is <code>(parameters) -&gt; expression</code> or <code>(parameters) -&gt; { statements; }</code>. The target functional-interface type supplies the parameter and return types.</p>
+      <pre><code>Predicate&lt;Integer&gt; isEven = number -&gt; number % 2 == 0;
+Comparator&lt;String&gt; byLength =
+    (first, second) -&gt; Integer.compare(first.length(), second.length());</code></pre>
+      <p>Lambdas can capture local variables only when those variables are final or effectively final. Unlike an anonymous class, a lambda does not introduce a new <code>this</code>; <code>this</code> refers to the enclosing object.</p>
+    </li>
+    <li>
+      <p><strong><code>map()</code> vs <code>flatMap()</code>:</strong> <code>map</code> transforms each input into exactly one output. <code>flatMap</code> transforms each input into a stream and then flattens all nested streams into one stream.</p>
+      <pre><code>List&lt;String&gt; names = employees.stream()
+    .map(Employee::getName)
+    .collect(Collectors.toList());
+
+List&lt;String&gt; skills = employees.stream()
+    .flatMap(employee -&gt; employee.getSkills().stream())
+    .distinct()
+    .collect(Collectors.toList());</code></pre>
+      <p>If every employee has a list of skills, <code>map(Employee::getSkills)</code> produces a <code>Stream&lt;List&lt;String&gt;&gt;</code>; <code>flatMap</code> produces a usable <code>Stream&lt;String&gt;</code>.</p>
+    </li>
+    <li>
+      <p><strong>Intermediate vs terminal operations:</strong></p>
+      <ul>
+        <li><strong>Intermediate operations</strong> return another stream and are lazy: <code>filter</code>, <code>map</code>, <code>flatMap</code>, <code>distinct</code>, <code>sorted</code>, <code>limit</code>, and <code>peek</code>.</li>
+        <li><strong>Terminal operations</strong> start pipeline execution and produce a result or side effect: <code>collect</code>, <code>reduce</code>, <code>count</code>, <code>forEach</code>, <code>findFirst</code>, <code>anyMatch</code>, and <code>min</code>/<code>max</code>.</li>
+      </ul>
+      <pre><code>long count = names.stream()
+    .filter(name -&gt; name.length() &gt; 5) // lazy intermediate step
+    .count();                           // terminal step starts execution</code></pre>
+      <p>Short-circuiting terminal operations such as <code>findFirst</code> and <code>anyMatch</code> may stop without processing every element.</p>
+    </li>
+    <li>
+      <p><strong><code>filter()</code> vs <code>map()</code>:</strong> <code>filter</code> decides whether an element remains in the stream, so its argument is a <code>Predicate&lt;T&gt;</code> returning <code>boolean</code>. <code>map</code> converts every retained element into another value using a <code>Function&lt;T,R&gt;</code>, and may change the stream's element type.</p>
+      <pre><code>List&lt;String&gt; adultNames = people.stream()
+    .filter(person -&gt; person.getAge() &gt;= 18) // Person -&gt; boolean
+    .map(Person::getName)                     // Person -&gt; String
+    .collect(Collectors.toList());</code></pre>
+    </li>
+    <li>
+      <p><strong><code>reduce()</code>:</strong> reduction combines stream elements into one value using an associative accumulator. The identity is the neutral starting value—for addition it is <code>0</code>; for multiplication it is <code>1</code>.</p>
+      <pre><code>int total = numbers.stream()
+    .reduce(0, Integer::sum);
+
+Optional&lt;Integer&gt; maximum = numbers.stream()
+    .reduce(Integer::max);</code></pre>
+      <p>The overload without an identity returns <code>Optional</code> because an empty stream has no result. For parallel execution, the accumulator/combiner must be associative and the identity must be valid; otherwise the result can be incorrect. Use collectors rather than repeated string or collection concatenation when mutable reduction is more efficient.</p>
+    </li>
+    <li>
+      <p><strong><code>Optional</code>:</strong> a container that either contains one non-null value or is empty. It is most useful as a return type when absence is a valid outcome and forces the caller to handle that outcome explicitly.</p>
+      <pre><code>User user = userRepository.findByEmail(email)
+    .orElseThrow(() -&gt; new UserNotFoundException(email));
+
+String city = findUser(id)
+    .map(User::getAddress)
+    .map(Address::getCity)
+    .orElse("Unknown");</code></pre>
+      <p>Prefer <code>orElseGet</code> when creating the fallback is expensive because it is evaluated lazily. Do not call <code>get()</code> without checking, and generally avoid using <code>Optional</code> for entity fields, DTO fields, or method parameters.</p>
+    </li>
+    <li>
+      <p><strong>Method references:</strong> a shorter form of a lambda that only invokes an existing method or constructor.</p>
+      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Example</th><th>Equivalent lambda</th></tr></thead><tbody>
+        <tr><td>Static method</td><td><code>Integer::parseInt</code></td><td><code>value -&gt; Integer.parseInt(value)</code></td></tr>
+        <tr><td>Bound instance method</td><td><code>System.out::println</code></td><td><code>value -&gt; System.out.println(value)</code></td></tr>
+        <tr><td>Unbound instance method</td><td><code>String::trim</code></td><td><code>value -&gt; value.trim()</code></td></tr>
+        <tr><td>Constructor</td><td><code>ArrayList::new</code></td><td><code>() -&gt; new ArrayList&lt;&gt;()</code></td></tr>
+      </tbody></table></div>
+      <p>Use a method reference when it remains clearer than the equivalent lambda.</p>
+    </li>
+    <li>
+      <p><strong>Find duplicate elements:</strong> build a frequency map, then keep keys whose count is greater than one. This returns each duplicated value once and does not mutate external state.</p>
+      <pre><code>List&lt;Integer&gt; numbers = List.of(1, 2, 3, 2, 4, 1, 2);
+
+Set&lt;Integer&gt; duplicates = numbers.stream()
+    .collect(Collectors.groupingBy(
+        Function.identity(),
+        Collectors.counting()))
+    .entrySet().stream()
+    .filter(entry -&gt; entry.getValue() &gt; 1)
+    .map(Map.Entry::getKey)
+    .collect(Collectors.toSet());
+
+// Result: [1, 2]</code></pre>
+    </li>
+    <li>
+      <p><strong>Find the second-highest distinct number:</strong> remove duplicates, sort in descending order, skip the highest, and read the next value.</p>
+      <pre><code>int secondHighest = numbers.stream()
+    .distinct()
+    .sorted(Comparator.reverseOrder())
+    .skip(1)
+    .findFirst()
+    .orElseThrow(() -&gt;
+        new IllegalArgumentException("At least two distinct values are required"));</code></pre>
+      <p>This solution is easy to explain but sorting costs O(n log n). A one-pass solution is preferable for a very large collection when performance is critical.</p>
+    </li>
+    <li>
+      <p><strong>Group objects by a field:</strong> <code>Collectors.groupingBy</code> uses a classifier function to create a map from each group key to its matching objects.</p>
+      <pre><code>Map&lt;String, List&lt;Employee&gt;&gt; byDepartment = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment));
+
+Map&lt;String, Double&gt; averageSalaryByDepartment = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::getDepartment,
+        Collectors.averagingDouble(Employee::getSalary)));</code></pre>
+      <p>A downstream collector can count, sum, average, map, or otherwise aggregate each group instead of returning lists.</p>
+    </li>
+    <li>
+      <p><strong>Find the frequency of elements:</strong> group equal elements using identity as the key and count the elements in every group.</p>
+      <pre><code>List&lt;String&gt; words = List.of("java", "sql", "java", "spring");
+
+Map&lt;String, Long&gt; frequency = words.stream()
+    .collect(Collectors.groupingBy(
+        Function.identity(),
+        LinkedHashMap::new, // preserve first-encounter order
+        Collectors.counting()));
+
+// {java=2, sql=1, spring=1}</code></pre>
+      <p>If order is irrelevant, omit <code>LinkedHashMap::new</code> and use the two-argument <code>groupingBy</code> overload.</p>
+    </li>
+  </ol></div></details>
+
+  <details class="qa"><summary><span class="q-num">4.</span> Multithreading and Concurrency</summary><div class="qa-body"><ul>
+    <li>Process vs thread?</li><li>How do you create a thread in Java?</li><li><code>Runnable</code> vs <code>Callable</code>?</li><li>What is <code>ExecutorService</code>?</li><li>What is synchronization?</li><li>What is a race condition?</li><li>What is deadlock, and how can you prevent it?</li><li><code>synchronized</code> vs <code>volatile</code>?</li><li>What is <code>ConcurrentHashMap</code>?</li><li>How would you execute multiple tasks concurrently?</li><li>What happens if multiple threads modify the same resource?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><p><strong>Process vs thread:</strong> a process is an independently running program with its own virtual address space, resources, and isolation boundary. A thread is an execution path inside a process; threads share the heap and open resources but each has its own stack, program counter, and local variables.</p><p>Creating or switching processes is generally heavier than working with threads. Threads communicate cheaply through shared memory, but that shared memory creates visibility, race-condition, and synchronization problems. A failure in one process is better isolated, whereas an unhandled fatal error in one thread can terminate the process.</p></li>
+    <li><p><strong>Creating work in Java:</strong> implement <code>Runnable</code>, supply a lambda, or use <code>Callable</code>, then submit it to an executor. Extending <code>Thread</code> and calling <code>start()</code> also creates a thread, but couples the task to its execution mechanism.</p><pre><code>Runnable task = () -&gt; System.out.println(Thread.currentThread().getName());
+Thread thread = new Thread(task);
+thread.start(); // start() creates a new call stack; calling run() directly does not
+
+ExecutorService executor = Executors.newFixedThreadPool(4);
+executor.submit(task);
+executor.shutdown();</code></pre><p>Application code normally prefers an executor because it reuses bounded resources and provides task queuing, results, cancellation, and lifecycle management.</p></li>
+    <li><p><strong><code>Runnable</code> vs <code>Callable</code>:</strong> <code>Runnable.run()</code> returns <code>void</code> and cannot declare checked exceptions. <code>Callable&lt;T&gt;.call()</code> returns a value of type <code>T</code> and may throw an exception.</p><pre><code>Callable&lt;BigDecimal&gt; totalTask = () -&gt; orderService.calculateTotal();
+Future&lt;BigDecimal&gt; future = executor.submit(totalTask);
+BigDecimal total = future.get(2, TimeUnit.SECONDS);</code></pre><p><code>Future.get()</code> blocks and wraps a task failure in <code>ExecutionException</code>. Use a timeout, handle cancellation and interruption, or use <code>CompletableFuture</code> when results must be composed without immediately blocking.</p></li>
+    <li><p><strong><code>ExecutorService</code>:</strong> it separates task submission from thread creation. A pool owns worker threads, a queue holds pending work, and submitted tasks return <code>Future</code> objects. This prevents the expensive and unsafe pattern of creating an unlimited thread per request.</p><p>Choose the pool from the workload: CPU-bound work usually starts near the available processor count; blocking I/O may use more threads, but must still be bounded according to downstream capacity. In production, configure core/max threads, queue capacity, thread names, rejection policy, metrics, and graceful shutdown. <code>shutdown()</code> stops new submissions and finishes accepted work; <code>shutdownNow()</code> requests interruption but cannot guarantee immediate termination.</p></li>
+    <li><p><strong>Synchronization:</strong> synchronization protects a critical section so only one thread at a time can execute it for the same monitor. It also establishes a Java Memory Model <em>happens-before</em> relationship: changes made before one thread releases the monitor become visible after another acquires it.</p><pre><code>public synchronized void transfer(Account target, BigDecimal amount) {
+    balance = balance.subtract(amount);
+    target.credit(amount);
+}</code></pre><p>A synchronized instance method locks <code>this</code>; a static synchronized method locks the <code>Class</code> object. Protect every access participating in the same invariant with the same lock, keep the critical section small, and avoid slow remote calls while holding it.</p></li>
+    <li><p><strong>Race condition:</strong> the result depends on the unpredictable ordering of two or more threads. For example, <code>count++</code> performs read, add, and write operations; two threads can read the same old value and one increment is lost.</p><pre><code>private final AtomicInteger count = new AtomicInteger();
+public void increment() { count.incrementAndGet(); }</code></pre><p>Prevent races using immutability, thread confinement, synchronized blocks, locks, atomic classes, concurrent collections, or database constraints. An atomic variable protects its own operation, but multiple related variables may still require one lock or an immutable state transition.</p></li>
+    <li><p><strong>Deadlock:</strong> two or more threads wait forever in a cycle—for example, thread A owns lock 1 and requests lock 2 while thread B owns lock 2 and requests lock 1. The classic necessary conditions are mutual exclusion, hold-and-wait, no preemption, and circular wait.</p><p>Prevent it by acquiring locks in one global order, reducing nested locks and lock duration, using <code>tryLock(timeout)</code>, and never calling unknown or remote code while locked. Diagnose it using thread dumps such as <code>jstack</code>, Java Flight Recorder, or monitoring that shows blocked threads and lock owners. If using <code>ReentrantLock</code>, always unlock in <code>finally</code>.</p></li>
+    <li><p><strong><code>synchronized</code> vs <code>volatile</code>:</strong> <code>synchronized</code> provides mutual exclusion and visibility for a block of operations. <code>volatile</code> guarantees that reads observe the latest write to one variable and prevents certain reorderings, but provides no exclusive access.</p><pre><code>private volatile boolean running = true; // suitable visibility flag
+public void stop() { running = false; }
+
+private int count;
+public synchronized void increment() { count++; } // compound action protected</code></pre><p><code>volatile int count; count++;</code> is still unsafe because increment is a read-modify-write sequence. Use <code>volatile</code> for independent state flags or safely published immutable references; use a lock or atomic type for compound state changes.</p></li>
+    <li><p><strong><code>ConcurrentHashMap</code>:</strong> a thread-safe map designed for high concurrency. Reads are generally non-blocking, and updates coordinate at a fine-grained bucket/node level rather than locking the entire map. It does not allow null keys or values, removing ambiguity between “absent” and “mapped to null.”</p><pre><code>ConcurrentHashMap&lt;String, LongAdder&gt; counts = new ConcurrentHashMap&lt;&gt;();
+counts.computeIfAbsent(key, ignored -&gt; new LongAdder()).increment();</code></pre><p>Use atomic methods such as <code>putIfAbsent</code>, <code>compute</code>, <code>merge</code>, and <code>replace</code>. A sequence like <code>if (!map.containsKey(k)) map.put(k, v)</code> is still a race because the two calls are not one atomic operation. Iterators are weakly consistent and do not represent a locked snapshot.</p></li>
+    <li><p><strong>Executing multiple tasks concurrently:</strong> submit independent tasks to a bounded executor and combine their results with <code>Future</code>, <code>invokeAll</code>, or <code>CompletableFuture</code>. Define an overall timeout and decide whether partial results are acceptable.</p><pre><code>CompletableFuture&lt;Stock&gt; stock = CompletableFuture.supplyAsync(
+    () -&gt; inventoryClient.get(productId), executor);
+CompletableFuture&lt;Price&gt; price = CompletableFuture.supplyAsync(
+    () -&gt; pricingClient.get(productId), executor);
+
+ProductView view = stock.thenCombine(price, ProductView::new)
+    .orTimeout(2, TimeUnit.SECONDS)
+    .join();</code></pre><p>Do not automatically use the common pool for blocking production I/O. Supply a dedicated, measured executor; handle exceptions with <code>exceptionally</code>/<code>handle</code>; propagate cancellation and tracing context; and avoid blocking <code>join()</code> inside the same saturated pool.</p></li>
+    <li><p><strong>Multiple threads modifying one resource:</strong> without coordination, updates can be lost, stale values can be observed, and multi-field invariants can become invalid. Collection internals can also be corrupted when a non-thread-safe implementation is mutated concurrently.</p><p>First try to eliminate shared mutable state through immutable objects, per-request state, message passing, or ownership by one thread. Otherwise select the narrowest correct mechanism: an atomic class for one variable, a concurrent collection for atomic map operations, a lock for a multi-step in-memory invariant, or an optimistic/pessimistic database lock and unique constraint for shared persistent data. Thread safety must cover the complete business operation—not only individual getter and setter calls.</p></li>
+  </ol>
+  <h3>Executor example</h3>
+  <pre><code>ExecutorService pool = Executors.newFixedThreadPool(4);
+try {
+    List&lt;Callable&lt;String&gt;&gt; tasks = List.of(
+        () -&gt; inventoryClient.check(),
+        () -&gt; paymentClient.check());
+
+    for (Future&lt;String&gt; future : pool.invokeAll(tasks, 2, TimeUnit.SECONDS)) {
+        if (!future.isCancelled()) System.out.println(future.get());
+    }
+} finally {
+    pool.shutdown();
+}</code></pre>
+  <p>In production, use bounded queues and explicit rejection policies. Avoid holding a lock during network or database calls, propagate timeouts, preserve interruption, and monitor active threads, queue depth, task latency, and rejected work.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">5.</span> Spring and Spring Boot</summary><div class="qa-body"><ul>
+    <li>What is IoC?</li><li>What is Dependency Injection?</li><li>Constructor injection vs field injection?</li><li>What is the difference between <code>@Component</code>, <code>@Service</code>, and <code>@Repository</code>?</li><li>What does <code>@RestController</code> do?</li><li>How does Spring Boot auto-configuration work?</li><li>What is a Spring Bean?</li><li>Singleton vs prototype bean scope?</li><li>What is <code>@Configuration</code>?</li><li>What is <code>@Bean</code>?</li><li>What is Spring Boot Actuator?</li><li>How do you manage application configuration across environments?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><p><strong>IoC:</strong> Inversion of Control means application code does not construct and coordinate its complete object graph. Spring's IoC container reads configuration and component metadata, creates objects, resolves dependencies, applies lifecycle callbacks/proxies, and manages their scopes. The application's classes therefore focus on business behavior instead of object wiring.</p></li>
+    <li><p><strong>Dependency Injection:</strong> DI is the mechanism by which the container supplies an object's collaborators from outside rather than the object creating them with <code>new</code>. This reduces coupling to implementations and makes replacement and unit testing easier. Spring supports constructor, setter, and field injection; constructor injection is the default choice for required dependencies.</p></li>
+    <li><p><strong>Constructor vs field injection:</strong> constructor injection makes dependencies explicit, permits <code>final</code> fields, guarantees a completely initialized object, and allows plain unit tests without Spring or reflection. Field injection is shorter but hides requirements, prevents immutability, and makes manual construction difficult. Setter injection is appropriate for genuinely optional or reconfigurable dependencies.</p></li>
+    <li><p><strong>Stereotype annotations:</strong> <code>@Component</code> is the generic component-scan stereotype. <code>@Service</code> expresses that a class owns business/application logic. <code>@Repository</code> marks persistence code and participates in translating provider exceptions into Spring's <code>DataAccessException</code> hierarchy. They all create beans, but the specific annotation communicates architectural intent and may enable specialized behavior.</p></li>
+    <li><p><strong><code>@RestController</code>:</strong> it combines <code>@Controller</code> with <code>@ResponseBody</code>. Request-mapping methods return response data rather than a view name, and an <code>HttpMessageConverter</code>—commonly Jackson—serializes the value to JSON according to content negotiation. Use DTOs and <code>ResponseEntity</code> when status or headers must be controlled; do not expose persistence entities directly.</p></li>
+    <li><p><strong>Auto-configuration:</strong> <code>@EnableAutoConfiguration</code> imports configuration selected from Spring Boot metadata. Conditions such as <code>@ConditionalOnClass</code>, <code>@ConditionalOnProperty</code>, and <code>@ConditionalOnMissingBean</code> inspect the classpath, settings, and existing beans. Boot supplies a sensible default only when conditions match and normally backs off when the application provides its own bean. The condition evaluation report explains why a configuration matched or did not match.</p></li>
+    <li><p><strong>Spring Bean:</strong> a bean is an object whose creation, dependencies, scope, lifecycle, and optional proxying are managed by the Spring container. Beans may come from component scanning, <code>@Bean</code> methods, or infrastructure auto-configuration. The default lifecycle includes instantiation, dependency population, awareness callbacks, bean post-processors, initialization callbacks, normal use, and destruction callbacks when the context closes.</p></li>
+    <li><p><strong>Singleton vs prototype:</strong> Spring singleton means one instance per bean definition per application context—not one instance for the entire JVM. Prototype creates a new instance whenever the container is asked for it. Singleton beans are shared across requests and must not hold unsafe user-specific mutable state. Spring creates prototype beans but does not automatically manage their complete destruction lifecycle.</p></li>
+    <li><p><strong><code>@Configuration</code>:</strong> it identifies a source of bean definitions. In full configuration mode, Spring can proxy the class so one <code>@Bean</code> method calling another still obtains the managed singleton rather than constructing an untracked object. Set <code>proxyBeanMethods = false</code> when inter-bean method calls are unnecessary and lightweight configuration is preferred.</p></li>
+    <li><p><strong><code>@Bean</code>:</strong> it registers the method's return value in the application context. It is especially useful for third-party classes that cannot be annotated, conditional construction, or explicit configuration. By default the bean name is the method name; dependencies can be declared as method parameters, and lifecycle methods can be configured when required.</p></li>
+    <li><p><strong>Spring Boot Actuator:</strong> Actuator adds operational endpoints and Micrometer instrumentation for health, readiness/liveness, metrics, loggers, mappings, thread dumps, and more. Expose only required endpoints, place management traffic behind appropriate network and authentication controls, and never publicly reveal environment or configuration values. Custom <code>HealthIndicator</code>s should reflect whether the application can actually serve traffic without making health checks fragile.</p></li>
+    <li><p><strong>Environment configuration:</strong> keep defaults in versioned configuration, override them through profile files, environment variables, command-line values, or a configuration service. Store secrets in a secret manager rather than Git or container images, bind related settings with validated <code>@ConfigurationProperties</code>, and fail fast when required values are absent. Promote the same immutable artifact between environments and change configuration externally.</p></li>
+  </ol>
+  <h3>Dependency-injection example</h3>
+  <pre><code>@Service
+public class OrderService {
+    private final PaymentClient paymentClient;
+
+    public OrderService(PaymentClient paymentClient) {
+        this.paymentClient = paymentClient;
+    }
+}
+
+@Configuration
+class ClientConfiguration {
+    @Bean
+    PaymentClient paymentClient(WebClient.Builder builder) {
+        return new PaymentClient(builder.build());
+    }
+}</code></pre>
+  <p><code>@SpringBootApplication</code> combines <code>@Configuration</code>, <code>@EnableAutoConfiguration</code>, and <code>@ComponentScan</code>. Auto-configuration is conditional and backs off when the application supplies its own bean; inspect the condition evaluation report when expected configuration is missing.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">6.</span> REST API Development</summary><div class="qa-body"><ul>
+    <li>What is REST?</li><li><code>GET</code> vs <code>POST</code> vs <code>PUT</code> vs <code>PATCH</code>?</li><li><code>PUT</code> vs <code>PATCH</code>?</li><li>What HTTP status codes do you commonly use?</li><li>How would you design a REST API for a payment or order system?</li><li>What makes an API idempotent?</li><li>How would you implement pagination?</li><li>How would you handle API validation?</li><li>How would you handle global exceptions?</li><li>What is the difference between authentication and authorization?</li><li>How would you secure a REST API?</li><li>How would you handle API versioning?</li><li>How would you handle third-party API failures?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><p><strong>REST:</strong> Representational State Transfer is an architectural style in which resources have stable URIs and clients manipulate their representations with standard HTTP semantics. A REST request is stateless: it carries everything needed to process it, enabling independent scaling. Good APIs use nouns such as <code>/orders/42</code>, HTTP methods/status codes, cache headers, and links or metadata where useful rather than encoding every action into custom verbs.</p></li>
+    <li><p><strong>HTTP methods:</strong> <code>GET</code> retrieves without changing intended state and is safe/idempotent. <code>POST</code> creates under a collection or invokes an action and is not inherently idempotent. <code>PUT</code> creates or completely replaces the resource at a known URI and is idempotent. <code>PATCH</code> applies a partial change; <code>DELETE</code> removes a resource and is idempotent even if repeated responses differ.</p></li>
+    <li><p><strong><code>PUT</code> vs <code>PATCH</code>:</strong> PUT supplies the complete replacement representation, so omitted fields may be reset. PATCH sends only changes, commonly as JSON Merge Patch or JSON Patch. PUT should produce the same state when repeated. PATCH is idempotent only when the patch operation itself is designed that way—for example, “set status” is idempotent while “increment balance” is not.</p></li>
+    <li><p><strong>Status codes:</strong> use <code>200</code> for a successful response, <code>201</code> plus <code>Location</code> for creation, and <code>204</code> when no body is returned. Client errors include <code>400</code> malformed input, <code>401</code> invalid/missing authentication, <code>403</code> insufficient permission, <code>404</code> missing resource, <code>409</code> state conflict, <code>422</code> semantic validation, and <code>429</code> rate limiting. Use <code>500</code> for an unexpected server failure and <code>502</code>/<code>503</code>/<code>504</code> for dependency or availability failures.</p></li>
+    <li><p><strong>Order/payment API design:</strong> expose resources such as <code>POST /orders</code>, <code>GET /orders/{id}</code>, <code>POST /payments</code>, and explicit refund/cancel transitions. Validate amounts, currency and allowed state changes; authenticate the caller and check ownership; use idempotency keys and unique constraints; return stable error contracts; and expose an immutable transaction ID. Treat slow or uncertain provider operations as workflows with pending states, verified webhooks, and reconciliation rather than one long HTTP transaction.</p></li>
+    <li><p><strong>Idempotency:</strong> repeated execution has the same intended effect as one execution. HTTP defines GET, PUT, and DELETE as idempotent, but retries still need safe implementation. For a payment POST, persist the client idempotency key, request fingerprint, processing state, and final response under a unique constraint. A matching retry returns the saved response; reuse with a different payload is rejected.</p></li>
+    <li><p><strong>Pagination:</strong> offset pagination (<code>?page=2&amp;size=20</code>) is simple and supports jumping to pages, but large offsets become expensive and concurrent inserts can shift results. Cursor/keyset pagination uses the last ordered value, such as <code>?after=2026-10-08T10:00:00Z&amp;id=42</code>, and is stable and efficient for feeds. Always cap page size, use deterministic indexed ordering with a unique tie-breaker, and return next-cursor metadata.</p></li>
+    <li><p><strong>Validation:</strong> use Bean Validation annotations such as <code>@NotBlank</code>, <code>@Positive</code>, and <code>@Valid</code> for transport-level constraints. Enforce cross-field and state-dependent business rules in the service/domain layer, because they may require current database state. Return a consistent error document with field, rejected rule, human-safe message, code, timestamp, path, and correlation ID; never return a stack trace.</p></li>
+    <li><p><strong>Global exceptions:</strong> centralize mapping with <code>@RestControllerAdvice</code> and targeted <code>@ExceptionHandler</code> methods. Map domain exceptions to stable HTTP errors, validation failures to field-level details, and unexpected exceptions to a generic 500 response while logging the internal cause with a correlation ID. Do not catch every exception in each controller or expose database/provider messages to clients.</p></li>
+    <li><p><strong>Authentication vs authorization:</strong> authentication answers “who are you?” by validating credentials or a token. Authorization answers “may this identity perform this operation on this resource?” using roles, scopes, ownership, and policies. Authentication normally precedes authorization, but a valid token alone must never grant access to every record.</p></li>
+    <li><p><strong>REST API security:</strong> require TLS; validate token signature, issuer, audience, expiry, and scopes; authorize at both route and resource-ownership levels; validate input and use parameterized persistence APIs; rate-limit abuse; restrict CORS; apply safe headers; rotate secrets; and redact sensitive logs. Use least privilege for service accounts and databases, audit high-risk actions, and test broken-object-level authorization explicitly.</p></li>
+    <li><p><strong>Versioning:</strong> first evolve compatibly by adding optional fields and tolerating unknown response fields. For a breaking contract, use a clear strategy such as <code>/api/v2</code> or versioned media types, maintain separate documentation and contract tests, announce a deprecation/sunset policy, monitor client usage, and provide a migration period. Avoid versioning merely because the internal implementation changed.</p></li>
+    <li><p><strong>Third-party failures:</strong> set connection and response timeouts, propagate a correlation ID, and classify failures as transient, permanent, or unknown. Retry only transient and idempotent operations with exponential backoff, jitter, and a cap; use circuit breakers and bulkheads to prevent cascading failure. For an unknown payment outcome, do not blindly retry—query by provider reference or reconcile asynchronously, and surface an explicit pending status.</p></li>
+  </ol>
+  <h3>Consistent validation and errors</h3>
+  <pre><code>public record CreateOrderRequest(@NotEmpty List&lt;Long&gt; productIds) {}
+
+@PostMapping("/orders")
+ResponseEntity&lt;OrderResponse&gt; create(
+        @Valid @RequestBody CreateOrderRequest request,
+        @RequestHeader("Idempotency-Key") String key) {
+    OrderResponse result = orderService.create(request, key);
+    return ResponseEntity.status(HttpStatus.CREATED).body(result);
+}
+
+@RestControllerAdvice
+class ApiExceptionHandler {
+    @ExceptionHandler(OrderNotFoundException.class)
+    ResponseEntity&lt;ProblemDetail&gt; notFound(OrderNotFoundException ex) {
+        return ResponseEntity.of(ProblemDetail.forStatusAndDetail(
+            HttpStatus.NOT_FOUND, ex.getMessage())).build();
+    }
+}</code></pre>
+  <p>Keep controllers thin, put business rules and transaction boundaries in services, never expose entities directly as API contracts, and document error schemas as carefully as successful responses.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">7.</span> Spring Security and JWT</summary><div class="qa-body"><ul>
+    <li>Authentication vs authorization?</li><li>What is JWT?</li><li>Explain the JWT authentication flow.</li><li>Access token vs refresh token?</li><li>Where should a JWT be validated?</li><li>How would you implement role-based authorization?</li><li>What happens when a JWT expires?</li><li>How would you secure sensitive APIs?</li><li>What are common security vulnerabilities in REST APIs?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>Authentication vs authorization:</strong> Authentication answers “Who are you?” by validating credentials or a token and creating an authenticated <code>Authentication</code> object. Authorization answers “May you perform this action?” by checking authorities, scopes, ownership, tenant, or another business rule. They are separate: a correctly authenticated customer should still receive <code>403 Forbidden</code> when trying to access another customer's order.</li>
+    <li><strong>JWT:</strong> A JSON Web Token is a compact string with Base64URL-encoded header and payload plus a cryptographic signature. Common claims include <code>sub</code>, <code>iss</code>, <code>aud</code>, <code>exp</code>, roles, and scopes. The signature protects integrity and authenticity; it does not encrypt the payload, so passwords, secrets, and sensitive personal data must not be placed in it.</li>
+    <li><strong>Authentication flow:</strong> The user authenticates with an authorization server such as Keycloak. It issues an access token signed with its private key. The client sends <code>Authorization: Bearer &lt;token&gt;</code>; Spring Security's resource-server filter verifies the signature using the issuer's public key, checks issuer, audience, and expiry, maps claims to authorities, and only then runs authorization rules. The API does not trust claims until all validation succeeds.</li>
+    <li><strong>Access vs refresh token:</strong> An access token is deliberately short-lived and is presented to resource APIs. A refresh token lasts longer and is presented only to the authorization server to obtain a new access token. Refresh tokens should be protected more strongly, rotated on use, and revoked when reuse is detected. Browser applications commonly keep them in secure, <code>HttpOnly</code>, <code>SameSite</code> cookies rather than JavaScript-readable storage.</li>
+    <li><strong>Validation location:</strong> The gateway should reject invalid traffic early, but each sensitive resource service should also validate JWTs because internal routes can be exposed accidentally or called through another path. Validation includes signature, allowed algorithm, issuer, intended audience, time claims, and required scope—not merely decoding the token. Central identity configuration plus service-level enforcement provides defense in depth.</li>
+    <li><strong>Role-based authorization:</strong> Convert trusted token claims into Spring <code>GrantedAuthority</code> values, define coarse endpoint rules in <code>SecurityFilterChain</code>, and enable method security for business-level checks. For example, <code>@PreAuthorize("hasAuthority('SCOPE_orders.write') and #userId == authentication.name")</code> combines permission and ownership. Deny by default and test allowed and forbidden cases.</li>
+    <li><strong>Expiry:</strong> A resource server rejects an expired access token with <code>401 Unauthorized</code>; it must not silently extend it. The client can use a still-valid refresh token with the authorization server and retry once with the newly issued access token. If refresh fails or has expired, require login again. Short access-token lifetime limits damage from theft, while revocation or token introspection may be needed for immediate logout requirements.</li>
+    <li><strong>Securing sensitive APIs:</strong> Use TLS, least-privilege scopes, object-level ownership checks, validation, rate limits, safe error messages, audit trails, secret rotation, and private networking for internal services. Protect high-risk actions with step-up authentication or approval and avoid logging credentials or tokens. CORS is a browser control, not API authentication, and CSRF protection is still relevant when credentials are cookie-based.</li>
+    <li><strong>Common API vulnerabilities:</strong> Broken object-level authorization occurs when changing an ID exposes another user's record; mass assignment lets clients set fields such as <code>role</code>; injection passes untrusted input into interpreters; SSRF makes the server call attacker-controlled destinations. Prevent these with per-object authorization, request DTO allow-lists, parameterized queries, outbound URL allow-lists, bounded payloads, dependency/configuration scanning, rate limiting, and explicit negative security tests.</li>
+  </ol>
+  <h3>Spring Security resource-server example</h3>
+  <pre><code>@Bean
+SecurityFilterChain security(HttpSecurity http) throws Exception {
+    return http
+        .csrf(csrf -&gt; csrf.disable())
+        .authorizeHttpRequests(auth -&gt; auth
+            .requestMatchers("/health", "/products/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/orders/**")
+                .hasAuthority("SCOPE_orders.write")
+            .anyRequest().authenticated())
+        .oauth2ResourceServer(oauth -&gt; oauth.jwt(Customizer.withDefaults()))
+        .build();
+}</code></pre>
+  <p>The resource server must validate the signature, issuer, audience, and expiry and then map trusted claims to authorities. A <code>401</code> means authentication is missing or invalid; a <code>403</code> means the authenticated caller lacks permission.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">8.</span> JPA and Hibernate</summary><div class="qa-body"><ul>
+    <li>What is ORM?</li><li>JPA vs Hibernate?</li><li>What is an Entity?</li><li>Explain one-to-one, one-to-many, and many-to-many relationships.</li><li>Lazy vs eager loading?</li><li>What is the N+1 query problem?</li><li>How can N+1 queries be avoided?</li><li>What is cascading?</li><li>What is the difference between <code>save()</code> and <code>saveAndFlush()</code>?</li><li>What is the first-level cache?</li><li>JPQL vs native query?</li><li>What is a database transaction?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>ORM:</strong> Object-relational mapping connects Java classes, fields, and object relationships to tables, columns, and foreign keys. It removes repetitive row-mapping and generates SQL, dirty checking, and relationship handling, but it does not eliminate the need to understand joins, indexes, locking, and transaction boundaries. A useful interview point is that ORM improves productivity while poorly chosen fetch plans can still generate expensive SQL.</li>
+    <li><strong>JPA vs Hibernate:</strong> Jakarta Persistence (JPA) is a standard contract containing annotations and APIs such as <code>@Entity</code>, JPQL, and <code>EntityManager</code>. Hibernate is an ORM provider that implements that contract and adds features such as filters, advanced batching, and provider-specific annotations. In Spring Data JPA, repositories usually program against JPA while Hibernate is the default engine doing the work.</li>
+    <li><strong>Entity:</strong> An entity is a domain object whose state is persisted and managed by a persistence context. It requires an identity using <code>@Id</code>, a no-argument constructor at least accessible to the provider, and should have stable equality semantics. Avoid placing API serialization concerns or expensive relationship traversal inside entity methods; use DTOs at service boundaries.</li>
+    <li><strong>Relationships:</strong> A one-to-one uses a unique foreign key; a many-to-one normally places the foreign key on the child; a one-to-many is usually the inverse collection; and many-to-many uses a join table. In real systems, model many-to-many as a join entity such as <code>Enrollment(student_id, course_id, enrolled_at, status)</code> when the relationship has data. The side with <code>@JoinColumn</code> owns the relation, and helper methods should update both sides in memory.</li>
+    <li><strong>Lazy vs eager:</strong> Lazy fetching returns a proxy or collection and loads it when accessed inside an active persistence context. Eager declares that data must be available, but it may still cause secondary selects and N+1 queries rather than one join. Prefer lazy associations and select an explicit fetch plan for each use case using a fetch join, entity graph, or projection. Accessing an uninitialized lazy relation after the session closes causes <code>LazyInitializationException</code>.</li>
+    <li><strong>N+1:</strong> The application first loads N orders with one query and then accesses each order's customer, causing up to N additional queries. The code looks harmless but network round trips and database work grow with result size. Detect it through SQL logs, Hibernate statistics, APM traces, or query-count assertions—not just by reviewing repository method names.</li>
+    <li><strong>Avoiding N+1:</strong> Use <code>JOIN FETCH</code> for a known object graph, <code>@EntityGraph</code> for reusable repository fetch plans, DTO projections when only selected columns are required, or batch fetching for controlled secondary queries. Do not set all associations to eager: that creates oversized graphs and moves the problem. Collection fetch joins plus pagination can duplicate rows, so page IDs first and fetch the graph in a second query.</li>
+    <li><strong>Cascading:</strong> Cascade controls whether an entity operation propagates from a parent to associated objects—for example, persisting an order can persist its newly created order items. It does not mean database <code>ON DELETE CASCADE</code>. Use only the operations required by aggregate ownership, avoid <code>CascadeType.ALL</code> by habit, and never cascade remove into shared reference entities such as products or roles.</li>
+    <li><strong><code>save()</code> vs <code>saveAndFlush()</code>:</strong> Spring Data <code>save()</code> calls <code>persist</code> for new entities or <code>merge</code> for detached ones; generated SQL may wait until flush or commit. <code>saveAndFlush()</code> additionally forces pending SQL to the database, useful when a later operation needs a constraint checked immediately. Flush is not commit—the surrounding transaction can still roll back—and excessive flushing reduces batching and performance.</li>
+    <li><strong>First-level cache:</strong> Every persistence context has a mandatory identity map. Loading the same entity ID twice in one transaction generally returns the same managed Java object and avoids a second ID query. It is not a cross-request cache and can consume large memory during bulk work, so batch jobs often call <code>flush()</code> and <code>clear()</code> periodically.</li>
+    <li><strong>JPQL vs native SQL:</strong> JPQL addresses entities and mapped fields, supports polymorphism, and is portable across databases. Native SQL addresses physical tables and exposes vendor features such as PostgreSQL CTEs, JSON operators, or specialized window expressions. Prefer JPQL/projections for ordinary domain queries; use native SQL when it provides measurable value and test mappings and portability explicitly.</li>
+    <li><strong>Transaction:</strong> A transaction is an atomic unit of database work with ACID guarantees. In a service method it should contain all related state changes—for example, save the order and its outbox event together—so either both commit or neither does. Keep it short, avoid slow remote calls while locks are held, and choose isolation and locking based on the concurrency invariant.</li>
+  </ol>
+  <h3>Targeted fetching example</h3>
+  <pre><code>@EntityGraph(attributePaths = "items")
+Optional&lt;Order&gt; findWithItemsById(Long id);
+
+@Query("select o from Order o join fetch o.customer where o.id = :id")
+Optional&lt;Order&gt; findWithCustomer(Long id);</code></pre>
+  <p>Keep associations lazy by default and choose the fetch plan per use case. Verify generated SQL and query counts in tests. Fetch-joining multiple collections or combining collection fetch joins with pagination can multiply rows, so DTO projections, batch fetching, or two-step queries may be safer.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">9.</span> Transactions</summary><div class="qa-body"><ul>
+    <li>What is a transaction?</li><li>Explain ACID properties.</li><li>What does <code>@Transactional</code> do?</li><li>What are transaction isolation levels?</li><li>What is a dirty read?</li><li>What is a non-repeatable read?</li><li>What is a phantom read?</li><li>What happens when an exception occurs inside a transactional method?</li><li>What is transaction rollback?</li><li>How would you maintain consistency when multiple database operations are involved?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>Transaction:</strong> A transaction groups related reads and writes into one logical unit. For a bank transfer, debit and credit must commit together or both roll back; exposing a half-finished transfer violates the business invariant. Transactions should be as short as possible because open transactions retain connections, locks, and database resources.</li>
+    <li><strong>ACID:</strong> Atomicity means all-or-nothing; consistency means committed work preserves declared constraints and business invariants; isolation controls what concurrent transactions can observe; durability means committed data survives failure according to the database's guarantees. Consistency is not automatic for every business rule—the application and schema must define constraints correctly.</li>
+    <li><strong><code>@Transactional</code>:</strong> Spring normally wraps the bean in a proxy. On entry, the interceptor obtains or joins a transaction according to propagation settings, binds persistence resources to the thread, and commits or rolls back on exit. Because proxy interception is involved, self-invocation and private methods commonly bypass the annotation. Put transaction boundaries in public service methods rather than controllers or repositories alone.</li>
+    <li><strong>Isolation levels:</strong> <code>READ_UNCOMMITTED</code> allows the weakest visibility; <code>READ_COMMITTED</code> prevents dirty reads; <code>REPEATABLE_READ</code> keeps previously read rows stable in typical engines; and <code>SERIALIZABLE</code> aims to make concurrent work behave sequentially. Exact behavior is database-specific. Stronger isolation can increase blocking or serialization failures, so combine the lowest adequate level with optimistic/pessimistic locking and safe retry.</li>
+    <li><strong>Dirty read:</strong> Transaction A reads a value written by B before B commits. If B rolls back, A acted on data that never officially existed. <code>READ_COMMITTED</code> and stronger levels prevent this; major production databases often default to at least that level.</li>
+    <li><strong>Non-repeatable read:</strong> A transaction reads one row twice and sees different committed values because another transaction updated it between reads. If stable state is required for a calculation, use appropriate isolation, a version check, or a row lock rather than assuming repeated queries remain identical.</li>
+    <li><strong>Phantom read:</strong> A transaction repeats a predicate query—such as all available seats—and a concurrent insert or delete changes the set of matching rows. This differs from a non-repeatable read, which changes an existing row. Serializable isolation, predicate/range locking, or a better domain constraint can protect invariants affected by phantoms.</li>
+    <li><strong>Exceptions and rollback:</strong> By default Spring rolls back for <code>RuntimeException</code> and <code>Error</code>, not checked exceptions. Use <code>rollbackFor</code> when a checked exception represents failure. If code catches and suppresses the exception, the interceptor may commit; either rethrow it or mark the transaction rollback-only. Also remember that an exception after flush can leave the transaction unusable even if caught.</li>
+    <li><strong>Rollback:</strong> The database discards uncommitted changes and releases locks. It cannot unsend an email, revoke an already completed HTTP call, or erase a published message. Coordinate such side effects with a transactional outbox, idempotency key, after-commit handler, or a compensating operation instead of assuming database rollback covers them.</li>
+    <li><strong>Multiple operations:</strong> Keep changes within one database in one local transaction and enforce invariants with constraints and locking. Across separately owned service databases, use a Saga: each service commits locally, publishes an event through an outbox, and defines a compensating action for failure. Consumers must be idempotent because delivery is normally at least once; reconciliation handles rare uncertain outcomes.</li>
+  </ol>
+  <h3>Important Spring transaction caveat</h3>
+  <pre><code>@Transactional(rollbackFor = PaymentException.class)
+public void placeOrder(CreateOrder command) throws PaymentException {
+    orderRepository.save(map(command));
+    outboxRepository.save(OrderCreated.from(command));
+}</code></pre>
+  <p>Spring normally applies transactions through a proxy. A call from one method to another method on the same object bypasses that proxy, so the inner <code>@Transactional</code> may not take effect. Keep transactional methods public, call them through another injected bean, and avoid slow remote calls while holding database locks.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">10.</span> SQL and Database</summary><div class="qa-body"><ul>
+    <li>Primary key vs foreign key?</li><li><code>INNER JOIN</code> vs <code>LEFT JOIN</code>?</li><li><code>WHERE</code> vs <code>HAVING</code>?</li><li><code>GROUP BY</code> vs <code>ORDER BY</code>?</li><li>What is normalization?</li><li>What is denormalization?</li><li>What is an index?</li><li>How does an index improve query performance?</li><li>Clustered vs non-clustered index?</li><li>What is a composite index?</li><li>What is a database transaction?</li><li>What is a database deadlock?</li><li>How would you identify a slow query?</li><li>What is <code>EXPLAIN</code> used for?</li><li>Write a query to find duplicate records.</li><li>Write a query to find the second-highest salary.</li><li>Write a query using a window function.</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>Primary vs foreign key:</strong> A primary key uniquely and permanently identifies a row and is implicitly unique and non-null. A foreign key references a candidate key in another or the same table and prevents orphaned relationships. For example, <code>orders.customer_id</code> references <code>customers.id</code>; choose deliberate delete behavior such as restrict, set null, or cascade rather than leaving it ambiguous.</li>
+    <li><strong><code>INNER JOIN</code> vs <code>LEFT JOIN</code>:</strong> An inner join returns only rows having a match on both sides. A left join retains every left-side row and fills right-side columns with null when no match exists. Put a filter on the right table in the <code>WHERE</code> clause carefully because it can accidentally turn a left join into inner-join behavior; place match-specific conditions in <code>ON</code> when unmatched left rows must remain.</li>
+    <li><strong><code>WHERE</code> vs <code>HAVING</code>:</strong> <code>WHERE</code> removes individual rows before grouping and should handle ordinary predicates so less data reaches aggregation. <code>HAVING</code> filters completed groups, commonly using aggregate expressions: <code>GROUP BY department HAVING COUNT(*) &gt; 10</code>. Using <code>HAVING</code> for a nonaggregate predicate can be less clear and sometimes less efficient.</li>
+    <li><strong><code>GROUP BY</code> vs <code>ORDER BY</code>:</strong> <code>GROUP BY</code> combines rows sharing key values so aggregate functions can return one result per group. <code>ORDER BY</code> sorts the final rows and does not aggregate them. SQL does not promise result order without an explicit <code>ORDER BY</code>, even if a grouping or index appears to return sorted output.</li>
+    <li><strong>Normalization:</strong> Normalization separates facts to reduce duplication and update anomalies. 1NF uses atomic values, 2NF removes partial dependency on a composite key, and 3NF removes transitive dependency on non-key attributes. For example, store customer contact data once in <code>customer</code> rather than repeating it in every order, while preserving historical order snapshots deliberately where required.</li>
+    <li><strong>Denormalization:</strong> Denormalization intentionally duplicates or precomputes data for a measured read requirement—for example, a materialized sales summary or customer name snapshot on an invoice. It improves some reads but adds write amplification and consistency rules. State which copy is authoritative and update derived copies through a transaction, event, refresh process, or reconciliation.</li>
+    <li><strong>Index:</strong> An index is a separate search structure, commonly a B-tree, containing indexed keys and row locators or included data. It can enforce uniqueness and support selective predicates, joins, ranges, and ordering. It is not free: indexes consume memory/storage and every insert, update, and delete may need to maintain them.</li>
+    <li><strong>How indexes help:</strong> Rather than scanning every table row, the engine can navigate the index to a small key range and fetch only qualifying rows. A covering index may satisfy the query without visiting the table. Benefits depend on selectivity, column order, statistics, and expressions; wrapping an indexed column in a function or using a leading wildcard may prevent an efficient lookup.</li>
+    <li><strong>Clustered vs non-clustered:</strong> In engines with clustered storage, the clustered key determines the physical/primary row organization, so only one such order exists. A non-clustered/secondary index stores its own ordered keys and a locator to the base row. PostgreSQL, MySQL/InnoDB, and SQL Server use different terminology and implementation details, so explain the concept and identify the database in an interview.</li>
+    <li><strong>Composite index:</strong> A multi-column index such as <code>(customer_id, created_at DESC)</code> is useful for recent orders of one customer. Its leftmost prefix usually supports <code>customer_id</code> alone but not an arbitrary query filtering only <code>created_at</code>. Choose equality columns first, then range/order columns based on real query patterns, and verify with the execution plan.</li>
+    <li><strong>Database transaction:</strong> It provides an all-or-nothing boundary and isolation from concurrent work. A transfer should update both account rows and append ledger entries in the same transaction, with constraints preventing invalid balances. Commit makes changes durable; rollback removes uncommitted work, but neither automatically coordinates an already completed external API call.</li>
+    <li><strong>Deadlock:</strong> A deadlock forms when transactions wait in a cycle—for example, A locks account 1 then requests 2 while B locks 2 then requests 1. The database detects the cycle and aborts a victim. Prevent it by locking resources in a consistent order, keeping transactions short, indexing updates correctly, and safely retrying the full idempotent transaction.</li>
+    <li><strong>Finding a slow query:</strong> Start with APM and slow-query logs to identify the exact SQL, parameters, call count, p95/p99 time, rows returned, and lock or I/O waits. Reproduce against production-like volume, inspect the actual plan, and check missing/stale statistics, N+1 calls, blocking, pool saturation, and result size. Optimize the measured bottleneck and compare the same metrics afterward.</li>
+    <li><strong><code>EXPLAIN</code>:</strong> It displays the optimizer's estimated scan, join, sort, and aggregation plan. <code>EXPLAIN ANALYZE</code> actually runs the statement and reports actual rows and timings, so use it cautiously for writes or expensive production queries. Large gaps between estimated and actual row counts suggest statistics or data-distribution problems; repeated loops often reveal N+1-like nested work.</li>
+    <li><strong>Duplicates:</strong> <code>SELECT email, COUNT(*) AS occurrences FROM users GROUP BY email HAVING COUNT(*) &gt; 1;</code>. To retrieve full duplicate rows, place the grouped keys in a CTE and join back to <code>users</code>. After cleanup, add a unique constraint if duplicates are invalid so application races cannot recreate them.</li>
+    <li><strong>Second-highest salary:</strong> <code>SELECT MAX(salary) FROM employee WHERE salary &lt; (SELECT MAX(salary) FROM employee);</code> returns the second distinct value. A scalable alternative is <code>DENSE_RANK() OVER (ORDER BY salary DESC)</code> and filter rank 2; <code>DENSE_RANK</code> handles ties, whereas <code>ROW_NUMBER</code> ranks individual rows.</li>
+    <li><strong>Window function:</strong> <code>SELECT id, department, salary, DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS dept_rank FROM employee;</code> ranks salaries independently inside each department without collapsing rows. Unlike <code>GROUP BY</code>, window functions retain each detail row and add analytics such as ranks, running totals, or previous-row comparisons.</li>
+  </ol>
+  <h3>Slow-query investigation flow</h3>
+  <ol>
+    <li>Capture the exact SQL, bind values, frequency, p95/p99 latency, and wait time.</li>
+    <li>Run <code>EXPLAIN (ANALYZE, BUFFERS)</code> with production-like data and inspect actual versus estimated rows.</li>
+    <li>Check sequential scans, join algorithms, sorts spilling to disk, lock waits, N+1 calls, and connection-pool saturation.</li>
+    <li>Add or adjust an index only when it matches the filter/join/order pattern; then rerun the plan and load test.</li>
+  </ol>
+  <p>For a composite B-tree index such as <code>(customer_id, created_at)</code>, queries beginning with <code>customer_id</code> generally benefit from the leftmost-prefix rule. Every index consumes storage and makes writes more expensive.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">11.</span> Redis and Caching</summary><div class="qa-body"><ul>
+    <li>What is Redis?</li><li>Why would you use Redis in a backend application?</li><li>Redis vs database?</li><li>What is caching?</li><li>Explain the cache-aside strategy.</li><li>What is TTL?</li><li>What happens when cached data becomes stale?</li><li>Where would you use Redis in a payment or backend system?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>Redis:</strong> Redis is a low-latency, in-memory data-structure server. Beyond strings it supports hashes, lists, sets, sorted sets, bitmaps, streams, atomic operations, expiry, replication, and optional persistence. Because commands on the primary execution path are atomic, it is useful for counters and conditional updates, but multi-step workflows still require careful Lua/transactions and failure design.</li>
+    <li><strong>Backend uses:</strong> Common uses are cache entries, sessions, rate-limit counters, one-time tokens, leaderboards, distributed coordination, and short-lived idempotency state. Choose the data structure deliberately: a sorted set fits rankings, <code>INCR</code> plus expiry fits simple limits, and hashes fit small grouped fields. Define behavior when Redis is slow or unavailable.</li>
+    <li><strong>Redis vs database:</strong> A relational database typically remains the durable system of record and provides constraints, joins, and robust transactions. Redis prioritizes speed and specialized structures; persistence and failover do not automatically make it a suitable financial ledger. Decide whether Redis data is disposable, rebuildable, or authoritative, then configure durability and recovery accordingly.</li>
+    <li><strong>Caching:</strong> A cache stores reusable data closer to the caller to reduce latency and protect downstream systems. It helps read-heavy, repeatedly requested, moderately stable data. It can hurt when hit rate is low, objects are huge, invalidation is unreliable, or strong read-after-write consistency is mandatory. Measure hit rate, miss latency, evictions, memory, and fallback load.</li>
+    <li><strong>Cache-aside:</strong> The service reads Redis first; on a miss it reads the database and populates Redis. On mutation, commit the database first and invalidate the cache key. This tolerates cache loss because the database remains authoritative, but concurrent misses can stampede and an unlucky read/write race can briefly cache stale data. Use TTL, request coalescing, versioned keys, or event invalidation according to risk.</li>
+    <li><strong>TTL:</strong> Time to live automatically expires a key and bounds staleness and memory use. Choose it from business tolerance, not an arbitrary round number. Add random jitter so thousands of keys do not expire together, and distinguish cache expiry from session/security expiry, where policy may require an exact deadline.</li>
+    <li><strong>Stale data:</strong> Staleness occurs when the source changes while an old cached representation remains. Mitigate it through write invalidation, domain-event invalidation, short TTLs, versioned keys, or a write-through strategy. Since database commit and cache deletion are not normally atomic, consumers must accept a defined staleness window or use patterns such as outbox-driven invalidation and reconciliation.</li>
+    <li><strong>Payment/backend use:</strong> Redis is suitable for rate limits, short-lived checkout state, session data, merchant configuration cache, and idempotency locks/records with a durable fallback. It must not be the only record of money movement. For a distributed lock use a unique owner token, bounded lease, and compare-and-delete release; also enforce the business invariant in the database because a lock can expire during a pause.</li>
+  </ol>
+  <h3>Spring cache-aside example</h3>
+  <pre><code>public Product findProduct(long id) {
+    String key = "product:" + id;
+    Product cached = redis.get(key, Product.class);
+    if (cached != null) return cached;
+
+    Product product = repository.findById(id).orElseThrow();
+    redis.set(key, product, Duration.ofMinutes(10));
+    return product;
+}</code></pre>
+  <p>On update, commit the database change first and invalidate the key. Protect hot misses with request coalescing or a short distributed lock, add TTL jitter to reduce synchronized expiry, and monitor hit rate, memory, evictions, latency, and database fallback load. Never assume a cache and database update are one atomic operation.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">12.</span> Kafka and RabbitMQ</summary><div class="qa-body"><ul>
+    <li>Why do we need message queues?</li><li>Synchronous vs asynchronous communication?</li><li>Kafka vs RabbitMQ?</li><li>What is a Kafka producer?</li><li>What is a consumer?</li><li>What is a topic?</li><li>What is a partition?</li><li>What is a consumer group?</li><li>How would you handle message failure?</li><li>What are retries and a dead-letter queue?</li><li>When would you prefer asynchronous processing?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>Why messaging:</strong> A broker decouples producer availability and speed from consumers, buffers traffic spikes, and moves slow work outside the request path. It also enables fan-out, retries, and independent scaling. The trade-off is eventual consistency, duplicates, ordering constraints, schema evolution, and additional operational monitoring; a queue is not automatically the right solution for a simple immediate query.</li>
+    <li><strong>Synchronous vs asynchronous:</strong> HTTP/gRPC request-response is appropriate when the caller needs an immediate answer and can tolerate dependency coupling. Messaging lets the producer acknowledge accepted work without waiting for every downstream service. Use deadlines and circuit breakers for sync calls; use durable events, idempotency, status tracking, and reconciliation for async flows. Many systems combine both—for example, sync order creation followed by async fulfilment.</li>
+    <li><strong>Kafka vs RabbitMQ:</strong> Kafka is a distributed append-only log: events remain for a retention period, consumers track offsets, and old data can be replayed. It excels at high-throughput event streams, integration events, and stream processing. RabbitMQ is a broker centered on exchanges, queues, routing keys, acknowledgements, and per-message delivery, making it strong for work queues and commands. Choose from replay, ordering, routing, throughput, and operational needs—not popularity.</li>
+    <li><strong>Producer:</strong> A Kafka producer serializes a key and value, selects a partition, batches records, and waits according to its acknowledgement setting. A stable key such as <code>orderId</code> sends related events to the same partition and preserves their order. Reliability also depends on retries, idempotent-producer configuration, delivery timeout, schema versioning, and handling send failures rather than ignoring the returned future.</li>
+    <li><strong>Consumer:</strong> A consumer polls records assigned to it, deserializes and processes them, then advances offsets. Offset commit means “work before this position is complete,” so committing before the database transaction can lose work. Committing afterward gives at-least-once delivery and possible duplicates; make effects idempotent and monitor lag, processing time, rebalance frequency, and failures.</li>
+    <li><strong>Topic:</strong> A topic is a named durable stream, normally split into partitions and configured with retention or compaction. Topic names and events form an integration contract, so use clear ownership, schemas, compatibility rules, and versioning such as <code>orders.created.v1</code>. Avoid placing unrelated event types in one loosely governed topic.</li>
+    <li><strong>Partition:</strong> A partition is an ordered append-only shard and Kafka's main unit of parallelism. Order is guaranteed only within one partition, not across the entire topic. More partitions can increase throughput and consumer concurrency but also add broker metadata, open files, rebalancing cost, and make later repartitioning/key choice consequential.</li>
+    <li><strong>Consumer group:</strong> Within one group, each partition is assigned to at most one active consumer, so members share the work. A group cannot usefully process one topic with more active consumers than partitions. Separate groups maintain independent offsets and each receive the full stream—for example, Inventory and Analytics can consume the same order events without competing.</li>
+    <li><strong>Failure handling:</strong> First classify transient failures, poison data, and permanent business rejection. Retry transient errors with bounded exponential backoff and jitter; do not block a partition indefinitely. Preserve event ID, key, payload, error, attempts, and trace context in a dead-letter topic, alert on it, and provide a controlled replay path after correction. Business rejection is often a normal outcome event, not a technical retry.</li>
+    <li><strong>Retry and DLQ:</strong> Retry topics or delayed queues prevent hot-looping the same failure. A dead-letter destination quarantines messages that exceed policy so healthy traffic can proceed, but it is not a garbage bin: assign ownership, dashboards, alerts, retention, inspection, correction, and replay procedures. Consumers must remain idempotent because both retry and replay can deliver the event again.</li>
+    <li><strong>When async fits:</strong> Prefer it for notifications, audit/analytics, media processing, inventory/payment workflows, and integrations where immediate completion is unnecessary and temporary downstream outage should be absorbed. Avoid it when the user requires an immediate strongly consistent decision or when added operational complexity has no benefit. Expose <code>202 Accepted</code> plus a status resource for genuinely asynchronous APIs.</li>
+  </ol>
+  <h3>Reliable Kafka consumer flow</h3>
+  <ol>
+    <li>Read the event and validate its version and required fields.</li>
+    <li>Check a <code>processed_events</code> table using the event ID.</li>
+    <li>In one local database transaction, apply the business change and store the processed event ID.</li>
+    <li>Acknowledge/commit the Kafka offset only after the database transaction succeeds.</li>
+  </ol>
+  <p>If the process crashes before committing the offset, Kafka redelivers the record and the idempotency record prevents duplicate effects. Preserve ordering by using a stable business key such as <code>orderId</code>; scale a consumer group only up to the useful partition count.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">13.</span> Microservices</summary><div class="qa-body"><ul>
+    <li>What is microservices architecture?</li><li>What are the core components of a microservices architecture?</li><li>Monolith vs microservices?</li><li>What are the advantages and disadvantages of microservices?</li><li>How do microservices communicate?</li><li>What is an API Gateway?</li><li>What is service discovery?</li><li>What is a circuit breaker?</li><li>How would you handle failure between two services?</li><li>How would you maintain consistency across services?</li><li>What is a distributed transaction?</li><li>What is the difference between the Saga pattern and Two-Phase Commit (2PC)?</li><li>How would you design a scalable backend?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>Microservices architecture:</strong> The system is split around business capabilities such as Orders, Inventory, and Payments. Each service owns its logic and normally its data, exposes an explicit API/event contract, and can be built and deployed independently. The goal is autonomous change, not merely many small projects; tightly coupled services sharing one schema produce a distributed monolith.</li>
+    <li><strong>Core components:</strong>
+      <ul>
+        <li><strong>Individual services:</strong> Small, self-contained units that implement one business capability and can be developed, deployed, and scaled independently.</li>
+        <li><strong>API Gateway:</strong> The client-facing entry point that routes requests and can handle concerns such as authentication, rate limiting, TLS, and protocol translation.</li>
+        <li><strong>Service registry and discovery:</strong> Tracks available service instances and lets callers locate healthy endpoints dynamically. Examples include Eureka and Consul; Kubernetes commonly provides discovery through Services and DNS.</li>
+        <li><strong>Load balancer:</strong> Distributes traffic among healthy instances to improve throughput, availability, and resource utilization.</li>
+        <li><strong>Database per service:</strong> Each service owns its data and exposes it through contracts instead of allowing other services to query its tables directly. This reduces coupling, although cross-service operations require eventual-consistency patterns.</li>
+        <li><strong>Message broker or event bus:</strong> Kafka or RabbitMQ enables asynchronous, loosely coupled communication and supports event-driven workflows.</li>
+        <li><strong>Centralized configuration and identity:</strong> Configuration services manage environment-specific settings, while OAuth 2.0/OpenID Connect providers such as Keycloak handle identity and token issuance. Secrets should use a dedicated secret manager.</li>
+        <li><strong>Observability:</strong> Centralized logs, metrics, traces, health checks, correlation IDs, dashboards, and alerts reveal system health and help trace a request across service boundaries.</li>
+      </ul>
+      <p><strong>Interview summary:</strong> Microservices are not only a collection of small APIs. They require routing, discovery, load balancing, isolated data ownership, reliable messaging, security, configuration, and observability so independently deployed services can operate as one reliable system.</p>
+    </li>
+    <li><strong>Monolith vs microservices:</strong> A modular monolith has one deployment and process, making local transactions, testing, debugging, and operations simpler. Microservices provide independent deployment and scaling when team and domain boundaries justify them, but every call can fail and cross-service work becomes eventually consistent. Start with the simplest architecture that meets scale and organizational needs, then extract measured boundaries.</li>
+    <li><strong>Advantages and costs:</strong> Benefits include team ownership, technology/deployment autonomy, targeted scaling, and some fault isolation. Costs include network latency, contract compatibility, duplicated platform concerns, distributed tracing, eventual consistency, complex testing, and more infrastructure. Mentioning both sides shows architectural maturity; “microservices are always scalable” is not sufficient.</li>
+    <li><strong>Communication:</strong> Use HTTP or gRPC for an immediate query/command response and Kafka/RabbitMQ for decoupled events or long workflows. Every remote call needs a deadline, correlation ID, authentication, versioned contract, and an explicit failure policy. Events should represent completed facts, be backward compatible, and carry stable identifiers so consumers can be idempotent.</li>
+    <li><strong>API Gateway:</strong> It is the controlled public entry point that routes requests and can centralize TLS termination, JWT validation, CORS, rate limiting, request IDs, and coarse policy. It should not accumulate domain orchestration or become a new monolith. Services still enforce their own business authorization, and internal services should be private where possible.</li>
+    <li><strong>Service discovery:</strong> Because instances scale and addresses change, discovery resolves a logical name to healthy endpoints. Eureka/Consul use a registry and heartbeats; Kubernetes commonly uses Services, EndpointSlices, and DNS. Discovery must work with health checks and load balancing, and stale instances or DNS caching must be considered.</li>
+    <li><strong>Circuit breaker:</strong> It counts qualifying failures or slow calls and opens after a threshold, causing new requests to fail fast instead of exhausting threads/connections. After a wait it becomes half-open and permits test calls; success closes it. Combine it with timeouts and bulkheads, tune it from SLOs, and do not use a fallback that silently returns incorrect business data.</li>
+    <li><strong>Handling service failure:</strong> Bound every call with connect/read deadlines, retry only transient and idempotent operations with backoff and jitter, and use circuit breakers plus separate pools to prevent cascading failure. Return a clear degraded response or queue recoverable work. Add metrics, logs, traces, alerts, and a correlation ID; resilience without observability only hides failures.</li>
+    <li><strong>Consistency:</strong> Each service commits its own database transaction. A transactional outbox atomically saves state and an event, while idempotent consumers safely handle redelivery. A Saga coordinates local steps and compensations such as releasing inventory after payment failure. Explicit states, timeouts, reconciliation, and manual recovery are required because compensation itself can fail.</li>
+    <li><strong>Distributed transaction:</strong> It spans independently managed resources. Two-phase commit asks participants to prepare and then commit, providing strong atomicity but increasing coupling, blocking risk, and coordinator dependency. Sagas trade immediate atomicity for availability and eventual consistency. Use 2PC only when resources support it and its operational cost matches the invariant; otherwise redesign around local transactions and compensations.</li>
+    <li><strong>Saga vs Two-Phase Commit (2PC):</strong>
+      <table>
+        <thead><tr><th>Area</th><th>Saga</th><th>Two-Phase Commit (2PC)</th></tr></thead>
+        <tbody>
+          <tr><td>Approach</td><td>A sequence of independent local transactions</td><td>One coordinated transaction across multiple participants</td></tr>
+          <tr><td>Consistency</td><td>Eventual consistency</td><td>Strong atomic consistency</td></tr>
+          <tr><td>Failure recovery</td><td>Runs compensating business actions for previously completed steps</td><td>Coordinator instructs every participant to commit or roll back</td></tr>
+          <tr><td>Locks</td><td>Each local transaction releases its locks quickly</td><td>Resources may remain locked between prepare and final decision</td></tr>
+          <tr><td>Availability</td><td>Usually higher; services can proceed independently and recover asynchronously</td><td>Lower during coordinator, participant, or network failure because the protocol can block</td></tr>
+          <tr><td>Coupling</td><td>Services agree on commands/events and compensations but keep transaction autonomy</td><td>Every resource must support the distributed transaction protocol and coordinator</td></tr>
+          <tr><td>Complexity</td><td>Business complexity: idempotency, ordering, timeouts, compensation, and reconciliation</td><td>Infrastructure complexity: transaction manager, protocol support, locks, and coordinator recovery</td></tr>
+          <tr><td>Best fit</td><td>Long-running workflows and independently deployed microservices</td><td>Short transactions across compatible resources where strict atomicity is essential</td></tr>
+        </tbody>
+      </table>
+      <h4>Saga example: placing an order</h4>
+      <ol>
+        <li>Order Service creates an order in its local database.</li>
+        <li>Inventory Service reserves stock in its own local transaction.</li>
+        <li>Payment Service charges the customer in another local transaction.</li>
+        <li>If payment fails, the Saga triggers compensations: release the inventory and mark the order as failed or cancelled.</li>
+      </ol>
+      <p>A Saga may use <strong>choreography</strong>, where services react to each other's events, or <strong>orchestration</strong>, where a Saga coordinator sends commands and tracks the workflow. Choreography is simple for a few steps but can become difficult to understand; orchestration makes a complex flow explicit but introduces a coordinator component.</p>
+      <h4>How 2PC works</h4>
+      <ol>
+        <li><strong>Prepare phase:</strong> the coordinator asks all participants whether they can commit. Each participant performs its work, holds required resources, and votes yes or no.</li>
+        <li><strong>Commit phase:</strong> if every participant votes yes, the coordinator tells all of them to commit; otherwise it tells them to roll back.</li>
+      </ol>
+      <p><strong>Important:</strong> a compensation is not always a technical rollback. Refunding a captured payment, for example, is a new auditable business transaction and could also fail. A production Saga therefore needs idempotency keys, durable state, retries with backoff, timeouts, dead-letter handling, monitoring, and reconciliation for stuck workflows.</p>
+      <p><strong>Interview answer:</strong> “2PC provides strong atomicity by coordinating prepare and commit across all participants, but it increases coupling and may hold locks or block during failures. A Saga uses local transactions and compensating actions, so it scales and fits autonomous microservices better, but it provides eventual consistency and requires careful failure handling. I generally prefer a Saga for cross-service business workflows and reserve 2PC for short transactions where all resources support it and the business truly requires immediate atomicity.”</p>
+    </li>
+    <li><strong>Scalable backend:</strong> Begin with workload shape and measurable SLOs. Remove the actual bottleneck using stateless horizontal scaling, suitable database indexes/replicas/partitioning, bounded pools, caching, asynchronous queues, and backpressure. Distribute across failure zones, eliminate single points of failure, capacity-test production-like data, monitor saturation and tail latency, and keep a safe degradation and rollback strategy.</li>
+  </ol>
+  <h3>Circuit Breaker interview questions</h3>
+  <h4>Basic level</h4>
+  <ol>
+    <li><strong>What is a Circuit Breaker, and why is it needed?</strong><p>A Circuit Breaker wraps a remote call, measures failures or slow responses, and temporarily rejects new calls when the dependency is unhealthy. It prevents repeated calls from consuming threads, connections, and timeouts, thereby limiting cascading failure and giving the dependency time to recover.</p></li>
+    <li><strong>What are its three states?</strong><ul><li><strong>Closed:</strong> calls flow normally and outcomes are recorded. For example, User Service calls Order Service successfully.</li><li><strong>Open:</strong> the failure threshold has been reached, so calls fail fast without contacting Order Service.</li><li><strong>Half-open:</strong> after a waiting period, a limited number of trial calls are allowed. Successful trials close the circuit; sufficient failures open it again.</li></ul></li>
+    <li><strong>What happens in the open state?</strong><p>The protected dependency is not called. Requests immediately receive an exception or approved fallback until the open-state wait duration expires, after which the breaker moves to half-open for probe calls.</p></li>
+    <li><strong>Retry vs Circuit Breaker:</strong><p>A retry repeats a failed call because a transient problem may disappear. A Circuit Breaker stops calls when failure is persistent. Use a small retry count with exponential backoff and jitter only for idempotent operations; place retry inside the breaker so one user request is normally recorded as one final outcome. Incorrect ordering or aggressive retries can amplify an outage.</p></li>
+    <li><strong>Caller or callee?</strong><p>Place it in the <strong>caller</strong>, around the outbound call, because the caller must protect its own threads and define how it degrades when that dependency fails. Each caller may have different latency limits and fallback behavior. The callee still needs rate limiting, load shedding, timeouts, and health checks.</p></li>
+    <li><strong>What is a fallback?</strong><p>A fallback is an intentional alternative executed when the call is rejected or fails—for example, returning cached catalogue data. It must be safe and truthful; returning an empty order list when the service is unavailable could mislead a user. Critical writes are usually queued durably or rejected clearly rather than faked.</p></li>
+  </ol>
+  <h4>Spring Boot and Resilience4j</h4>
+  <ol start="7">
+    <li><strong>Which library is commonly used?</strong><p><strong>Resilience4j</strong> is a lightweight, modular fault-tolerance library commonly used with modern Spring Boot. Its modules include CircuitBreaker, Retry, RateLimiter, Bulkhead, and TimeLimiter.</p></li>
+    <li><strong>How is it implemented, and which annotations are used?</strong><p>Add the Resilience4j Spring Boot starter and Spring AOP dependency, configure a named instance, and wrap an outbound method with <code>@CircuitBreaker(name = "orderService", fallbackMethod = "orderFallback")</code>. Related annotations include <code>@Retry</code>, <code>@Bulkhead</code>, <code>@RateLimiter</code>, and <code>@TimeLimiter</code>.</p></li>
+    <li><strong>How is it configured in <code>application.yml</code>?</strong><pre><code>resilience4j:
+  circuitbreaker:
+    instances:
+      orderService:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+        ignore-exceptions:
+          - com.example.orders.OrderNotFoundException</code></pre><p>Property names may vary slightly by Resilience4j/Spring Boot version, so validate them against the version used by the project.</p></li>
+    <li><strong>What does <code>@CircuitBreaker</code> do?</strong><p>Spring AOP intercepts the proxied method and uses the breaker identified by <code>name</code>. <code>fallbackMethod</code> optionally identifies the recovery method. Because it is proxy-based, self-invocation within the same bean normally bypasses the annotation.</p></li>
+    <li><strong>What are <code>slidingWindowSize</code> and <code>failureRateThreshold</code>?</strong><p>The sliding window is the recent sample used to calculate health: the last N calls for a count-based window or recent N seconds for a time-based window. The failure-rate threshold is the percentage of recorded failures that opens the circuit after <code>minimumNumberOfCalls</code> has been reached.</p></li>
+    <li><strong>What does <code>waitDurationInOpenState</code> do?</strong><p>It defines how long the breaker remains open before it may enter half-open and test recovery. A very short value can hammer an unhealthy dependency; a very long value delays recovery, so tune it using service behavior and SLOs.</p></li>
+    <li><strong>How is a fallback method defined?</strong><p>It belongs to the same Spring bean, must return a compatible type, and normally accepts the original method arguments followed optionally by the handled exception.</p><pre><code>public OrderResponse getOrders(Long userId) { ... }
+
+private OrderResponse orderFallback(Long userId, Throwable error) {
+    return OrderResponse.temporarilyUnavailable(userId);
+}</code></pre><p>For <code>CompletableFuture</code>, Reactor, or other asynchronous return types, the fallback must return the corresponding compatible type.</p></li>
+  </ol>
+  <h4>Design and scenario questions</h4>
+  <ol start="14">
+    <li><strong>UserService calls OrderService. Where does the breaker go?</strong><p>Put it in UserService around its OrderService client. Use a separate named breaker for OrderService so failures in another dependency do not affect it, and combine it with a strict connect/read timeout.</p></li>
+    <li><strong>Which failures does it protect against?</strong><p>Connection refusal, DNS/network failure, repeated HTTP 5xx responses, timeouts, excessive latency, exhausted downstream pools, and deployment outages. Do not normally record expected business responses such as a valid 404 or validation error as infrastructure failure.</p></li>
+    <li><strong>Real-life analogy:</strong><p>An electrical breaker cuts power when excessive current could damage the circuit. A software breaker similarly stops traffic to an unhealthy dependency and later sends controlled probes before restoring normal traffic.</p></li>
+    <li><strong>What if it opens frequently?</strong><p>Inspect breaker events, traces, downstream error rate and latency, saturation, recent deployments, network/DNS, pool sizes, and timeout alignment. Confirm that recorded and ignored exceptions are correct, fix the root cause, capacity-test it, then tune thresholds only from observed SLOs—do not hide an outage by simply increasing the threshold.</p></li>
+    <li><strong>How do you test it?</strong><p>Use a stub such as WireMock to return controlled failures or delays. Send enough calls to cross the configured minimum and threshold, assert the transition from closed to open and that later requests never reach the stub, advance/wait for half-open, then return success and assert closure. Also unit-test fallback semantics and run integration/chaos tests for timeouts and recovery.</p></li>
+    <li><strong>Circuit Breaker vs Bulkhead:</strong><p>A breaker stops calls based on dependency health; a bulkhead limits concurrent work so one slow dependency cannot consume every thread or connection. They solve different problems and should often be combined with timeouts: the bulkhead contains resource usage while the breaker fails fast during an outage.</p></li>
+  </ol>
+  <h4>Advanced questions</h4>
+  <ol start="20">
+    <li><strong>Can it cause loss of critical functionality?</strong><p>It intentionally rejects calls, so a careless fallback can lose work or return incorrect data. For critical commands, use an idempotency key and a durable queue/outbox, expose a pending state, or return an explicit retryable error. Never claim success unless the operation was durably accepted.</p></li>
+    <li><strong>What about a fast but unreliable service?</strong><p>A failure-rate rule still opens the breaker even when failures arrive quickly. This protects correctness and avoids retry storms, but first classify exceptions carefully so expected client/business errors do not trip it.</p></li>
+    <li><strong>Can breakers be chained across service layers?</strong><p>Yes, but independently tuned breakers, retries, and fallbacks at every hop can create long latency and confusing behavior. Use an end-to-end deadline, limited retry budget, correlation IDs, clear ownership, and avoid fallback chains that call more unhealthy services. Prefer flatter call graphs and asynchronous workflows for long chains.</p></li>
+    <li><strong>Performance implications:</strong><p>State checks and metric recording add small CPU/memory overhead, usually far less than a network call. The larger risks are poorly chosen sliding windows, high-cardinality breaker names, blocking fallbacks, excessive event logging, and half-open probe storms.</p></li>
+    <li><strong>How is it monitored?</strong><p>Expose Resilience4j metrics through Spring Boot Actuator and Micrometer to Prometheus/Grafana. Track state, call count by outcome, rejected calls, failure and slow-call rates, state transitions, fallback rate, dependency latency, and business impact. Alert on sustained open state or abnormal fallback use, not every isolated transition.</p></li>
+    <li><strong>Resilience4j vs Netflix Hystrix:</strong><p>Hystrix is in maintenance mode and is based around its own command/thread-pool model. Resilience4j is actively used for modern applications, modular, lightweight, Java 8 functional-style, and integrates with Spring Boot, Reactor, and Micrometer. For new Spring Boot systems, Resilience4j is generally the appropriate choice.</p></li>
+  </ol>
+  <h4>Hands-on: UserService calls OrderService</h4>
+  <pre><code>// DTO
+public record OrderResponse(Long userId, List&lt;OrderDto&gt; orders,
+                            boolean temporarilyUnavailable) {
+    static OrderResponse unavailable(Long userId) {
+        return new OrderResponse(userId, List.of(), true);
+    }
+}
+
+// Caller-side service. The HTTP client should also have strict timeouts.
+@Service
+public class UserOrderService {
+    private final OrderClient orderClient;
+
+    public UserOrderService(OrderClient orderClient) {
+        this.orderClient = orderClient;
+    }
+
+    @CircuitBreaker(name = "orderService", fallbackMethod = "orderFallback")
+    public OrderResponse getOrders(Long userId) {
+        return orderClient.getOrders(userId);
+    }
+
+    // Same arguments as getOrders, followed by the exception.
+    private OrderResponse orderFallback(Long userId, Throwable error) {
+        return OrderResponse.unavailable(userId);
+    }
+}
+
+// Example declarative client
+@FeignClient(name = "order-service", url = "${clients.order-service.url}")
+public interface OrderClient {
+    @GetMapping("/api/users/{userId}/orders")
+    OrderResponse getOrders(@PathVariable Long userId);
+}</code></pre>
+  <pre><code># application.yml
+resilience4j:
+  circuitbreaker:
+    instances:
+      orderService:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  health:
+    circuitbreakers:
+      enabled: true</code></pre>
+  <p>The fallback explicitly marks the result unavailable rather than pretending the user has no orders. For a critical write, return a clear failure or durably queue the command instead of returning a fabricated success.</p>
+  <h3>Order Saga example</h3>
+  <ol>
+    <li>Order Service creates an order with status <code>PENDING_INVENTORY</code> and stores an outbox event in the same transaction.</li>
+    <li>Inventory Service reserves stock idempotently and publishes either reserved or rejected.</li>
+    <li>Payment Service charges the customer only after reservation and publishes the result.</li>
+    <li>On success, Order Service marks the order paid. On payment failure, Inventory Service releases the reservation as a compensating action.</li>
+  </ol>
+  <p>This provides eventual consistency, not one global ACID transaction. Every step needs an idempotency key, explicit state transitions, retry policy, timeout handling, trace/correlation ID, and a reconciliation process for workflows stuck in an intermediate state.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">14.</span> Docker, Kubernetes, and AWS</summary><div class="qa-body">
+    <h3>Docker</h3><ul><li>What is Docker?</li><li>Image vs container?</li><li>What is a Dockerfile?</li><li>How do you containerize a Spring Boot application?</li><li>Why are containers useful?</li></ul>
+    <h3>Kubernetes</h3><ul><li>What is Kubernetes?</li><li>What is a Pod?</li><li>What is a Deployment?</li><li>What is a Service?</li><li>How does Kubernetes help with scaling?</li></ul>
+    <h3>AWS</h3><ul><li>Which AWS services have you worked with?</li><li>What is EC2?</li><li>What is S3?</li><li>What is RDS?</li><li>How would you deploy a backend application on AWS?</li></ul>
+    <h3>Answers — Docker</h3><ol>
+      <li><strong>Docker:</strong> Docker builds and runs an application with its user-space runtime and libraries as an isolated process. Containers share the host kernel, so they are lighter than virtual machines but are not miniature VMs. A container should run one main concern, write durable state to external storage, receive configuration at runtime, and be replaceable rather than manually patched.</li>
+      <li><strong>Image vs container:</strong> An image is an immutable, content-addressed stack of read-only layers describing the filesystem and startup metadata. A container is a running instance with a thin writable layer, network namespace, resource controls, and runtime settings. Many containers can start from the same image; deleting a container loses its writable layer unless data is stored in a volume or external service.</li>
+      <li><strong>Dockerfile:</strong> It is the repeatable build recipe. <code>FROM</code> selects the base, <code>WORKDIR</code> sets context, <code>COPY</code> adds artifacts, <code>RUN</code> creates layers during build, <code>USER</code> drops privilege, and <code>ENTRYPOINT</code>/<code>CMD</code> define startup. Pin trusted base versions, use <code>.dockerignore</code>, order layers for caching, avoid secrets in build layers, and scan the final image.</li>
+      <li><strong>Spring Boot containerization:</strong> Build and test the JAR in CI or a multi-stage build, then copy only the artifact into a small supported JRE image. Run as non-root, expose the application port as documentation, configure a JVM/container-aware entrypoint, and supply profiles, URLs, and secrets through environment/configuration at deployment. Add Actuator readiness/liveness endpoints and handle <code>SIGTERM</code> for graceful shutdown.</li>
+      <li><strong>Benefits:</strong> The same versioned artifact moves through development, test, and production, reducing “works on my machine” drift. Containers start quickly, isolate dependencies, integrate well with CI/CD and orchestration, and make rollback predictable. They do not remove the need for OS/image patching, secret management, observability, backups, or capacity planning.</li>
+    </ol><h3>Answers — Kubernetes</h3><ol>
+      <li><strong>Kubernetes:</strong> Kubernetes is a control plane for declaring and continuously reconciling desired state for container workloads. It schedules Pods, restarts failed instances, manages service discovery, configuration, secrets, rollouts, and scaling. It solves orchestration, not application correctness; poor probes, resource limits, or state handling can still cause outages.</li>
+      <li><strong>Pod:</strong> A Pod is the smallest schedulable unit and may contain one main container plus tightly coupled sidecars. Containers in it share an IP/port namespace and mounted volumes and are created and destroyed together. Pods are ephemeral, so clients use a Service instead of a Pod IP and persistent state uses managed stores or persistent volumes.</li>
+      <li><strong>Deployment:</strong> A Deployment declares the desired replica count and Pod template for a stateless workload. It manages ReplicaSets, rolling updates, rollout history, pause/resume, and rollback. Configure <code>maxUnavailable</code>/<code>maxSurge</code>, readiness probes, and graceful termination so new versions receive traffic only when ready and old requests can finish.</li>
+      <li><strong>Service:</strong> A Kubernetes Service selects Pods by label and provides a stable DNS name and virtual address while endpoints change. <code>ClusterIP</code> is internal, <code>NodePort</code> exposes node ports, and <code>LoadBalancer</code> integrates with a cloud load balancer. An Ingress or Gateway commonly handles external HTTP routing and TLS above Services.</li>
+      <li><strong>Scaling:</strong> A Deployment can scale replicas manually; the Horizontal Pod Autoscaler reacts to CPU, memory, or custom metrics; the Cluster Autoscaler adds/removes nodes. Effective scaling also requires stateless application nodes, enough database/broker capacity, partitioning, connection limits, readiness, and backpressure. Autoscaling reacts after load appears, so minimum capacity and realistic load testing still matter.</li>
+    </ol><h3>Answers — AWS</h3><ol>
+      <li><strong>AWS experience:</strong> Name only services you actually used and explain responsibility rather than reciting a catalog: “I deployed Spring Boot images to ECS, stored data in RDS PostgreSQL, used S3 for documents, CloudWatch for logs/alarms, and IAM roles plus Secrets Manager for access.” Add one concrete design or incident and clarify what platform work was handled by another team.</li>
+      <li><strong>EC2:</strong> Elastic Compute Cloud provides configurable virtual machines. You choose the AMI, instance type, network, storage, and scaling model and remain responsible for guest OS patches, runtime, deployment, and much of availability. Use security groups, IAM instance roles instead of static keys, private subnets where appropriate, Auto Scaling Groups, health checks, and immutable replacement.</li>
+      <li><strong>S3:</strong> Simple Storage Service is highly durable object storage accessed by bucket/key APIs. It fits uploads, backups, logs, static assets, and data lakes, but is not a relational database or conventional block filesystem. Use least-privilege bucket policies, block public access by default, encryption, versioning/lifecycle rules, and presigned URLs when clients need temporary direct access.</li>
+      <li><strong>RDS:</strong> It manages relational engines such as PostgreSQL and MySQL, automating backups, monitoring integration, maintenance, and optional Multi-AZ failover. The team still owns schema design, indexes, slow-query tuning, connection pooling, capacity, parameter choices, and tested recovery. Read replicas scale eligible reads but do not replace backups or solve write bottlenecks.</li>
+      <li><strong>AWS deployment:</strong> CI tests and scans an immutable image, publishes it to ECR, and deploys it to ECS/EKS (or EC2) behind an Application Load Balancer. Run tasks in private subnets, restrict security groups, use IAM roles and Secrets Manager, connect to Multi-AZ RDS, and send logs/metrics/traces to an observable platform. Add health checks, autoscaling, migrations, blue/green or rolling deployment, alarms, backups, and an exercised rollback/recovery plan.</li>
+    </ol>
+    <h3>Production container example</h3>
+    <pre><code>FROM eclipse-temurin:21-jre
+RUN useradd --system appuser
+WORKDIR /app
+COPY target/application.jar app.jar
+USER appuser
+ENTRYPOINT ["java", "-jar", "app.jar"]</code></pre>
+    <p>In Kubernetes, deploy this image through a Deployment, expose it internally with a Service, and configure readiness and liveness probes for different purposes. Set resource requests/limits, keep secrets outside the image, run as a non-root user, and use rolling deployment plus observable rollback. On AWS, place public load balancers at the edge and keep application and database resources in private subnets where practical.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">15.</span> Testing</summary><div class="qa-body"><ul>
+    <li>Unit test vs integration test?</li><li>What is mocking?</li><li>Explain Mockito basics.</li><li>What should be tested in a REST API?</li><li>What is JUnit?</li><li>What is RSpec in Rails?</li><li>How would you test a service that calls an external API?</li><li>What is the difference between a mock and a real integration dependency?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>Unit vs integration:</strong> A unit test constructs one class with controlled collaborators, runs in milliseconds, and pinpoints business-rule failures. An integration test verifies real boundaries such as Spring wiring, HTTP serialization, JPA mappings, database constraints, or broker configuration. Use many focused unit tests and fewer high-value integration/contract/end-to-end tests; the distinction is the boundary being exercised, not the annotation name alone.</li>
+    <li><strong>Mocking:</strong> A mock replaces a collaborator with programmable behavior and records interactions. It is useful for failure paths or expensive/nondeterministic dependencies, but mocking every internal class couples tests to implementation. Prefer real value objects and pure logic, mock true boundaries, and assert the observable result; verify calls only when the interaction itself is the behavior.</li>
+    <li><strong>Mockito:</strong> <code>@Mock</code> creates collaborators, <code>@InjectMocks</code> constructs the subject, <code>when(...).thenReturn(...)</code> stubs results, <code>thenThrow</code> models errors, and <code>verify</code>/<code>ArgumentCaptor</code> inspect interactions. Use <code>@ExtendWith(MockitoExtension.class)</code> in JUnit 5. Avoid broad <code>any()</code> matchers when important arguments should be asserted, and do not mock DTOs/entities unnecessarily.</li>
+    <li><strong>REST API tests:</strong> Cover valid responses, request validation, malformed input, authentication, object-level authorization, media types, serialization, pagination/sorting, concurrency/idempotency, stable error contracts, and persistence side effects. Add controller slice tests, database-backed integration tests, consumer/provider contract tests, and a small number of end-to-end flows. Explicitly test <code>401</code> vs <code>403</code> and information leakage.</li>
+    <li><strong>JUnit:</strong> JUnit 5 supplies the Jupiter programming model and Platform: <code>@Test</code>, lifecycle hooks, assertions, nested and parameterized tests, tags, extensions, and executable discovery. Use descriptive test names and Arrange–Act–Assert. A good test is deterministic, independent, fast enough for its layer, and explains the rule it protects.</li>
+    <li><strong>RSpec:</strong> RSpec is Ruby's behavior-driven testing framework and is common in Rails for model, request, service, and system specs. <code>describe</code>, <code>context</code>, and <code>it</code> express behavior, while expectations assert outcomes. In a Java interview, distinguish it from JUnit/Mockito and mention it only when discussing a Rails service or polyglot project.</li>
+    <li><strong>External API testing:</strong> Unit-test your adapter with a mocked HTTP client for business branches, then integration-test against WireMock/MockWebServer for URL, headers, JSON, error mapping, timeouts, retries, and malformed responses. Use provider contract tests or a sandbox for compatibility. Inject the client and clock, keep retries bounded, and assert that non-idempotent requests are not duplicated.</li>
+    <li><strong>Mock vs real dependency:</strong> A mock is fast and deterministic but proves only your assumption about the collaborator. A real PostgreSQL/Kafka/Redis container verifies protocol, SQL, mapping, and configuration but takes longer and can require lifecycle management. Use Testcontainers for important infrastructure compatibility and mocks for narrow unit behavior; neither alone gives complete confidence.</li>
+  </ol>
+  <h3>JUnit and Mockito example</h3>
+  <pre><code>@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
+    @Mock PaymentClient paymentClient;
+    @Mock OrderRepository repository;
+    @InjectMocks OrderService service;
+
+    @Test
+    void createsOrderWhenPaymentIsApproved() {
+        when(paymentClient.authorize(any())).thenReturn(APPROVED);
+
+        Order result = service.create(validCommand());
+
+        assertEquals(CONFIRMED, result.getStatus());
+        verify(repository).save(any(Order.class));
+    }
+}</code></pre>
+  <p>Use <code>@WebMvcTest</code> for controller slices, <code>@DataJpaTest</code> for repository behavior, and <code>@SpringBootTest</code> only when the full context is valuable. Testcontainers can provide a real PostgreSQL/Kafka/Redis dependency and prevent false confidence caused by an incompatible in-memory substitute.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">16.</span> FinTech and Payment Scenarios</summary><div class="qa-body"><ul>
+    <li>How would you design a payment API?</li><li>How would you prevent duplicate payment processing?</li><li>What is idempotency?</li><li>How would you implement an idempotency key?</li><li>What happens if payment succeeds but the API response is lost?</li><li>How would you handle a failed third-party banking API?</li><li>How would you implement retries safely?</li><li>How would you maintain transaction consistency?</li><li>How would you maintain an audit trail for financial transactions?</li><li>How would you design a reconciliation process?</li><li>How would you secure sensitive financial data?</li><li>How would you handle concurrent requests for the same transaction?</li>
+  </ul><h3>Answers</h3><ol>
+    <li><strong>Payment API design:</strong> Create a payment intent containing immutable amount, currency, merchant/order reference, payer, and idempotency key; return a server-generated payment ID and explicit state such as <code>PENDING</code>. Keep provider interaction behind an adapter, verify signed callbacks, and expose status, capture/cancel, and refund operations with authorization and audit history. Treat the provider response and webhook as inputs to a state machine, not direct permission to overwrite any state.</li>
+    <li><strong>Prevent duplicate charges:</strong> Require an idempotency key scoped to the merchant/operation and enforce it with a database unique constraint. Store a canonical request hash so reuse with different amount or beneficiary is rejected. Use conditional state changes or locking so only one worker performs the provider call, reuse the same provider reference during safe retries, and make webhook/message consumers idempotent as well.</li>
+    <li><strong>Idempotency:</strong> Repeating the same logical operation one or many times produces the same externally visible result without repeating the side effect. It does not mean every HTTP method is automatically safe: the server must identify the operation and persist its outcome. This is essential because clients, gateways, brokers, and operators can retry after timeouts even when the first attempt succeeded.</li>
+    <li><strong>Idempotency-key implementation:</strong> In one transaction insert <code>(merchant_id, key, request_hash, status)</code> under a unique constraint. The winner processes the operation and stores status code plus response; an identical concurrent/repeated request waits or returns the stored result. A different hash receives a conflict. Define retention and protect against a worker stuck in <code>PROCESSING</code> through leases/status recovery and reconciliation.</li>
+    <li><strong>Success with lost response:</strong> The outcome is unknown to the client, not necessarily failed. It retries with the same key and receives the stored response; the server must not generate a new charge. If local state is uncertain, query the provider by the original stable reference or consume its verified webhook, then reconcile. Never blindly retry with a new provider reference after a timeout.</li>
+    <li><strong>Failed banking API:</strong> Use strict connect/read timeouts, a circuit breaker, and bounded concurrency. Distinguish a definitive decline from a technical failure and from an unknown result after submission. Retry only if the provider supports idempotency; otherwise query status/reconcile before another attempt. Queue recoverable work, surface a truthful pending state, alert on error rates, and preserve provider correlation IDs.</li>
+    <li><strong>Safe retries:</strong> Retry transient conditions such as connection reset, throttling, or a documented <code>5xx</code>, not validation errors or declines. Apply exponential backoff with jitter, a maximum attempt/time budget, the same idempotency identifier, and a circuit breaker. Persist retry state for durable workflows and route exhausted cases to controlled investigation rather than an endless loop.</li>
+    <li><strong>Transaction consistency:</strong> Commit payment state, ledger entries, and an outbox event atomically in the local database. Publish from the outbox and let idempotent consumers update their own stores. Across provider and services, use explicit Saga states and compensation/refund where valid, plus reconciliation for ambiguous outcomes. A remote provider call cannot participate reliably in the same local ACID transaction.</li>
+    <li><strong>Audit trail:</strong> Keep append-only records with transaction/event ID, actor, timestamp, correlation ID, source, reason, prior/new state, provider reference, and monetary debit/credit entries. Restrict and monitor access, encrypt sensitive fields, synchronize time, and make tampering detectable through immutable storage or controlled ledger rules. Corrections should append reversal/adjustment entries rather than rewriting history.</li>
+    <li><strong>Reconciliation:</strong> On a schedule ingest provider settlement/status reports, normalize them, and match by stable provider and internal references, amount, currency, and date. Classify exact matches, missing local/provider records, duplicates, and amount/status mismatches. Auto-repair only safe known cases, retain evidence, alert owners, and route unresolved breaks to an auditable operations queue.</li>
+    <li><strong>Financial-data security:</strong> Minimize collected data, tokenize card details through a compliant provider, use TLS and encryption at rest, isolate networks, rotate secrets/keys, and grant least-privilege access through short-lived identities. Mask logs and UI, audit reads and mutations, apply retention/deletion policy, and follow applicable PCI/regulatory controls. Never store CVV or log full PAN, credentials, tokens, or webhook secrets.</li>
+    <li><strong>Concurrent requests:</strong> Enforce the invariant at the database with unique constraints and an atomic conditional update such as <code>UPDATE ... SET status='PROCESSING' WHERE status='PENDING'</code>. Use optimistic <code>@Version</code> checks when conflicts are rare or a short pessimistic lock when contention is expected. Idempotency records ensure only one logical request wins even across multiple application instances.</li>
+  </ol>
+  <h3>Idempotent payment flow</h3>
+  <pre><code>BEGIN;
+INSERT INTO idempotency_request(merchant_id, request_key, request_hash, status)
+VALUES (:merchant, :key, :hash, 'PROCESSING'); -- unique(merchant_id, request_key)
+
+INSERT INTO payment(id, amount, currency, status)
+VALUES (:id, :amount, :currency, 'PENDING');
+COMMIT;</code></pre>
+  <p>A repeated request with the same key and payload receives the stored result; the same key with a different payload is rejected. If the provider times out, mark the outcome <code>UNKNOWN</code> rather than failed, query the provider using its stable reference, and reconcile before retrying a charge. Store money as an integer minor unit or exact decimal—never binary floating point.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">17.</span> Project-Based Questions</summary><div class="qa-body"><ul>
+    <li>Explain your current project.</li><li>What problem does your application solve?</li><li>Explain your architecture.</li><li>What was your individual contribution?</li><li>Explain one important API you developed.</li><li>Explain one database table you worked with.</li><li>What was the most difficult technical problem you solved?</li><li>Tell me about a production issue you handled.</li><li>Did you improve any API performance?</li><li>Did you optimize any SQL query?</li><li>Did you implement caching?</li><li>How did you handle authentication?</li><li>How did you handle exceptions?</li><li>How did you test your code?</li><li>How was your application deployed?</li><li>What would you improve in your current architecture?</li>
+  </ul><h3>Answer Guidance</h3><ol>
+    <li><strong>Explain your project:</strong> Give a structured 60–90 second answer: “The product serves [users] and solves [problem]. It uses [key stack] with [high-level architecture] and handles [honest scale]. I owned [specific services/features]. My strongest contribution was [action], producing [measured or observable outcome].” Then pause so the interviewer can choose a deeper area instead of listing every technology.</li>
+    <li><strong>Problem solved:</strong> Start with the user or business pain, not the framework. Explain the previous manual, slow, risky, or fragmented process; identify who was affected; then state how the application changes the workflow and how success is measured. Example: “Farmers could ask multilingual agricultural questions and receive relevant responses without navigating English-only material.”</li>
+    <li><strong>Architecture:</strong> Draw or narrate one representative flow from client through gateway/authentication to services, database, cache/broker, and external systems. State ownership boundaries and why communication is synchronous or asynchronous. Mention deployment and observability, then acknowledge one trade-off—for example, event-driven independence creates eventual consistency and requires idempotency.</li>
+    <li><strong>Individual contribution:</strong> Separate personal work from team work. Say, “I designed the API contract, implemented service and persistence layers, added tests and dashboards, and supported rollout; the platform team operated Kubernetes.” Discuss a decision you made, feedback you incorporated, and evidence of impact. Interviewers use this question to distinguish real hands-on depth from familiarity with the project vocabulary.</li>
+    <li><strong>Important API:</strong> Explain purpose and consumer, method/path, request and response contract, validation, JWT scope/ownership, service logic, transaction boundary, data access, idempotency, failures, observability, and tests. Include one design choice: “POST used an idempotency key because clients could retry after a timeout,” and share measured latency/volume only if genuinely known.</li>
+    <li><strong>Database table:</strong> Describe what business entity the table represents, its primary key, foreign keys, statuses and timestamps, unique/check constraints, and indexes derived from queries. Explain one common query and concurrency rule. For an <code>orders</code> table, a unique merchant reference prevents duplicates, <code>@Version</code> detects conflicting updates, and <code>(customer_id, created_at)</code> supports order history.</li>
+    <li><strong>Difficult technical problem:</strong> Use STAR, but spend most time on Action. Describe symptoms and constraints, evidence gathered, hypotheses eliminated, root cause, alternatives considered, selected trade-off, implementation, verification, and result. End with what prevents recurrence. A strong answer demonstrates a repeatable problem-solving method rather than claiming the issue was “very complex.”</li>
+    <li><strong>Production issue:</strong> Cover detection, customer impact, timeline, logs/metrics/traces used, mitigation, root cause, permanent correction, validation, and prevention. Be precise about your role and avoid blaming another team. If impact was ongoing, explain communication and rollback/feature-flag decisions before the deep technical fix.</li>
+    <li><strong>API performance:</strong> Establish a baseline such as p95 latency, throughput, error rate, and resource saturation. Profile across gateway, application, database, and dependencies; identify the dominant bottleneck; change one justified component such as an N+1 fetch, index, cache, or payload size; then load-test and compare before/after. Mention regression monitoring and costs introduced by the optimization.</li>
+    <li><strong>SQL optimization:</strong> Show the exact query and production-like execution plan. Explain whether time came from a scan, bad row estimate, join, sort spill, lock wait, or excessive calls. Apply a targeted index/query rewrite/projection and rerun <code>EXPLAIN ANALYZE</code>. Report read improvement plus index storage/write overhead and add a regression test or slow-query alert.</li>
+    <li><strong>Caching:</strong> Identify what was cached and why it was safe, the key structure, cache-aside/write policy, TTL and jitter, invalidation path, serialization, and behavior during Redis failure. Address stale data and stampedes, then state measured hit rate or latency/database-load change. Do not claim caching was useful without measurements or an invalidation design.</li>
+    <li><strong>Authentication and authorization:</strong> Explain where login occurs, who issues JWTs, how gateway and services verify signature/issuer/audience/expiry, and how claims become roles/scopes. Add object-level authorization, token refresh/rotation, TLS, secret/key handling, and audit logging. Clearly distinguish public catalogue/health endpoints from protected write endpoints and explain defense in depth.</li>
+    <li><strong>Exception handling:</strong> Validate at the boundary, throw meaningful domain exceptions, and map them centrally with <code>@ControllerAdvice</code> to stable error codes and correct HTTP statuses. Return a correlation ID and safe message, log structured diagnostic context once, and avoid leaking stack traces. Retry only classified transient dependency failures; validation and business conflicts should not be blindly retried.</li>
+    <li><strong>Testing:</strong> Explain the test pyramid for your change: pure unit tests for rules, Mockito for true boundaries, <code>@WebMvcTest</code> for API/security, <code>@DataJpaTest</code> or Testcontainers for mappings/queries, and contract/integration tests for external APIs or Kafka. Include negative paths, concurrency/idempotency, CI execution, test data isolation, and which failures block deployment.</li>
+    <li><strong>Deployment:</strong> Walk from commit through review, CI build/test/security checks, immutable image publishing, environment-specific configuration and secrets, database migration, and rolling/blue-green deployment. Explain readiness/liveness, dashboards/alerts, smoke tests, and automatic/manual rollback. Clarify whether you owned the pipeline or consumed one maintained by a platform team.</li>
+    <li><strong>What to improve:</strong> Choose one observed limitation rather than proposing a fashionable rewrite. State evidence, expected business/reliability benefit, and an incremental plan with compatibility, migration, measurement, and rollback. Example: add transactional outbox publishing to remove the database/Kafka dual-write gap, migrate one event flow, monitor lag/failure, then expand after validation.</li>
+  </ol>
+  <h3>Reusable interview structure</h3>
+  <p><strong>Project introduction:</strong> “I worked on [product] for [users/business problem]. The system used [stack] and handled approximately [honest scale]. My responsibility was [specific ownership]. One important contribution was [change], which improved [measured result].”</p>
+  <p><strong>Production incident (STAR):</strong> explain the situation and customer impact, your responsibility, the metrics/logs/traces used to isolate the cause, the immediate mitigation, the permanent fix, and the measurable result. Finish with prevention such as an alert, regression test, runbook, or capacity threshold.</p>
+  <p>Never invent scale or claim team work as individual work. Interviewers value ownership and evidence more than a long technology list.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">18.</span> Hibernate Interview Questions</summary><div class="qa-body">
+    <h3>Interview Resources</h3>
+    <ul>
+      <li><a href="https://www.interviewbit.com/hibernate-interview-questions/" target="_blank" rel="noopener noreferrer">InterviewBit — Hibernate Interview Questions</a></li>
+      <li><a href="https://www.geeksforgeeks.org/advance-java/hibernate-interview-questions/" target="_blank" rel="noopener noreferrer">GeeksforGeeks — Hibernate Interview Questions</a></li>
+      <li><a href="https://medium.com/@pratik.941/mastering-hibernate-key-interview-questions-3bcc5f2b7775" target="_blank" rel="noopener noreferrer">Medium — Mastering Hibernate: Key Interview Questions</a></li>
+    </ul>
+
+    <h3>Questions</h3>
+    <ol>
+      <li>What is Hibernate, and how is it different from JPA?</li>
+      <li>Explain the transient, persistent/managed, detached, and removed entity states.</li>
+      <li>What are <code>SessionFactory</code>, <code>Session</code>, <code>EntityManagerFactory</code>, and <code>EntityManager</code>?</li>
+      <li>What is dirty checking, and when does Hibernate execute SQL?</li>
+      <li>What is the difference between <code>persist()</code>, <code>merge()</code>, <code>save()</code>, and <code>update()</code>?</li>
+      <li>Explain lazy and eager fetching. What is <code>LazyInitializationException</code>?</li>
+      <li>What is the N+1 query problem, and how can it be resolved?</li>
+      <li>What are Hibernate's first-level and second-level caches?</li>
+      <li>What is the difference between cascade types and <code>orphanRemoval</code>?</li>
+      <li>How do optimistic and pessimistic locking prevent concurrent-update problems?</li>
+      <li>What are the owning and inverse sides of a bidirectional relationship?</li>
+      <li>How would you diagnose and improve Hibernate performance?</li>
+    </ol>
+
+    <h3>Answers</h3>
+    <ol>
+      <li><strong>Hibernate vs JPA:</strong> Hibernate is an ORM framework that maps Java objects and relationships to relational tables and generates SQL for persistence operations. Jakarta Persistence (formerly JPA) is a specification defining APIs and annotations such as <code>EntityManager</code>, <code>@Entity</code>, and JPQL. Hibernate is a common implementation of that specification and also provides vendor-specific features. Code written only against standard JPA APIs is generally easier to move to another provider.</li>
+
+      <li><strong>Entity states:</strong> A <em>transient</em> object was created with <code>new</code> but is not associated with a persistence context. A <em>managed</em> entity is tracked by the current persistence context, so changes can be synchronized automatically. A <em>detached</em> entity was previously managed but is no longer tracked because the context was cleared or closed. A <em>removed</em> entity is managed and scheduled for deletion when the context flushes.</li>
+
+      <li><strong>Persistence objects:</strong> <code>SessionFactory</code> is Hibernate's heavyweight, thread-safe factory and should usually be created once per database. A <code>Session</code> is a lightweight, non-thread-safe unit of work holding the persistence context. JPA's equivalents are <code>EntityManagerFactory</code> and <code>EntityManager</code>. In Spring, these are normally configured and scoped for you; application code should not share one entity manager/session across threads.</li>
+
+      <li><strong>Dirty checking and flushing:</strong> Hibernate keeps snapshots of managed entities. At flush time it compares their current state with the tracked state and generates <code>UPDATE</code> statements for detected changes, so calling a repository <code>save()</code> after every setter is not required for an already managed entity. A flush commonly occurs before transaction commit and sometimes before a query whose result could depend on pending changes. <code>flush()</code> synchronizes SQL with the database but does not commit the transaction.</li>
+
+      <li><strong>Persistence methods:</strong> JPA <code>persist()</code> makes a new instance managed and has no returned entity. <code>merge()</code> copies state into a managed instance and returns that managed instance; the supplied object remains detached. Hibernate <code>save()</code> is a provider-specific insert-oriented operation that returns an identifier. Hibernate <code>update()</code> reattaches a detached instance and can fail if the session already contains another object with the same identity. In Spring Data JPA, <code>save()</code> delegates to <code>persist</code> for new entities and <code>merge</code> otherwise.</li>
+
+      <li><strong>Fetching:</strong> Lazy fetching loads an association only when it is accessed; eager fetching requests it as part of the original load contract, although it does not guarantee one SQL join. <code>LazyInitializationException</code> occurs when an uninitialized lazy proxy or collection is accessed after its session/persistence context has closed. Fix the use case by fetching required data inside the transaction with a fetch join, entity graph, or DTO projection—not by making every association eager or keeping the session open across arbitrary layers.</li>
+
+      <li><strong>N+1 problem:</strong> N+1 means one query loads N parent rows and accessing an association triggers as many as N more queries. Resolve it per use case with JPQL <code>JOIN FETCH</code>, <code>@EntityGraph</code>, DTO projections, or batch fetching. Do not combine collection fetch joins carelessly with pagination because row multiplication can produce incorrect or inefficient paging; use a two-step ID query or batch loading when needed.</li>
+
+      <li><strong>Caches:</strong> The first-level cache is the mandatory persistence-context identity map. It ensures one managed object per entity identity and avoids repeating an ID lookup within that context. The optional second-level cache is shared across sessions/entity managers and stores entity or collection data through a configured cache provider. The query cache stores query result identifiers, not complete object graphs, and must be used selectively. Cache mostly-read data, define invalidation and expiry behavior, and measure hit rates.</li>
+
+      <li><strong>Cascade vs orphan removal:</strong> Cascade types propagate operations such as <code>PERSIST</code>, <code>MERGE</code>, or <code>REMOVE</code> from a parent to associated entities. <code>orphanRemoval = true</code> deletes a child when it is removed from the parent's relationship and no longer belongs to that aggregate. They are related but not identical: cascade remove applies when the parent itself is deleted, while orphan removal applies when the child is disconnected. Avoid <code>CascadeType.REMOVE</code> on shared entities or many-to-many relationships.</li>
+
+      <li><strong>Locking:</strong> Optimistic locking uses a <code>@Version</code> column. An update includes the previous version in its <code>WHERE</code> clause; if another transaction already changed the row, Hibernate raises an optimistic-lock exception so the operation can be retried or rejected. Pessimistic locking requests a database lock, such as <code>PESSIMISTIC_WRITE</code>, and can block competing transactions. Prefer optimistic locking when conflicts are rare; use pessimistic locking for short, highly contested critical sections after considering deadlocks and timeouts.</li>
+
+      <li><strong>Relationship ownership:</strong> In a bidirectional association, the owning side controls the foreign-key update. The inverse side uses <code>mappedBy</code>. For a typical one-to-many/many-to-one mapping, the child with <code>@ManyToOne</code> and <code>@JoinColumn</code> is the owner. Update both sides in helper methods so the in-memory object graph remains consistent, even though only the owning side determines the SQL relationship change.</li>
+
+      <li><strong>Performance diagnosis:</strong> Start with measured request and SQL timings. Enable controlled SQL/statistics logging outside sensitive production paths, inspect query counts, use application tracing, and analyze slow statements with the database execution plan. Look for N+1 queries, unnecessary eager relationships, missing indexes, oversized entity graphs, unbounded result sets, excessive flushing, lock waits, and connection-pool exhaustion. Apply targeted projections/fetch plans, pagination, batching with periodic <code>flush()</code>/<code>clear()</code>, read-only transactions where useful, and properly sized pools; then verify improvements with production-like load.</li>
+    </ol>
+  </div></details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+</body>
+</html>

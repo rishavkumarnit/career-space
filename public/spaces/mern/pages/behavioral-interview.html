@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behavioral Interview — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="behavioral-interview.html" class="active">Behavioral Interview</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Behavioral Interview</h1>
+  <p class="page-sub">Production incidents structured as clear, ownership-focused STAR answers with lessons and follow-up discussion.</p>
+
+  <details class="qa" open>
+    <summary><span class="q-num">1.</span> Tell me about a production bug caused by an incorrect assumption between services.</summary>
+    <div class="qa-body">
+      <p><strong>Interview answer:</strong> “One production bug I worked on at ANNAM.AI involved our Question Service and Logging Service. Our logging flow assumed that every question was associated with a user. That assumption was valid during the normal question-creation flow, so the logging code directly accessed the user object.</p>
+      <p>Later, we introduced questions that could be uploaded manually through files. Those questions did not necessarily have an associated user. When the Question Service processed one of them, the Logging Service attempted to access the missing user information. The lookup returned <code>null</code>, causing a <code>NullPointerException</code> that propagated back and failed the core question-processing flow.</p>
+      <p>I traced the request from the Question Service through the logging call. This showed that the question data itself was valid; the actual problem was an incorrect downstream assumption that a user would always exist.</p>
+      <p>We fixed the issue by explicitly supporting a missing user and treating system- or file-created questions as a valid business scenario. We also made the logging path defensive so optional metadata could not break the primary workflow.</p>
+      <p>The main lesson was that, when debugging distributed services, I should not stop at the line throwing the exception. I need to understand every way an entity can enter the system and verify the assumptions made by each downstream service.”</p>
+      <div class="table-wrap"><table><thead><tr><th>STAR element</th><th>What to emphasize</th></tr></thead><tbody>
+        <tr><td>Situation</td><td>File-uploaded questions could legitimately exist without a user.</td></tr>
+        <tr><td>Task</td><td>Find why valid question processing failed across two services.</td></tr>
+        <tr><td>Action</td><td>Traced the cross-service call, identified the invalid non-null assumption, handled the optional user, and isolated logging failure from the core workflow.</td></tr>
+        <tr><td>Result</td><td>System/file-created questions were processed correctly and missing optional log metadata no longer caused the business operation to fail.</td></tr>
+      </tbody></table></div>
+      <p><strong>Likely follow-up:</strong> I would add regression tests for user-created, system-created, file-created, and missing-user cases; use null-safe DTO mapping; attach correlation IDs across both services; and define whether logging is best-effort or mandatory so its failure policy is explicit.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">2.</span> Tell me about a production data bug involving aggregation or business identity.</summary>
+    <div class="qa-body">
+      <p><strong>Interview answer:</strong> “One of the more interesting production bugs I solved at ANNAM.AI was an incorrect course-completion count for users enrolled in multiple cohorts.</p>
+      <p>A batch process aggregated watch-time data from MongoDB and calculated completed items for each enrollment. The correct enrollment identity consisted of <code>(userId, courseId, courseVersionId, cohortId)</code>, but the aggregation did not consistently group by <code>cohortId</code>. Completion data from different cohorts could therefore be merged, making one cohort show more completed items than the user had actually completed within it.</p>
+      <p>I traced the issue through the enrollment map, MongoDB <code>$match</code> and <code>$group</code> stages, and the final result mapping. I found that <code>cohortId</code> was missing from part of the aggregation key. I also found inconsistent handling of a missing cohort versus a MongoDB <code>ObjectId</code> cohort value.</p>
+      <p>I corrected the aggregation and result mapping so every stage consistently used <code>(userId, courseId, courseVersionId, cohortId)</code> as the identity. I also normalized the no-cohort case so matching and grouping used one representation.</p>
+      <p>The key lesson was that a database grouping key must exactly match the business entity's uniqueness definition. An aggregation can be syntactically and technically valid while still producing incorrect business results if one identity dimension is omitted.”</p>
+      <div class="table-wrap"><table><thead><tr><th>STAR element</th><th>What to emphasize</th></tr></thead><tbody>
+        <tr><td>Situation</td><td>Users could have separate enrollments in the same course/version across multiple cohorts.</td></tr>
+        <tr><td>Task</td><td>Explain and correct completion counts that exceeded the valid total for one enrollment.</td></tr>
+        <tr><td>Action</td><td>Followed data through application keys and MongoDB stages, restored <code>cohortId</code> to the full grouping identity, and normalized null/no-cohort values.</td></tr>
+        <tr><td>Result</td><td>Completion totals were isolated per enrollment and cohort rather than leaking across cohort boundaries.</td></tr>
+      </tbody></table></div>
+      <p><strong>Likely follow-up:</strong> I would add fixtures covering the same user/course/version in several cohorts, assert totals per composite identity, validate BSON types before aggregation, compare a sample of batch results with source records, and monitor impossible counts such as completed items exceeding total items.</p>
+    </div>
+  </details>
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+</body>
+</html>

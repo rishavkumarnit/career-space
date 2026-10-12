@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CI/CD — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html" class="active">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">CI/CD Interview Questions</h1>
+  <p class="page-sub">Pipelines, deployment strategies, testing, security, and production delivery for MERN applications.</p>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is the difference between continuous integration, continuous delivery, and continuous deployment?</summary>
+    <div class="qa-body">
+      <p><strong>Continuous integration (CI)</strong> means frequently merging small changes into a shared branch and automatically building and testing them. <strong>Continuous delivery</strong> keeps every successful change ready for production, but a human may approve the release. <strong>Continuous deployment</strong> goes one step further and automatically releases every change that passes the pipeline.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> What stages would you include in a CI/CD pipeline for a MERN application?</summary>
+    <div class="qa-body">
+      <p>A typical pipeline installs locked dependencies, runs linting and type checks, executes unit and integration tests, builds the React client and Node server, scans dependencies and images, creates an immutable artifact or Docker image, deploys it to staging, runs smoke tests, and then promotes the same artifact to production after any required approval.</p>
+      <p>Each stage should fail fast and prevent later stages from running when a quality or security check fails.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> Why should a pipeline use <code>npm ci</code> instead of <code>npm install</code>?</summary>
+    <div class="qa-body">
+      <p><code>npm ci</code> installs the exact dependency tree recorded in <code>package-lock.json</code>, removes any existing <code>node_modules</code>, and fails when the manifest and lockfile disagree. This makes CI builds faster and reproducible. <code>npm install</code> may update the lockfile and is better suited to local dependency changes.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> How should secrets and environment-specific configuration be handled?</summary>
+    <div class="qa-body">
+      <p>Keep configuration outside the build artifact and store secrets in the CI platform's encrypted secret store or a dedicated secrets manager. Inject them only into the jobs and environments that need them, mask them in logs, restrict access with least privilege, rotate them regularly, and never commit <code>.env</code> files or credentials to Git.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> What is the difference between blue-green and canary deployment?</summary>
+    <div class="qa-body">
+      <p><strong>Blue-green deployment</strong> maintains two complete environments. The new version is deployed to the idle environment and traffic switches to it at once, enabling a quick rollback. <strong>Canary deployment</strong> gradually sends a small percentage of live traffic to the new version and increases it while monitoring errors and performance, reducing the blast radius of a bad release.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> How do you design a safe database migration for a zero-downtime release?</summary>
+    <div class="qa-body">
+      <p>Use backward-compatible, incremental changes: add new fields or tables first, deploy code that can work with both schemas, backfill data separately, switch reads and writes, and remove the old schema only after every application instance has moved forward. Avoid coupling a destructive migration to application startup, and test both migration and recovery procedures before production.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> What is the difference between an artifact and a deployment?</summary>
+    <div class="qa-body">
+      <p>An <strong>artifact</strong> is the immutable output of a build, such as a versioned Docker image or compiled bundle. A <strong>deployment</strong> places a specific artifact into an environment with its runtime configuration. Building once and promoting the same artifact through staging and production avoids environment-specific rebuild differences.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q8.</span> How would you make a CI pipeline faster without reducing confidence?</summary>
+    <div class="qa-body">
+      <p>Cache the package manager's download cache, run independent lint and test jobs in parallel, use affected-file detection in a monorepo, split long test suites, reuse immutable build artifacts, and run quick checks before expensive end-to-end tests. Cache keys should include the lockfile, and cached output must never replace required validation.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q9.</span> What checks should run after a production deployment?</summary>
+    <div class="qa-body">
+      <p>Run smoke tests against critical endpoints and user journeys, verify health and readiness checks, and monitor error rate, latency, saturation, logs, and business metrics. Define thresholds and an observation window so the release can automatically stop or roll back when service-level indicators regress.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q10.</span> What makes a rollback strategy reliable?</summary>
+    <div class="qa-body">
+      <p>A reliable rollback uses versioned immutable artifacts, automated deployment commands, backward-compatible database changes, and a clearly defined trigger. Teams should test rollback regularly. When data has already changed incompatibly, rolling the application back may be unsafe, so a forward fix or feature flag may be the better recovery path.</p>
+    </div>
+  </details>
+
+  <h2>Docker Basics</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q11.</span> What is Docker, and why is it used?</summary>
+    <div class="qa-body">
+      <p>Docker packages an application and its dependencies into a portable container. The container runs consistently across a developer's machine, CI, staging, and production, which reduces environment-specific problems and makes applications easier to build, ship, and scale.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q12.</span> What is the difference between a Docker image and a container?</summary>
+    <div class="qa-body">
+      <p>An <strong>image</strong> is an immutable template containing the application, runtime, libraries, and filesystem. A <strong>container</strong> is a running or stopped instance of that image. Many isolated containers can be created from the same image.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q13.</span> What is a Dockerfile?</summary>
+    <div class="qa-body">
+      <p>A Dockerfile is a text file containing instructions used to build an image. Common instructions include <code>FROM</code> for the base image, <code>WORKDIR</code> for the working directory, <code>COPY</code> for files, <code>RUN</code> for build commands, <code>EXPOSE</code> for documenting a port, and <code>CMD</code> for the default startup command.</p>
+      <pre><code>FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q14.</span> What is the difference between <code>RUN</code>, <code>CMD</code>, and <code>ENTRYPOINT</code>?</summary>
+    <div class="qa-body">
+      <p><code>RUN</code> executes while the image is being built and creates a new image layer. <code>CMD</code> provides the default command or arguments when a container starts and is easily overridden. <code>ENTRYPOINT</code> defines the container's main executable; command-line arguments are normally appended to it.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q15.</span> How does Docker port mapping work?</summary>
+    <div class="qa-body">
+      <p>A container has its own network namespace, so an application port is not automatically accessible from the host. The command <code>docker run -p 8080:3000 my-api</code> maps host port <code>8080</code> to port <code>3000</code> inside the container. <code>EXPOSE 3000</code> documents the intended container port but does not publish it.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q16.</span> What are Docker volumes, and when should you use them?</summary>
+    <div class="qa-body">
+      <p>Volumes store data outside a container's writable layer, allowing it to survive container removal and be shared or backed up. They are useful for databases and other persistent data. Containers themselves should remain disposable; source code is often bind-mounted during local development but copied into the image for production.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q17.</span> What is Docker Compose?</summary>
+    <div class="qa-body">
+      <p>Docker Compose defines and runs a multi-container application from a YAML file. A MERN development setup might declare an API, React client, and MongoDB service along with their ports, environment variables, volumes, and shared network. <code>docker compose up</code> starts the complete stack.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q18.</span> How is Docker commonly used in a CI/CD pipeline?</summary>
+    <div class="qa-body">
+      <p>The pipeline builds an image from a reviewed Dockerfile, runs tests and security scans, tags the image with a unique version such as the commit SHA, and pushes it to a container registry. Deployment then pulls that exact image into each environment. Avoid relying only on the mutable <code>latest</code> tag because it does not identify a specific build.</p>
+    </div>
+  </details>
+
+  <h2>Redis Basics</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q19.</span> What is Redis, and where is it commonly used?</summary>
+    <div class="qa-body">
+      <p>Redis is an in-memory data store that provides very fast reads and writes. It is commonly used for caching, session storage, rate limiting, counters, leaderboards, queues, and publish/subscribe messaging. Redis is often placed alongside a primary database rather than used as a replacement for it.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q20.</span> Why is Redis faster than a traditional database?</summary>
+    <div class="qa-body">
+      <p>Redis primarily serves data from memory instead of reading it from disk for every request. Its commands operate on optimized data structures and most command execution is serialized, avoiding much of the locking overhead found in multithreaded systems. Network latency and inefficient command usage can still become bottlenecks.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q21.</span> Which data types does Redis support?</summary>
+    <div class="qa-body">
+      <p>Common Redis types include <strong>strings</strong> for cached values and counters, <strong>hashes</strong> for object-like fields, <strong>lists</strong> for ordered queues, <strong>sets</strong> for unique values, and <strong>sorted sets</strong> for ranked data such as leaderboards. Redis also supports streams, bitmaps, geospatial indexes, and probabilistic structures.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q22.</span> How would you cache an API response using Redis?</summary>
+    <div class="qa-body">
+      <p>Use the cache-aside pattern: first check Redis using a predictable key; on a hit, return the cached value. On a miss, query the database, store the serialized result in Redis with an expiration, and return it. When the underlying data changes, invalidate or update the related cache entry.</p>
+      <pre><code>const key = `user:${userId}`;
+const cached = await redis.get(key);
+
+if (cached) return JSON.parse(cached);
+
+const user = await User.findById(userId);
+await redis.set(key, JSON.stringify(user), { EX: 300 });
+return user;</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q23.</span> What is TTL in Redis?</summary>
+    <div class="qa-body">
+      <p>TTL means <strong>time to live</strong>: the remaining time before a key expires automatically. Expiration prevents stale cache entries from living forever and limits memory usage. A TTL should reflect how long the application can safely tolerate stale data; adding small random variation can prevent many popular keys from expiring simultaneously.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q24.</span> Does Redis persist data?</summary>
+    <div class="qa-body">
+      <p>Redis can persist data using <strong>RDB snapshots</strong>, which save point-in-time copies, and <strong>AOF</strong>, which records write operations. RDB is compact and useful for backups, while AOF can provide lower data-loss windows. They can be used together, but persistence does not remove the need for replication and backups.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q25.</span> What happens when Redis runs out of memory?</summary>
+    <div class="qa-body">
+      <p>Redis follows its configured <code>maxmemory-policy</code>. It may reject new writes or evict keys using policies based on recency, frequency, randomness, or expiration. For a cache, an eviction policy such as least-recently-used may be appropriate; for critical persistent data, unexpected eviction can cause data loss and should be avoided through sizing and monitoring.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q26.</span> How can Redis be used for rate limiting?</summary>
+    <div class="qa-body">
+      <p>Create a key based on the client and time window, increment it for every request, and set an expiration. If the counter exceeds the allowed limit, reject the request. The increment and expiration must be applied atomically—using a transaction or Lua script—to avoid race conditions under concurrent traffic.</p>
+    </div>
+  </details>
+</main>
+
+<footer class="site"><a href="../index.html">&larr; Back to all topics</a></footer>
+
+</body>
+</html>

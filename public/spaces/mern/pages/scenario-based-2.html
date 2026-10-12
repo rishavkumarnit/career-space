@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scenario-Based 2 | Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a class="active" href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Scenario-Based Interview Questions — Part 2</h1>
+  <p class="page-sub">Kafka, Redis caching, application security, Kubernetes, CI/CD, and production deployment scenarios.</p>
+
+  <h2 class="section-heading">Kafka and Event-Driven Systems</h2>
+
+  <details class="qa" open><summary><span class="q-num">1.</span> Kafka consumer lag continuously increases in production. How will you investigate?</summary><div class="qa-body"><p>Compare producer rate with consumer throughput and break lag down by topic, partition, and consumer instance. Check slow handlers, database/external calls, errors and retries, GC, CPU, rebalances, batch size, and partition skew. Fix the bottleneck, then scale consumers only up to the partition count or increase partitions after considering ordering and key distribution.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">2.</span> Consumers process messages multiple times. How will you ensure idempotency?</summary><div class="qa-body"><p>Assume at-least-once delivery. Give every event a stable ID and atomically store that ID with the business update under a unique constraint; if it already exists, acknowledge without repeating the side effect. Use natural business keys and idempotency keys for payments or orders, and commit the offset only after successful processing.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">3.</span> Kafka producers send duplicate messages during retries. How will you handle this?</summary><div class="qa-body"><p>Enable the idempotent producer with acknowledgements and safe retry settings so Kafka deduplicates retry attempts within the producer session. Keep a stable event/business ID because duplicates can still arise across restarts or application-level retries. Consumers must remain idempotent, and database-to-Kafka publishing should use an outbox.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">4.</span> Event ordering is disturbed. What could cause it?</summary><div class="qa-body"><p>Kafka guarantees order only within one partition. Related events may use different keys, partitions may change, multiple producers may race, or consumers may process records concurrently and complete out of order. Use the entity ID as partition key, preserve sequence/version numbers, limit in-partition concurrency, and reject or reconcile stale versions.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">5.</span> One consumer instance is much slower than others. How will you identify the bottleneck?</summary><div class="qa-body"><p>Compare its assigned partitions, lag, message sizes, key distribution, handler latency, CPU, memory, GC, thread pools, database connections, and network with healthy instances. A hot partition or noisy node may be responsible. Move the instance, rebalance keys/partitions, or fix its resource or downstream constraint based on evidence.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">6.</span> Events arrive faster than consumers process them. How will you scale?</summary><div class="qa-body"><p>Optimize and batch the handler first, remove avoidable blocking work, and monitor processing time and lag age. Add consumer instances up to the available partition count; increase well-keyed partitions if more parallelism is required. Protect databases and downstream systems with bounded concurrency and backpressure rather than moving the bottleneck.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">7.</span> One faulty message blocks queue processing. How will you handle it?</summary><div class="qa-body"><p>Retry transient failures a bounded number of times with backoff, then publish the record and error metadata to a dead-letter topic so the partition can progress. Alert and provide replay tooling after the data or code is fixed. Preserve the original key, payload, headers, and failure reason, and make replay idempotent.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">8.</span> Messages are lost after a service restart. What could cause this?</summary><div class="qa-body"><p>The producer may return before broker acknowledgement, a consumer may auto-commit before processing, in-memory work may not be durable, or retention/offset reset may skip data. Verify <code>acks</code>, replication, flush behavior, offset commit timing, retention, and restart logs. Use durable Kafka storage, outbox publishing, and commit offsets after business success.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">9.</span> Kafka broker disk is full. What actions will you take?</summary><div class="qa-body"><p>Identify the largest topics/partitions and whether retention, compaction, replication, or consumer lag changed. Stabilize by reducing production, expanding/rebalancing storage, or shortening retention only with business approval—never delete unknown log directories manually. Then add disk alerts, quotas, capacity forecasts, and correct retention policies.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">10.</span> Async processing reduced performance. Why?</summary><div class="qa-body"><p>Serialization, broker round trips, small messages, context switching, queue wait, acknowledgements, retries, or an undersized consumer pool can cost more than the original work. Async improves decoupling and burst handling, not every operation's latency. Measure enqueue-to-complete time and batch or keep simple immediate work synchronous where appropriate.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">11.</span> An event is consumed but its database update fails. How will you maintain consistency?</summary><div class="qa-body"><p>Keep the offset uncommitted when the database transaction fails so Kafka redelivers it. Make processing idempotent and commit the offset only after the transaction succeeds. Use bounded retries and a dead-letter topic for permanent errors; if the handler also publishes Kafka records, use an outbox or carefully scoped Kafka transaction.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">12.</span> Multiple services consume one event and cause duplicate actions. How will you avoid it?</summary><div class="qa-body"><p>Different business services should use different consumer groups so each receives the event once for its own responsibility; replicas of the same logical service share one group. If two services perform the same side effect, clarify ownership and remove the duplicate handler. Every handler should still deduplicate by event or business ID.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">13.</span> Consumers unexpectedly reprocess old messages. What could cause this?</summary><div class="qa-body"><p>Offsets may have expired, been reset, failed to commit, moved to a new group ID, or been rewound manually; a rebalance/crash before commit also redelivers recent records. Check group history, <code>auto.offset.reset</code>, retention, commit errors, and deployment configuration. Reprocessing must be safe through idempotency.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">14.</span> You need guaranteed event delivery between services. How will you design it?</summary><div class="qa-body"><p>Define “guaranteed” precisely: practical systems commonly provide at-least-once delivery. Atomically store the business change and outbox event, publish with broker acknowledgements and replication, retain/retry durably, consume idempotently, commit after success, route poison records to a DLQ, and reconcile missing/stuck workflow states.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">15.</span> Partition imbalance creates uneven traffic. How will you fix it?</summary><div class="qa-body"><p>Measure records, bytes, and processing cost by partition and inspect key cardinality. Replace a low-cardinality or hot key with a better distribution strategy where per-entity ordering permits it, isolate very hot entities, or increase partitions and rebalance. More consumers cannot split one hot partition.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">16.</span> A publisher sends events but a consumer receives them much later. How will you debug it?</summary><div class="qa-body"><p>Timestamp and trace publish acknowledgement, broker append, consumer fetch, queue wait, and handler start. Check consumer lag, paused partitions, rebalances, fetch settings, batching, network, broker health, retries, and clock skew. Determine whether delay is before Kafka, inside Kafka, or after fetch.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">17.</span> Async retries create a retry storm. How will you prevent it?</summary><div class="qa-body"><p>Use exponential backoff with jitter, retry only transient failures, cap attempts and total retry rate, and circuit-break the failing dependency. Use delayed retry topics/queues rather than blocking main consumers, enforce concurrency limits, and send exhausted records to a DLQ. Recovery should ramp gradually.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">18.</span> How will you handle poison messages in Kafka?</summary><div class="qa-body"><p>Classify deserialization, validation, and business errors; permanent invalid data should not retry forever. Capture it in a DLQ with original payload, headers, offset, schema/version, and error details, alert the owner, and provide an audited replay path. Protect sensitive payloads and ensure replay is idempotent.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">19.</span> Event schema changes broke consumers. How will you maintain compatibility?</summary><div class="qa-body"><p>Use versioned schemas in a registry with compatibility checks in CI. Prefer additive optional fields, stable meanings, defaults, and consumers tolerant of unknown fields. Deploy compatible consumers before removing fields; use a new event version/topic only for unavoidable breaking semantics and run a migration window.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">20.</span> Async architecture is difficult to debug. What monitoring and tracing will you add?</summary><div class="qa-body"><p>Propagate trace and causation/correlation IDs in message headers, create producer/consumer spans, and log topic, partition, offset, event ID, schema version, attempt, and processing result. Monitor publish rate, lag/age, handler latency, errors, retries, DLQ volume, rebalances, and business workflow state.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">21.</span> An event must be processed only once globally. How will you design it?</summary><div class="qa-body"><p>True global exactly-once across Kafka and arbitrary external systems is generally not available. Achieve the business effect once using a stable operation ID, database uniqueness, an atomic inbox/business transaction, and idempotent external APIs. Kafka transactions help for Kafka-to-Kafka workflows but do not replace external deduplication.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">22.</span> A consumer crashes while processing. How will you avoid data loss?</summary><div class="qa-body"><p>Disable premature auto-commit and acknowledge only after durable processing. If it crashes first, Kafka redelivers the uncommitted record, so the handler must be idempotent. Use graceful shutdown to stop polling, finish or abandon in-flight work, and ensure processing stays within poll/rebalance constraints.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">23.</span> High throughput causes memory pressure in consumers. How will you optimize?</summary><div class="qa-body"><p>Bound fetched and in-flight records by tuning fetch/batch sizes and concurrency; process streams rather than collecting large batches. Reduce payload size and deserialization copies, commit/release promptly, and pause partitions or apply backpressure when downstream capacity is full. Profile heap before increasing it.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">24.</span> Async communication increases eventual-consistency issues. How will you handle them?</summary><div class="qa-body"><p>Model visible workflow states such as pending/confirmed/failed, publish versioned events reliably, process idempotently and in entity order, and use Saga compensation plus reconciliation. Set user expectations and provide status polling/notifications. Use synchronous or strongly consistent boundaries for invariants that cannot tolerate delay.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">25.</span> When would you prefer synchronous communication over Kafka?</summary><div class="qa-body"><p>Prefer synchronous calls when the caller requires an immediate answer to continue, such as validation, authentication, or a live query, and the dependency can meet the latency/availability budget. Prefer Kafka for events, burst buffering, fan-out, and temporal decoupling. Many systems use both deliberately.</p></div></details>
+
+  <h2 class="section-heading">Redis and Caching</h2>
+
+  <details class="qa"><summary><span class="q-num">26.</span> Redis goes down and database traffic surges. What problem does this create?</summary><div class="qa-body"><p>This cache-failure stampede can overload the database and turn a cache outage into a full outage. Fail fast on Redis, limit database fallback concurrency, shed noncritical traffic, coalesce identical requests, and recover the cache gradually. Use Redis high availability and capacity-test the fallback path.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">27.</span> Users see stale data after updates. How will you keep cache consistent?</summary><div class="qa-body"><p>Use cache-aside and invalidate or update the key only after the database transaction commits. Give entries bounded TTLs and propagate versioned invalidation events across services. For critical read-after-write paths, read the authoritative database or compare versions rather than promising strong consistency from async invalidation.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">28.</span> Cache hit ratio is low. What could be wrong?</summary><div class="qa-body"><p>Keys may be too granular or unstable, TTLs too short, eviction too frequent, requests highly unique, the cache undersized, or instances may use separate caches. Analyze misses by reason, key cardinality, memory/eviction, and traffic distribution. Cache only repeatable expensive reads with correct keys.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">29.</span> Cache memory use is extremely high. How will you optimize it?</summary><div class="qa-body"><p>Inspect largest keys, cardinality, TTL coverage, data types, fragmentation, and eviction statistics. Remove unnecessary fields, split or avoid huge values, serialize compactly, set justified TTLs and max-memory policy, and prevent unbounded per-user keys. Capacity-plan with replication overhead included.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">30.</span> One cache key is a hotspot. How will you solve it?</summary><div class="qa-body"><p>Replicate/read-cache the value locally, coalesce refreshes, precompute it, or shard the key only if operations allow aggregation. Add TTL jitter and stale-while-revalidate to avoid synchronized refresh. Check whether a single global counter can be partitioned or estimated instead of updated centrally.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">31.</span> Several servers overwrite one cache entry. How will you preserve consistency?</summary><div class="qa-body"><p>Do not use uncoordinated read-modify-write. Use Redis atomic commands/Lua or compare-and-set with a version, and define the database as source of truth. For derived cache data, prefer invalidation and rebuilding over competing writes; distributed locks need expiry and ownership validation.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">32.</span> Cache penetration causes database hits. What can help?</summary><div class="qa-body"><p>Cache legitimate “not found” results briefly, validate requests early, use a Bloom filter for a large known keyspace, and rate-limit abusive clients. Use shorter negative TTLs so newly created records become visible, and prevent attackers from creating unlimited cache keys.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">33.</span> APIs remain slow after caching. Why?</summary><div class="qa-body"><p>The cache may miss, use poor keys, be remote/slow, serialize huge objects, or cover only a small part of the critical path; downstream calls, CPU, and response transfer may dominate. Trace cache lookup, computation, database, and network separately. Verify hit rate and actual latency saved.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">34.</span> Frequently changing data makes invalidation hard. What strategy will you use?</summary><div class="qa-body"><p>First decide whether it should be cached at all. Use short TTLs, versioned keys, write-through or post-commit invalidation events, and explicit ownership. For correctness-critical rapidly changing values, query the source of truth; caching them may cost more complexity than it saves.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">35.</span> Redis keys expire unexpectedly. How will you debug it?</summary><div class="qa-body"><p>Inspect TTL immediately after writes, application code that sets or overwrites keys, namespace collisions, eviction statistics, max-memory policy, replica/failover events, and clock issues. A key can disappear through expiry, eviction, deletion, flush, or replacement—not only its original TTL.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">36.</span> Cache expiry causes a stampede. How will you prevent it?</summary><div class="qa-body"><p>Add TTL jitter so keys do not expire together, coalesce refresh with a per-key lock/single-flight, serve stale data while one worker refreshes, and pre-warm known hot keys. Bound fallback traffic and apply backpressure so cache misses cannot overwhelm the database.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">37.</span> Huge cached objects cause memory pressure. What improvements would you suggest?</summary><div class="qa-body"><p>Cache only required fields or smaller fragments, compress only when CPU trade-offs are measured, paginate collections, and cap value size. Set TTLs and memory policies, reject accidental oversized entries, and monitor top keys. Object storage may fit large blobs better than Redis.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">38.</span> A distributed cache is inconsistent across nodes. Why?</summary><div class="qa-body"><p>Possible causes include replication lag, stale local L1 caches, split-brain/failover, async invalidation loss, inconsistent keys/serialization, or writes sent to different clusters. Inspect topology and versions, establish one authoritative writer/source, and use versioned invalidation plus consistency-aware reads.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">39.</span> Cache warm-up after deployment spikes database load. How will you optimize?</summary><div class="qa-body"><p>Preserve a shared external cache across stateless deployments, pre-warm only proven hot keys gradually, use request coalescing and concurrency limits, and roll instances in stages. Serve stale-while-revalidate when valid and add TTL jitter so deployment does not synchronize future expiry.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">40.</span> How will you decide what should be cached?</summary><div class="qa-body"><p>Cache data that is expensive to obtain, frequently reused, small enough, and tolerant of defined staleness. Avoid secrets, unbounded/high-cardinality one-off responses, rapidly changing correctness-critical state, and data without safe tenant/user keys. Define TTL, invalidation, source of truth, and failure behavior first.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">41.</span> The application needs low latency and strong consistency. How will you balance caching?</summary><div class="qa-body"><p>Split data by consistency requirement. Serve immutable/reference data from cache, but route critical inventory/payment reads and writes to the authoritative store or use a version/read-through protocol that proves freshness. After writes, invalidate/update post-commit and support read-your-writes for that user.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">42.</span> Redis is a single point of failure. How will you improve reliability?</summary><div class="qa-body"><p>Use replicated Redis with automatic failover or a managed clustered service across failure zones, backups where data needs durability, and monitored capacity. Clients need short timeouts, reconnect/backoff, and safe degraded behavior. Do not make cache availability mandatory for core correctness.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">43.</span> One user sees another user's cached data. What could cause this?</summary><div class="qa-body"><p>The cache key likely omitted user/tenant, authorization scope, locale, or another response-varying field, or a shared HTTP cache ignored <code>Vary</code>/<code>private</code>. Treat it as a security incident, purge affected entries, fix key construction and cache-control, assess exposure, and add isolation tests.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">44.</span> Cache invalidation produces stale data across microservices. How will you redesign it?</summary><div class="qa-body"><p>Make one service the data owner and publish versioned change events through an outbox after commit. Consumers invalidate/update their derived caches idempotently and ignore older versions. Add finite TTLs and reconciliation as safety nets, and avoid shared caches that let multiple services mutate the same representation.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">45.</span> You need to cache API responses for millions of users. What factors matter?</summary><div class="qa-body"><p>Consider key cardinality and tenant isolation, value size, repeat frequency, TTL/invalidation, authorization, regional distribution, memory cost, eviction, hot keys, stampede control, encryption, and privacy deletion. Prefer CDN for public responses and avoid per-user caching when reuse is near zero.</p></div></details>
+
+  <h2 class="section-heading">Application and API Security</h2>
+
+  <details class="qa"><summary><span class="q-num">46.</span> JWTs remain valid after logout. How will you solve it?</summary><div class="qa-body"><p>JWT access tokens are stateless and normally remain valid until expiry. Use short-lived access tokens, revoke/rotate server-tracked refresh tokens on logout, and add a denylist or user token-version check for high-risk immediate revocation. Balance revocation lookup cost against the threat model.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">47.</span> A malicious user sends thousands of requests per second. How will you protect the system?</summary><div class="qa-body"><p>Apply WAF/DDoS protection and token-bucket limits by account/API key with IP/device fallback, plus per-route cost limits and global admission control. Return 429, block abusive identities, cap payloads and concurrency, and monitor patterns. Rate limiting complements authentication; it does not replace it.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">48.</span> Sensitive customer data appears in logs. Why is this dangerous?</summary><div class="qa-body"><p>Logs are widely replicated and retained, so exposed passwords, tokens, payment data, or PII can enable account compromise and regulatory violations. Stop the logging, restrict access, rotate exposed credentials, assess and report the incident, redact/purge according to policy, and add centralized masking and tests.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">49.</span> SQL injection is found in your APIs. How will you fix and prevent it?</summary><div class="qa-body"><p>Replace concatenated SQL with prepared statements or correctly parameterized ORM queries; allowlist identifiers that cannot be parameters. Validate input for business rules, use least-privilege DB accounts, review similar query paths, add security tests/scanning, and investigate whether exploitation occurred. Escaping alone is insufficient.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">50.</span> Passwords are stored in plain text. What must improve?</summary><div class="qa-body"><p>Treat it as a serious incident: restrict access, assess exposure, force resets as appropriate, and remove plaintext copies/backups according to policy. Store passwords with a slow adaptive salted hash such as Argon2id, bcrypt, or scrypt using reviewed parameters; never reversible encryption. Add MFA and rate-limited login.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">51.</span> API keys were exposed publicly. What immediate actions will you take?</summary><div class="qa-body"><p>Revoke/rotate the keys immediately, identify affected systems, inspect audit logs for misuse, contain permissions, and notify security/owners. Removing the Git commit is not enough because history and forks persist. Move secrets to a secret manager, use least privilege and short lifetimes, and enable secret scanning.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">52.</span> Unauthorized users access admin APIs. What could be wrong?</summary><div class="qa-body"><p>Authentication may exist without endpoint-level authorization, role claims may be trusted incorrectly, route patterns may be misconfigured, or object ownership checks may be missing. Deny by default, validate JWT issuer/audience/signature, enforce server-side RBAC/ABAC at route and service layers, and add negative authorization tests and audits.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">53.</span> Session hijacking occurred. How will you investigate?</summary><div class="qa-body"><p>Revoke affected sessions, preserve audit evidence, identify token leakage through XSS, logs, URLs, insecure transport/storage, or weak cookie flags, and assess impacted actions. Use HTTPS, Secure/HttpOnly/SameSite cookies, session rotation after login/privilege change, short inactivity limits, CSRF protection, and anomaly detection.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">54.</span> APIs face brute-force login attacks. How will you protect them?</summary><div class="qa-body"><p>Apply progressive per-account and per-source throttling, temporary cooldowns, generic error messages, MFA, breached-password checks, bot/WAF controls, and alerts. Hash verification is intentionally expensive, so bound authentication concurrency. Avoid permanent lockouts that attackers can abuse for denial of service.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">55.</span> CORS blocks the frontend. How will you debug and configure it?</summary><div class="qa-body"><p>Inspect the browser preflight and response: origin, method, requested headers, credentials, redirects, and gateway behavior. Allowlist exact trusted origins, methods, and headers; return CORS headers on preflight and error responses. Never combine wildcard origin with credentials, and remember CORS is browser policy—not API authentication.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">56.</span> How will you secure third-party and service-to-service communication?</summary><div class="qa-body"><p>Use TLS with certificate validation, preferably mTLS or workload identity internally, and short-lived scoped OAuth/client credentials. Store secrets in a manager, rotate them, authenticate webhooks with signatures and replay protection, restrict egress, validate responses, and log access without secrets.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">57.</span> A developer committed secrets to Git. How will you handle it?</summary><div class="qa-body"><p>Assume compromise and rotate/revoke first; deleting the file or rewriting history does not invalidate copied credentials. Search logs for use, assess scope, notify security, then remove the secret from current/history where policy requires. Adopt secret managers, pre-commit/CI scanning, least privilege, and short-lived credentials.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">58.</span> Public APIs expose internal implementation details. Why is that risky?</summary><div class="qa-body"><p>Stack traces, SQL, hostnames, paths, framework versions, and internal IDs help attackers map the system and may expose sensitive data. Return stable sanitized error codes/messages plus a correlation ID, while keeping detailed diagnostics in protected logs. Disable verbose error pages in production.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">59.</span> Authentication becomes a bottleneck. How will you scale it?</summary><div class="qa-body"><p>Separate login/refresh from local access-token validation, run stateless auth instances horizontally, cache signing keys safely, reuse connections, and rate-limit expensive password flows. Scale the identity store carefully, use short-lived tokens, and isolate auth resources. Do not weaken hashing or validation for speed.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">60.</span> JWT size is large and hurts performance. Why?</summary><div class="qa-body"><p>Too many roles, permissions, profile fields, nested claims, or certificates may be embedded and sent on every request. Keep only stable authorization/identity claims, use compact identifiers, fetch dynamic details server-side or use opaque/reference tokens when suitable, and avoid sensitive data. Compression can introduce security risks and is not the first fix.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">61.</span> Attackers replay payment requests. How will you prevent it?</summary><div class="qa-body"><p>Use HTTPS plus a unique idempotency key/business transaction ID enforced by a database constraint. For signed requests/webhooks, validate signature, timestamp, nonce, body digest, and a short acceptance window, then record used IDs. Bind operations to authenticated user, amount, and order and reconcile provider status.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">62.</span> Uploaded files are stored insecurely. What risks arise?</summary><div class="qa-body"><p>Risks include malware, executable content, path traversal, stored XSS, decompression bombs, public PII exposure, and denial of service. Store outside the web root with generated names, validate size/type/content, scan files, restrict access with short-lived signed URLs, encrypt, and serve with safe content headers.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">63.</span> Failed logins consume excessive resources. How will you optimize safely?</summary><div class="qa-body"><p>Rate-limit before expensive password verification, cap auth worker concurrency, use WAF/bot signals, and apply progressive delays/MFA. Preserve strong password hashing; do not reduce its security to save CPU. Use generic responses, cache safe account policy data briefly, and monitor attack patterns.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">64.</span> Weak authorization checks expose APIs. How will you design RBAC?</summary><div class="qa-body"><p>Deny by default and map authenticated identities to narrowly scoped roles/permissions. Enforce rules server-side at endpoint and business-object level, including tenant and ownership checks; UI hiding is not authorization. Centralize policy, use least privilege, audit sensitive actions, and test every role's denied as well as allowed paths.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">65.</span> How will you secure internal microservice communication?</summary><div class="qa-body"><p>Use zero-trust principles: authenticate every workload with mTLS/workload identity, authorize least-privilege service scopes, encrypt traffic, rotate short-lived credentials, and apply network policies/segmentation and egress controls. Validate service tokens and observe/audit calls; an internal network is not inherently trusted.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">66.</span> How will you prevent XSS?</summary><div class="qa-body"><p>Contextually encode untrusted output and let frameworks escape text by default; sanitize only when intentionally rendering HTML. Avoid dangerous sinks such as raw <code>innerHTML</code>, enforce Content Security Policy, validate URLs/uploads, and protect session cookies with HttpOnly. Input validation alone does not prevent output-context XSS.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">67.</span> Security scans find vulnerable outdated dependencies. How will you manage them?</summary><div class="qa-body"><p>Verify reachability and exploitability, prioritize by severity and exposure, patch/upgrade and test promptly, or apply a documented temporary mitigation. Maintain lockfiles and an SBOM, automate dependency scanning/updates in CI, pin trusted sources, remove unused packages, and define remediation SLAs and exceptions.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">68.</span> Users share JWTs in URLs. Why is that dangerous?</summary><div class="qa-body"><p>URLs leak through browser history, logs, analytics, screenshots, bookmarks, proxies, and <code>Referer</code> headers. Tokens are bearer credentials, so anyone who obtains one can act as the user. Send access tokens in authorization headers or secure cookies, redact URLs, revoke exposed tokens, and keep them short lived.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">69.</span> An API should allow only specific IP ranges. How will you implement it?</summary><div class="qa-body"><p>Enforce CIDR allowlists at the firewall, load balancer, API gateway, or service mesh before application processing, and combine them with strong authentication. Trust forwarded client IP headers only from known proxies. Manage ranges as reviewed configuration, log denials, test IPv4/IPv6, and plan for changing/NAT addresses.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">70.</span> What backend precautions support data-privacy compliance?</summary><div class="qa-body"><p>Inventory and minimize personal data, document purpose and retention, enforce consent/legal basis, encrypt in transit/at rest, use least privilege and audit access, and separate tenants. Support export, correction, deletion, retention jobs, breach response, backups, and vendor controls. Tokenize sensitive fields and avoid PII in logs/test data; involve legal/security for applicable regulations.</p></div></details>
+
+  <h2 class="section-heading">Deployment, Kubernetes, and CI/CD</h2>
+
+  <details class="qa"><summary><span class="q-num">71.</span> A deployment caused downtime. How will you reduce deployment risk?</summary><div class="qa-body"><p>Use immutable artifacts, automated tests and contract checks, backward-compatible migrations, readiness/startup probes, and rolling, canary, or blue-green deployment. Monitor technical/business metrics and automatically halt or roll back on regression. Rehearse rollback and keep configuration versioned.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">72.</span> Staging works but production fails. What could differ?</summary><div class="qa-body"><p>Compare effective configuration, secrets, feature flags, data volume/distribution, schema, network/DNS/TLS, permissions, quotas, traffic, infrastructure, runtime/image, and dependent versions. Use the same immutable artifact and configuration schema across environments, then trace the exact failing production request safely.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">73.</span> A deployment introduces memory leaks and degradation. How will you identify it quickly?</summary><div class="qa-body"><p>Compare canary versus old instances for heap-after-GC, allocation rate, GC pause, RSS, latency, and error trends. Capture heap/JFR profiles from the bad version, diff retained objects, and correlate new code paths. Roll back first when impact is material, then fix and load-soak test.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">74.</span> Kubernetes containers restart repeatedly. How will you debug them?</summary><div class="qa-body"><p>Inspect pod status, restart reason, exit code, events, current and previous container logs, probes, resources, mounts, secrets, and node pressure. Distinguish <code>OOMKilled</code>, application crash, failed startup/liveness probe, and eviction. Reproduce with the same image/config and fix the root cause rather than raising limits blindly.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">75.</span> A database migration fails during deployment. What recovery steps will you take?</summary><div class="qa-body"><p>Stop rollout and determine whether the migration transaction rolled back or partially applied. Preserve data, restore/repair using a tested migration or point-in-time recovery as appropriate, then deploy the compatible application version. Use expand-contract migrations, prechecks, backups, locks/timeouts, and rehearsal on production-like data.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">76.</span> Health checks fail after deployment although the application seems healthy. Why?</summary><div class="qa-body"><p>The probe may use the wrong port/path/protocol, start too early, have an insufficient timeout, require auth, depend on a slow optional system, or be blocked by network policy. Test it from the kubelet/network context and inspect events. Separate startup, liveness, and readiness semantics.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">77.</span> An immediate rollback is required. What strategy will you follow?</summary><div class="qa-body"><p>Pause the rollout, shift traffic to the last known-good image or blue/green environment, and validate core journeys and data compatibility. Database changes must be backward compatible; destructive migrations may require a forward fix or data recovery instead of binary rollback. Communicate and preserve incident evidence.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">78.</span> Configuration changes break production. How will you prevent this?</summary><div class="qa-body"><p>Version non-secret configuration, validate it against a typed schema at CI and startup, review changes through pull requests, and test combinations in lower environments. Store secrets in a manager, use feature flags for risky behavior, deploy config progressively, audit changes, and provide one-action rollback.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">79.</span> One service deployment cascades failures. How will you reduce impact?</summary><div class="qa-body"><p>Use canary rollout, backward-compatible contracts, dependency contract tests, and automated health/SLO gates. At runtime use timeouts, circuit breakers, bulkheads, and load shedding so callers fail fast or degrade. Roll out gradually and stop automatically when downstream error rates rise.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">80.</span> The CI/CD pipeline is very slow. What can be optimized?</summary><div class="qa-body"><p>Measure each stage first. Cache dependencies/build outputs safely, run independent tests in parallel, use incremental builds and change-based jobs, right-size agents, avoid rebuilding the same artifact per environment, and move slow nonblocking analysis appropriately. Preserve deterministic clean builds and security gates.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">81.</span> Container logs disappear after restart. How will you improve logging?</summary><div class="qa-body"><p>Write structured logs to stdout/stderr and have a node/sidecar collector ship them to centralized durable storage before container deletion. Include trace, service, pod, version, and environment labels; set buffering, rotation, retention, and backpressure controls. Do not rely on a container's writable filesystem.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">82.</span> How will you achieve zero-downtime deployment?</summary><div class="qa-body"><p>Run multiple replicas and use rolling, canary, or blue-green rollout with readiness gates, connection draining, graceful shutdown, surge capacity, and automated rollback. Keep APIs/events and database schemas backward compatible through expand-contract changes. “Zero downtime” also requires testing long requests and background consumers.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">83.</span> Configuration mismatch makes environments behave differently. How will you standardize them?</summary><div class="qa-body"><p>Deploy the same versioned image everywhere and express configuration through validated templates or infrastructure as code. Maintain a configuration schema, environment overlays with minimal differences, secret-manager references, drift detection, and effective-config diagnostics that redact secrets. Promote artifacts rather than rebuild them.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">84.</span> Infrastructure scaling is manual and slow. How will you improve it?</summary><div class="qa-body"><p>Define infrastructure as code and configure autoscaling on meaningful signals such as concurrency, latency, queue lag, CPU, and memory. Set safe min/max capacity, warm-up behavior, and scheduled pre-scaling for known events. Load-test and ensure databases/dependencies can handle the new application capacity.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">85.</span> A deployment enabled DEBUG logs and hurt performance. Why?</summary><div class="qa-body"><p>Debug logging increases formatting, allocation, locking, disk/network I/O, collector load, and storage, sometimes exposing sensitive data. Validate log-level configuration in CI/deployment policy, restrict temporary debug to targeted packages/instances, sample it, and automatically expire the change.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">86.</span> Kubernetes pods are healthy but traffic fails. What could be wrong?</summary><div class="qa-body"><p>Check Service selectors/endpoints, target ports, Ingress/gateway routes, DNS, network policies, security groups, TLS, and readiness—not only liveness. Verify from inside the cluster and inspect proxy/load-balancer health. The probe may test a different path or bypass authentication/dependencies used by real traffic.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">87.</span> Environment secrets are managed insecurely. What should replace this?</summary><div class="qa-body"><p>Use a managed secret store such as Azure Key Vault or workload-integrated Kubernetes secrets with encryption, strict RBAC, audit logs, rotation, and short-lived identity-based access. Never commit secrets, bake them into images, or expose them in logs/environment dumps. Automate secret scanning and emergency rotation.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">88.</span> Deployment traffic causes request failures. How will you reduce impact?</summary><div class="qa-body"><p>Maintain enough surge capacity, add readiness/startup probes, drain connections before termination, and shut down gracefully while completing in-flight requests. Roll out gradually, pre-warm caches/connections, respect pod disruption budgets, and avoid deploying every dependency simultaneously.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">89.</span> Service versions require coordinated compatibility. How will you handle it?</summary><div class="qa-body"><p>Reduce lockstep deployment through additive contracts and tolerant consumers. Maintain a tested compatibility matrix and consumer-driven contracts, deploy providers/consumers in a safe sequence, and support overlapping API/event versions during migration. Use feature flags rather than a big-bang release.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">90.</span> Application startup became slow. How will you investigate?</summary><div class="qa-body"><p>Measure startup phases with timestamps/profiling: classpath scanning, bean creation, migrations, remote configuration/secrets, DNS, connection pools, cache warm-up, and JIT. Compare releases and dependency/config changes. Move noncritical initialization after readiness carefully, parallelize independent work, and avoid blocking remote calls in constructors.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">91.</span> Monitoring failed to alert during an outage. How will you improve observability?</summary><div class="qa-body"><p>Find whether collection, transport, query, rule, routing, or paging failed and whether the alert measured the wrong signal. Add independent external synthetic checks, SLO/error-budget alerts, monitoring-pipeline health and dead-man alerts, tested escalation routes, and regular alert drills. Remove unactionable noise.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">92.</span> A deployment changed API contracts and broke consumers. How will you prevent it?</summary><div class="qa-body"><p>Store the OpenAPI/event schema with code and run breaking-change plus consumer-contract checks in CI. Make changes additive, deprecate with a migration period, deploy tolerant consumers first, and canary the provider. Require explicit approval and versioning for unavoidable incompatible changes.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">93.</span> Infrastructure cost rose significantly after scaling. How will you optimize utilization?</summary><div class="qa-body"><p>Break cost down by service, environment, resource, and unit such as cost per request/order. Right-size requests/limits and instance types, tune autoscaling/minimums, schedule nonproduction capacity, improve utilization and caching, reduce log/storage retention, and use commitments for stable baseline load. Preserve SLO headroom.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">94.</span> Background jobs run multiple times after deployment. Why?</summary><div class="qa-body"><p>Every replica may run the same in-process scheduler, and rolling deployment temporarily increases replica count. Use a cluster-aware scheduler, leader election, or atomic job claiming/distributed lock. Make jobs idempotent, checkpoint progress, and enforce business uniqueness because locks cannot eliminate every crash race.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">95.</span> Sale traffic rises 20×. How should deployment and infrastructure autoscale?</summary><div class="qa-body"><p>Load-test and pre-scale for predictable sales because reactive scaling has delay. Autoscale stateless services and consumers using concurrency/queue lag, place CDN/cache at the edge, queue bursty work, rate-limit fairly, reserve inventory atomically, and protect databases/payment with bounded concurrency. Define graceful degradation and incident controls.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">96.</span> How will you deploy database schema changes without downtime?</summary><div class="qa-body"><p>Use expand-and-contract: add nullable/new structures first, deploy code that can read/write old and new forms, backfill in small resumable batches, switch reads, then remove old structures in a later release. Avoid long blocking DDL, test on production-like volume, monitor locks, and keep rollback compatibility.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">97.</span> One container uses much more CPU than others. How will you find the issue?</summary><div class="qa-body"><p>Compare its traffic, partition/shard assignment, requests, logs, GC, thread profile, and node conditions with peer containers. Capture a CPU profile and thread dump and check for hot keys, loops, retries, or a noisy node. Replace the instance to test node versus workload, then fix the evidenced cause.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">98.</span> Logs are spread across servers. How will you centralize observability?</summary><div class="qa-body"><p>Emit structured stdout logs and collect them with an agent into a centralized searchable platform. Standardize service, environment, version, pod, severity, and trace IDs; combine logs with metrics and distributed traces. Apply access control, redaction, sampling, retention, and alerts rather than copying files manually.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">99.</span> The pipeline deployed the wrong production configuration. What safeguards will you add?</summary><div class="qa-body"><p>Use typed validated configuration, environment-scoped variables and service connections, least-privilege approvals, protected production environments, and a rendered-config diff before deployment. Promote the same artifact, prevent arbitrary overrides, run post-deploy smoke tests, keep audit history, and automate rollback.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">100.</span> How would you improve your current project's deployment architecture?</summary><div class="qa-body"><p>Give an evidence-based roadmap: containerize immutable builds, add CI tests/security/contract gates, manage infrastructure/configuration as code, use a secret manager, introduce canary or blue-green rollout, backward-compatible migrations, automated rollback, centralized observability, autoscaling, and recovery drills. Prioritize the highest current risk rather than claiming every tool is necessary.</p></div></details>
+
+  <h2 class="section-heading">Java Streams and Collector Scenarios</h2>
+
+  <details class="qa"><summary><span class="q-num">101.</span> How do you group employees by department into <code>Map&lt;String, List&lt;Employee&gt;&gt;</code>?</summary><div class="qa-body"><pre><code>Map&lt;String, List&lt;Employee&gt;&gt; byDepartment =
+    employees.stream()
+        .collect(Collectors.groupingBy(Employee::getDepartment));</code></pre><p><code>groupingBy</code> creates one list per department. Use a <code>LinkedHashMap</code> supplier only when encounter order matters.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">102.</span> How do you find the highest-paid employee in each department?</summary><div class="qa-body"><pre><code>Map&lt;String, Optional&lt;Employee&gt;&gt; highestByDepartment =
+    employees.stream().collect(Collectors.groupingBy(
+        Employee::getDepartment,
+        Collectors.maxBy(Comparator.comparing(Employee::getSalary))));</code></pre><p>The value is <code>Optional</code> because <code>maxBy</code> can be empty. If each group is guaranteed non-empty, unwrap it deliberately with a downstream <code>collectingAndThen</code>.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">103.</span> How do you convert <code>List&lt;Employee&gt;</code> to <code>Map&lt;id, Employee&gt;</code>?</summary><div class="qa-body"><pre><code>Map&lt;Long, Employee&gt; byId = employees.stream()
+    .collect(Collectors.toMap(Employee::getId, Function.identity()));</code></pre><p>Define a merge rule when duplicate IDs are possible, for example <code>(first, second) -&gt; first</code>; otherwise <code>toMap</code> throws an exception and exposes a data-quality problem.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">104.</span> How do you find the average employee salary using streams?</summary><div class="qa-body"><pre><code>double averageSalary = employees.stream()
+    .mapToDouble(Employee::getSalary)
+    .average()
+    .orElse(0.0);</code></pre><p>Use a primitive stream to avoid boxing. Decide whether returning <code>0.0</code> for an empty list is valid; alternatively keep the result as <code>OptionalDouble</code>.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">105.</span> How do you partition numbers into even and odd with <code>partitioningBy</code>?</summary><div class="qa-body"><pre><code>Map&lt;Boolean, List&lt;Integer&gt;&gt; partitioned = numbers.stream()
+    .collect(Collectors.partitioningBy(n -&gt; n % 2 == 0));
+List&lt;Integer&gt; evens = partitioned.get(true);
+List&lt;Integer&gt; odds = partitioned.get(false);</code></pre><p>Use <code>partitioningBy</code> for a two-way true/false split. For more than two categories, use <code>groupingBy</code>.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">106.</span> How do you find the top three highest numbers?</summary><div class="qa-body"><pre><code>List&lt;Integer&gt; topThree = numbers.stream()
+    .sorted(Comparator.reverseOrder())
+    .limit(3)
+    .toList();</code></pre><p>This is clear for small collections. For very large datasets, a bounded heap is more efficient than sorting every value.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">107.</span> How do you flatten a list of lists?</summary><div class="qa-body"><pre><code>List&lt;String&gt; flat = nestedLists.stream()
+    .flatMap(Collection::stream)
+    .toList();</code></pre><p><code>flatMap</code> turns many inner streams into one stream, which is useful before filtering, mapping, or collecting all items.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">108.</span> Given sentences, how do you return unique words using <code>flatMap</code> and <code>distinct</code>?</summary><div class="qa-body"><pre><code>List&lt;String&gt; words = sentences.stream()
+    .flatMap(sentence -&gt; Arrays.stream(sentence.toLowerCase().split(&quot;\\s+&quot;)))
+    .filter(word -&gt; !word.isBlank())
+    .distinct()
+    .toList();</code></pre><p>In production, normalize punctuation and locale-aware casing as needed; splitting only on whitespace leaves punctuation attached to words.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">109.</span> How do you join a list of strings with commas?</summary><div class="qa-body"><pre><code>String csv = values.stream()
+    .collect(Collectors.joining(&quot;, &quot;));</code></pre><p>Use <code>joining(&quot;, &quot;, &quot;[&quot;, &quot;]&quot;)</code> when you also need a prefix and suffix.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">110.</span> How do you custom-sort objects by multiple fields?</summary><div class="qa-body"><pre><code>employees.sort(Comparator.comparing(Employee::getDepartment)
+    .thenComparing(Employee::getLastName)
+    .thenComparing(Employee::getFirstName)
+    .thenComparing(Employee::getId));</code></pre><p>Add a stable final tie-breaker such as ID. Use <code>Comparator.nullsLast(...)</code> where a sorted field can be null.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">111.</span> Given transactions, how do you filter values above 10,000 and sort by date?</summary><div class="qa-body"><pre><code>List&lt;Transaction&gt; result = transactions.stream()
+    .filter(t -&gt; t.getAmount().compareTo(new BigDecimal(&quot;10000&quot;)) &gt; 0)
+    .sorted(Comparator.comparing(Transaction::getDate))
+    .toList();</code></pre><p>Use <code>BigDecimal</code> for monetary amounts rather than <code>double</code>. Reverse the comparator if the newest transaction should appear first.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">112.</span> From employees, how do you get names of those who joined after 2020?</summary><div class="qa-body"><pre><code>List&lt;String&gt; names = employees.stream()
+    .filter(e -&gt; e.getJoinDate().isAfter(LocalDate.of(2020, 12, 31)))
+    .map(Employee::getName)
+    .toList();</code></pre><p>Make the cutoff inclusive or exclusive explicitly. A date such as 1 January 2021 avoids ambiguity in the interview.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">113.</span> How do you count transactions per month?</summary><div class="qa-body"><pre><code>Map&lt;YearMonth, Long&gt; countByMonth = transactions.stream()
+    .collect(Collectors.groupingBy(
+        t -&gt; YearMonth.from(t.getDate()),
+        Collectors.counting()));</code></pre><p><code>YearMonth</code> prevents January from different years being combined. Use the correct business timezone before deriving a month from a timestamp.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">114.</span> How do you find duplicate words in a paragraph with streams?</summary><div class="qa-body"><pre><code>Set&lt;String&gt; duplicates = Arrays.stream(paragraph.toLowerCase()
+        .replaceAll(&quot;[^a-z0-9\\s]&quot;, &quot;&quot;).split(&quot;\\s+&quot;))
+    .filter(word -&gt; !word.isBlank())
+    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+    .entrySet().stream()
+    .filter(entry -&gt; entry.getValue() &gt; 1)
+    .map(Map.Entry::getKey)
+    .collect(Collectors.toSet());</code></pre><p>The first grouping step produces a frequency map; the second stream retains only words with a count above one.</p></div></details>
+
+  <details class="qa"><summary><span class="q-num">115.</span> How do you return the longest string from a list?</summary><div class="qa-body"><pre><code>Optional&lt;String&gt; longest = values.stream()
+    .max(Comparator.comparingInt(String::length));</code></pre><p>Returning <code>Optional</code> handles an empty list honestly. If ties matter, this returns one of the longest values according to encounter behavior; collect all ties if required.</p></div></details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

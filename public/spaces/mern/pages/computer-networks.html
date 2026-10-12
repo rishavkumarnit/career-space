@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Networks — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html" class="active">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Computer Networks — Interview Prep</h1>
+  <p class="page-sub">Core networking models, protocols, addressing, routing, security, and practical troubleshooting.</p>
+
+  <aside class="resource-links" aria-labelledby="network-resources-heading">
+    <h2 id="network-resources-heading">Computer Networks Interview Resources</h2>
+    <ol>
+      <li><a href="https://www.interviewbit.com/networking-interview-questions/" target="_blank" rel="noopener noreferrer">InterviewBit — Networking Interview Questions</a></li>
+      <li><a href="https://nitizsharma.com/networking-interview-questions-answers/" target="_blank" rel="noopener noreferrer">Nitiz Sharma — Networking Questions and Answers</a></li>
+      <li><a href="https://www.geeksforgeeks.org/blogs/networking-interview-questions/" target="_blank" rel="noopener noreferrer">GeeksforGeeks — Networking Interview Questions</a></li>
+    </ol>
+  </aside>
+
+  <h2 class="section-heading">Computer Networks Fundamentals</h2>
+
+  <details class="qa"><summary><span class="q-num">Q1.</span> What is a computer network?</summary><div class="qa-body">
+    <p>A computer network is a group of connected devices that exchange data and share resources using agreed protocols. Networks may be classified by scope: a <strong>LAN</strong> covers a limited area, a <strong>MAN</strong> spans a city or campus, and a <strong>WAN</strong> connects geographically distant networks. The Internet is the largest WAN.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q2.</span> Explain the seven layers of the OSI model.</summary><div class="qa-body">
+    <table><tr><th>Layer</th><th>Responsibility and examples</th></tr><tr><td>7. Application</td><td>User-facing network services: HTTP, DNS, SMTP</td></tr><tr><td>6. Presentation</td><td>Encoding, compression, and encryption</td></tr><tr><td>5. Session</td><td>Establishes and manages conversations</td></tr><tr><td>4. Transport</td><td>End-to-end delivery: TCP and UDP</td></tr><tr><td>3. Network</td><td>Logical addressing and routing: IP, routers</td></tr><tr><td>2. Data Link</td><td>Frames, MAC addresses, switches, Ethernet</td></tr><tr><td>1. Physical</td><td>Bits, cables, radio signals, connectors</td></tr></table>
+    <p>When sending, data is encapsulated as it moves down the layers; the receiver decapsulates it in reverse.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q3.</span> What is the difference between TCP and UDP?</summary><div class="qa-body">
+    <table><tr><th>TCP</th><th>UDP</th></tr><tr><td>Connection-oriented; begins with a three-way handshake</td><td>Connectionless; sends datagrams without a handshake</td></tr><tr><td>Reliable, ordered delivery using acknowledgements and retransmission</td><td>No built-in guarantee of delivery or order</td></tr><tr><td>Flow and congestion control; more overhead</td><td>Small header and low latency</td></tr><tr><td>Used by HTTP/1.1, HTTP/2, SSH, email</td><td>Used by DNS, VoIP, gaming; QUIC builds reliability over UDP</td></tr></table>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q4.</span> How does DNS resolve a domain name?</summary><div class="qa-body">
+    <p>The client checks browser, OS, and local caches, then asks a recursive resolver. On a cache miss, the resolver follows referrals from a root server to the relevant TLD server and then the domain's authoritative server. It returns the record—commonly an <code>A</code> or <code>AAAA</code> address—and caches it for its TTL.</p>
+    <p><strong>Useful records:</strong> <code>CNAME</code> aliases a name, <code>MX</code> routes email, <code>TXT</code> stores verification/policy text, and <code>NS</code> identifies authoritative name servers.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q5.</span> What are an IP address, subnet mask, and default gateway?</summary><div class="qa-body">
+    <p>An IP address identifies a network interface. The subnet mask or CIDR prefix separates the network portion from the host portion; for example, <code>192.168.1.20/24</code> belongs to network <code>192.168.1.0</code>. A host sends same-subnet traffic directly, but sends off-subnet traffic to its <strong>default gateway</strong>, normally a router.</p>
+    <p>IPv4 uses 32-bit addresses; IPv6 uses 128-bit addresses and provides a vastly larger address space.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q6.</span> What is subnetting, and why is it useful?</summary><div class="qa-body">
+    <p>Subnetting divides an IP network into smaller networks by extending its prefix. It conserves addresses, reduces broadcast domains, improves organization, and enables security boundaries. Splitting <code>192.168.1.0/24</code> into four equal subnets produces four <code>/26</code> networks, each with 64 total IPv4 addresses (normally 62 usable host addresses).</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q7.</span> What do ARP and DHCP do?</summary><div class="qa-body">
+    <p><strong>ARP</strong> resolves an IPv4 address to a MAC address on the local network so an Ethernet frame can reach the next hop. <strong>DHCP</strong> automatically supplies IP configuration using DORA: Discover, Offer, Request, Acknowledge. A lease commonly includes an IP address, subnet mask, gateway, DNS servers, and expiry time.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q8.</span> What is the difference between a hub, switch, router, and gateway?</summary><div class="qa-body">
+    <table><tr><th>Device</th><th>Role</th></tr><tr><td>Hub</td><td>Repeats incoming bits to every port; no traffic intelligence.</td></tr><tr><td>Switch</td><td>Forwards local-network frames using a MAC-address table.</td></tr><tr><td>Router</td><td>Forwards packets between IP networks using a routing table.</td></tr><tr><td>Gateway</td><td>An entry/exit point to another network; it may also translate protocols.</td></tr></table>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q9.</span> What are NAT and PAT?</summary><div class="qa-body">
+    <p><strong>NAT</strong> translates addresses between networks, commonly mapping private IPv4 addresses to public addresses. <strong>PAT</strong> (NAT overload) also translates port numbers so many internal devices can share one public IP. NAT conserves IPv4 addresses, but it is not a substitute for a firewall.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q10.</span> What happens when you enter an HTTPS URL in a browser?</summary><div class="qa-body">
+    <ol><li>The browser parses the URL and checks caches and policies.</li><li>DNS resolves the hostname to an IP address.</li><li>The client reaches the server, normally using TCP plus TLS, or QUIC for HTTP/3.</li><li>During TLS negotiation, the certificate is validated and session keys are established.</li><li>The browser sends the HTTP request; proxies, load balancers, and application servers may handle it.</li><li>The response returns, and the browser parses HTML, fetches dependencies, lays out, and renders the page.</li></ol>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q11.</span> What is the difference between HTTP and HTTPS?</summary><div class="qa-body">
+    <p>HTTPS is HTTP carried through TLS. TLS provides <strong>confidentiality</strong> through encryption, <strong>integrity</strong> against undetected modification, and <strong>authentication</strong> through certificates. HTTPS does not make an application itself secure; authorization, input validation, secure cookies, and other controls are still required.</p>
+  </div></details>
+
+  <details class="qa"><summary><span class="q-num">Q12.</span> How would you troubleshoot a website that is slow or unreachable?</summary><div class="qa-body">
+    <ol><li>Define scope: one user, one region, one endpoint, or everyone.</li><li>Check local connectivity, proxy/VPN settings, and whether the hostname resolves correctly.</li><li>Use <code>ping</code> where permitted, <code>traceroute</code>/<code>tracert</code>, <code>nslookup</code>/<code>dig</code>, and <code>curl -v</code> to isolate DNS, routing, TCP/TLS, and HTTP.</li><li>Check status codes, timing breakdowns, packet loss, latency, firewall rules, load balancer health, and server metrics/logs.</li><li>Compare a known-good client or region and correlate the failure with deployments or configuration changes.</li></ol>
+    <p>Do not assume an application bug until the failing layer is identified.</p>
+  </div></details>
+</main>
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operating Systems — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html" class="active">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Operating Systems — Interview Prep</h1>
+  <p class="page-sub">Curated resources for revising processes, threads, scheduling, concurrency, memory management, deadlocks, file systems, and other operating-system fundamentals.</p>
+
+  <aside class="resource-links" aria-labelledby="os-interview-resources-heading">
+    <h2 id="os-interview-resources-heading">Operating Systems Interview Resources</h2>
+    <ol>
+      <li><a href="https://www.geeksforgeeks.org/operating-systems/operating-systems-interview-questions/" target="_blank" rel="noopener noreferrer">GeeksforGeeks — Operating Systems Interview Questions</a></li>
+      <li><a href="https://www.interviewbit.com/operating-system-interview-questions/" target="_blank" rel="noopener noreferrer">InterviewBit — Operating System Interview Questions</a></li>
+      <li><a href="https://www.gatesmashers.com/resources/operating-system-interview-questions" target="_blank" rel="noopener noreferrer">Gate Smashers — Operating System Interview Questions</a></li>
+    </ol>
+  </aside>
+
+  <h2 class="section-heading">Operating Systems Fundamentals</h2>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is an operating system, and what are its main responsibilities?</summary>
+    <div class="qa-body">
+      <p>An <strong>operating system (OS)</strong> is the software layer between applications and computer hardware. It provides a safe, consistent environment in which programs can run.</p>
+      <p>Its main responsibilities include process and CPU scheduling, memory management, file-system management, device and I/O management, security and access control, networking, and providing system calls through which applications request kernel services.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> What is the difference between a program, a process, and a thread?</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td>Program</td><td>Passive instructions stored on disk, such as an executable file.</td></tr>
+        <tr><td>Process</td><td>A running instance of a program with its own virtual address space and resources.</td></tr>
+        <tr><td>Thread</td><td>A unit of execution inside a process. Threads share the process's code, heap, and open files, but each has its own stack and registers.</td></tr>
+      </table>
+      <p>Creating and switching threads is generally cheaper than doing the same with processes, but shared memory also means threads require careful synchronization.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> What is a context switch?</summary>
+    <div class="qa-body">
+      <p>A <strong>context switch</strong> occurs when the CPU stops executing one process or thread and starts another. The OS saves the current execution state—such as registers, program counter, and stack pointer—and restores the next task's state.</p>
+      <p>Context switching enables multitasking but adds overhead because saving state, running the scheduler, restoring state, and disrupting CPU caches do not perform application work. Excessive switching can therefore reduce throughput.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> What are the common process states?</summary>
+    <div class="qa-body">
+      <p>The common states are <strong>new</strong>, <strong>ready</strong>, <strong>running</strong>, <strong>waiting/blocked</strong>, and <strong>terminated</strong>. A ready process is waiting for CPU time, whereas a blocked process is waiting for an event such as disk I/O, a network response, or a lock.</p>
+      <p>Some operating systems also use suspended-ready and suspended-blocked states when a process is temporarily moved out of main memory.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> What is CPU scheduling? Compare common scheduling algorithms.</summary>
+    <div class="qa-body">
+      <p>CPU scheduling selects which ready process or thread runs next.</p>
+      <table>
+        <tr><th>Algorithm</th><th>Key characteristic</th><th>Trade-off</th></tr>
+        <tr><td>FCFS</td><td>Runs tasks in arrival order</td><td>Simple, but a long task can delay every short task.</td></tr>
+        <tr><td>SJF/SRTF</td><td>Chooses the shortest job or remaining time</td><td>Good average waiting time, but requires duration estimates and may starve long jobs.</td></tr>
+        <tr><td>Round Robin</td><td>Gives each task a fixed time quantum</td><td>Responsive and fair; a tiny quantum creates excessive context switches.</td></tr>
+        <tr><td>Priority</td><td>Runs the highest-priority task first</td><td>Important tasks respond quickly, but low-priority tasks may starve.</td></tr>
+      </table>
+      <p><strong>Aging</strong> gradually raises the priority of waiting tasks to prevent starvation.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> What is a race condition, and how can it be prevented?</summary>
+    <div class="qa-body">
+      <p>A race condition occurs when multiple threads or processes access shared mutable state concurrently and the result depends on their timing. For example, two threads performing a non-atomic read-modify-write increment can overwrite one another's updates.</p>
+      <p>Prevent it using mutexes/locks, semaphores, atomic operations, monitors, immutable data, message passing, or by eliminating shared state. Keep critical sections small and always acquire locks in a consistent order.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> What is the difference between a mutex and a semaphore?</summary>
+    <div class="qa-body">
+      <p>A <strong>mutex</strong> provides mutual exclusion: one owner locks it, enters a critical section, and must unlock it. A <strong>semaphore</strong> maintains a counter; a thread decrements the counter to acquire a permit and increments it to release one.</p>
+      <p>A binary semaphore can resemble a mutex, while a counting semaphore is useful for limiting access to a pool of resources—for example, allowing at most ten concurrent database operations.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q8.</span> What is deadlock, and what four conditions are required for it?</summary>
+    <div class="qa-body">
+      <p>A deadlock is a state in which tasks wait forever for resources held by one another. All four Coffman conditions must exist:</p>
+      <ol>
+        <li><strong>Mutual exclusion:</strong> a resource can be held by only one task.</li>
+        <li><strong>Hold and wait:</strong> a task holds one resource while requesting another.</li>
+        <li><strong>No preemption:</strong> resources cannot be forcibly taken away.</li>
+        <li><strong>Circular wait:</strong> a cycle of tasks exists, each waiting for the next.</li>
+      </ol>
+      <p>Deadlocks can be handled through prevention, avoidance such as Banker's algorithm, detection and recovery, or practical measures such as consistent lock ordering and timeouts.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q9.</span> What is virtual memory, and how does paging work?</summary>
+    <div class="qa-body">
+      <p>Virtual memory gives each process the illusion of a large, private, contiguous address space. The OS and memory-management unit translate virtual addresses into physical RAM addresses.</p>
+      <p>With paging, virtual memory is divided into fixed-size <strong>pages</strong> and physical memory into equal-size <strong>frames</strong>. Page tables store the mappings, while the TLB caches recent translations. Pages that are not currently required may stay on disk and be loaded into RAM on demand.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q10.</span> What is a page fault, and what is thrashing?</summary>
+    <div class="qa-body">
+      <p>A <strong>page fault</strong> occurs when a process accesses a virtual page that is not currently mapped into physical memory. The OS verifies the access, loads the page from disk if necessary, updates the page table, and resumes the instruction. An invalid access instead causes an error such as a segmentation fault.</p>
+      <p><strong>Thrashing</strong> happens when memory pressure makes the system spend most of its time repeatedly swapping pages rather than executing useful work. Reducing active workloads, adding memory, or improving locality can help.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q11.</span> What is the difference between user mode and kernel mode?</summary>
+    <div class="qa-body">
+      <p><strong>User mode</strong> restricts applications from directly accessing protected memory, hardware, or privileged CPU instructions. <strong>Kernel mode</strong> gives the operating-system kernel unrestricted access so it can manage hardware and system resources.</p>
+      <p>An application requests privileged work through a system call. The CPU switches to kernel mode, the kernel validates and performs the operation, and control then returns to user mode. This separation prevents an ordinary application failure from directly corrupting the whole system.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q12.</span> What is inter-process communication (IPC)?</summary>
+    <div class="qa-body">
+      <p>IPC is the set of mechanisms processes use to exchange data and coordinate work. Common options include pipes, named pipes, message queues, shared memory, sockets, signals, and memory-mapped files.</p>
+      <p>Shared memory is fast because processes can access the same region directly, but it needs synchronization. Message passing and sockets provide stronger separation and are easier to distribute across machines, though serialization and data copying add overhead.</p>
+    </div>
+  </details>
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

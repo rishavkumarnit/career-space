@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS & React Quirks — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html" class="active">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">JavaScript &amp; React Interview Handbook</h1>
+  <p class="page-sub">50 output-prediction questions. Click a question to reveal the explanation.</p>
+
+  <details class="qa">
+    <summary><span class="q-num">1.</span> arr.filter(Boolean)</summary>
+    <div class="qa-body">
+      <pre><code>const arr = [1, 0, "", "hello", null, undefined];
+console.log(arr.filter(Boolean));</code></pre>
+      <p><strong>Expected Output:</strong> [1, "hello"]</p>
+      <p><strong>Explanation:</strong> filter invokes the Boolean function as its callback on every element; Boolean(x) is JavaScript's explicit way of asking "is this truthy?" There are exactly 8 falsy values in JS &mdash; false, 0, -0, 0n, "", null, undefined, and NaN &mdash; everything else (including "0", "false", [], {}) is truthy. Here 0 and "" are dropped, but "hello" survives. General rule: filter(Boolean) is shorthand for filter(x =&gt; !!x) and is the idiomatic way to strip falsy/empty values from an array. Gotcha: skip this pattern when a legitimate falsy value (0, false, "") is meaningful data you must keep &mdash; e.g. filtering a list of scores would silently drop a score of 0.</p>
+      <pre><code>arr.filter(item => Boolean(item))</code></pre>
+      <p>Boolean is a built-in function that converts a value to true or false according to JavaScript's truthiness rules.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">2.</span> map(parseInt)</summary>
+    <div class="qa-body">
+      <pre><code>["1","2","3"].map(parseInt)</code></pre>
+      <p><strong>Expected Output:</strong> [1, NaN, NaN]</p>
+      <p><strong>Explanation:</strong> map passes (value, index). The index becomes the radix: parseInt("2", 1) and parseInt("3", 2) are invalid.</p>
+      <pre><code>array.map((element, index, array) => {})
+becomes:
+parseInt("1", 0, ["1", "2", "3"])
+parseInt("2", 1, ["1", "2", "3"])
+parseInt("3", 2, ["1", "2", "3"])
+
+parseInt(string, radix)</code></pre>
+      <p>The third argument is ignored because parseInt accepts only two parameters. 0 means JavaScript infers the base (decimal here): Base 1 is invalid. Base 2 allows only 0 and 1. General rule: this bites any time you hand a function with a different arity directly as a callback to map/forEach/filter, since those methods always call callback(element, index, array) &mdash; extra positional arguments silently change behavior if the callback happens to accept them. Fix: use an explicit radix, e.g. ["1","2","3"].map(n =&gt; parseInt(n, 10)), or simply .map(Number).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">3.</span> this with setTimeout</summary>
+    <div class="qa-body">
+      <pre><code>setTimeout(user.print, 1000)</code></pre>
+      <p><strong>Expected Output:</strong> undefined</p>
+      <p><strong>Explanation:</strong> this in JavaScript is determined by the call-site, not by where a function is defined &mdash; the rule is "what's to the left of the dot when the function is actually invoked?" When you write setTimeout(user.print, 1000) you extract the function reference off user and hand it to setTimeout as a bare, unbound value; setTimeout later calls it as print(), with no object to the left of the dot, so this defaults to undefined in strict mode (or the global object in sloppy mode) and user.print reading this.name yields undefined. General rule: any time a method is passed as a value (callback, event handler, destructured, stored in a variable) it detaches from its object and this binding is lost. Fix it with setTimeout(user.print.bind(user), 1000), setTimeout(() =&gt; user.print(), 1000), or by defining print as an arrow class field so it's lexically bound once at construction.</p>
+      <pre><code>const user = {
+  name: "Asha",
+  print() { console.log(this.name); }
+};
+setTimeout(user.print.bind(user), 1000); // "Asha"
+setTimeout(() =&gt; user.print(), 1000);    // "Asha"</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">4.</span> var vs let in loops</summary>
+    <div class="qa-body">
+      <pre><code>for (var i=0;i<3;i++) setTimeout(()=>console.log(i));</code></pre>
+      <p><strong>Expected Output:</strong> 3 3 3</p>
+      <p><strong>Explanation:</strong> var is function-scoped, so there is only one i binding shared across the whole loop; the loop runs to completion (i becomes 3) before any of the three setTimeout callbacks fires, and each closure reads that same final value, printing 3 3 3. let is block-scoped, and the spec gives for-loops special treatment: each iteration gets a fresh lexical binding of i, copied from the previous iteration's value, so each closure captures its own snapshot and prints 0 1 2. General rule: this is the classic "closures in loops" gotcha &mdash; whenever an async callback (setTimeout, event listener, Promise) is created inside a loop, check whether the loop variable is var (shared, dangerous) or let (per-iteration, safe). Fix for var without switching to let: create a new scope per iteration, e.g. wrap the body in an IIFE or a helper function that takes i as a parameter.</p>
+      <pre><code>for (var i = 0; i < 3; i++) {
+    function process(i){
+        setTimeout(()=>console.log(i))
+    }
+    process(i);
+}</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">5.</span> Event Loop</summary>
+    <div class="qa-body">
+      <pre><code>console.log(1);
+setTimeout(()=>console.log(2));
+Promise.resolve().then(()=>console.log(3));
+console.log(4);</code></pre>
+      <p><strong>Expected Output:</strong> 1 4 3 2</p>
+      <p><strong>Explanation:</strong> console.log(1) and console.log(4) run synchronously during the initial pass through the call stack, so they print first, in order. setTimeout(...) schedules its callback as a macrotask (a "task" in spec terms), which can only run after the current synchronous script finishes AND the microtask queue is fully drained. Promise.resolve().then(...) schedules its callback as a microtask. The event loop's rule is: run the current task to completion, then drain the entire microtask queue (running any microtasks that get queued during that drain too), and only then pick up the next macrotask (timers, I/O, rendering). So the order is: synchronous code (1, 4) &rarr; microtasks (3) &rarr; macrotasks (2). General rule: microtasks (Promise callbacks, queueMicrotask, async/await continuations, MutationObserver) always run before the next macrotask (setTimeout/setInterval, I/O, UI events), no matter how small the timer delay is &mdash; even setTimeout(fn, 0) yields to every pending microtask first.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">6.</span> [] == false</summary>
+    <div class="qa-body">
+      <pre><code>[] == false</code></pre>
+      <p><strong>Expected Output:</strong> true</p>
+      <p><strong>Explanation:</strong> == triggers the Abstract Equality Comparison algorithm, which coerces operands until they're the same type. Comparing an object ([]) with a boolean (false): first false is converted to a number, 0. Now it's [] == 0, an object vs a number, so [] is converted via ToPrimitive &mdash; arrays default to calling toString(), and [].toString() is "" (empty string). Now it's "" == 0, string vs number, so "" is converted with ToNumber to 0. Finally 0 == 0 is true. General rule: == chains through ToNumber/ToPrimitive coercions that are easy to get wrong and hard to predict for mixed types (objects, arrays, booleans, strings). Always prefer === (strict equality, no coercion) in production code, and reserve == only for the well-known `x == null` idiom that intentionally matches both null and undefined.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">7.</span> Object keys</summary>
+    <div class="qa-body">
+      <pre><code>obj[{}] = 1; obj[{}] = 2;</code></pre>
+      <p><strong>Expected Output:</strong> {"[object Object]": 2}</p>
+      <p><strong>Explanation:</strong> Property keys accessed with bracket notation must be a string or a Symbol (the ToPropertyKey coercion). When you use a plain object as a key, JS calls its toString() method, and the default Object.prototype.toString() returns the literal string "[object Object]" for every plain object &mdash; regardless of the object's actual contents. So obj[{}] = 1 and obj[{}] = 2 both really write to obj["[object Object]"], and the second write overwrites the first, leaving {"[object Object]": 2}. General rule: plain objects ({}) can never be distinguished as keys because they all stringify identically; if you need real objects (or any non-string value) as keys with reference-based identity, use a Map, whose keys can be any value and are compared by reference, not by coerced string.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">8.</span> var hoisting</summary>
+    <div class="qa-body">
+      <pre><code>console.log(a); var a = 10;</code></pre>
+      <p><strong>Expected Output:</strong> undefined</p>
+      <p><strong>Explanation:</strong> During the compile/creation phase, the JS engine scans the current scope for var and function declarations and pre-allocates them in memory before any code runs. var declarations are hoisted to the top of their enclosing function (or global scope) and immediately initialized to undefined; only the assignment (a = 10) stays in place and runs later, in source order. So console.log(a) executes after a already exists (as undefined) but before the assignment reaches it, printing undefined rather than throwing a ReferenceError. General rule: contrast this with let/const, which are also hoisted to the top of their block but stay in the Temporal Dead Zone (uninitialized) until their declaration line executes &mdash; accessing them before that throws a ReferenceError instead of silently giving undefined. Avoid the confusion by always declaring variables at the top of their scope, and prefer let/const so the TDZ surfaces this class of bug loudly instead of returning undefined.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">9.</span> Function declarations</summary>
+    <div class="qa-body">
+      <pre><code>foo(); function foo(){}</code></pre>
+      <p><strong>Expected Output:</strong> Works</p>
+      <p><strong>Explanation:</strong> Unlike var (whose value is hoisted only as undefined), a function declaration (function foo(){}) is hoisted along with its entire definition/body during the creation phase, so the binding foo already refers to a callable function before execution reaches the declaration line &mdash; calling foo() above its textual position works fine. General rule: this only applies to function declarations, not function expressions or arrow functions assigned to a variable (const foo = function(){}), whose right-hand side is not hoisted &mdash; only the var/let/const binding itself is (see Q28). Relying on hoisting for readability is discouraged in real code: define functions before use so the flow reads top-to-bottom regardless of hoisting rules.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">10.</span> typeof null</summary>
+    <div class="qa-body">
+      <pre><code>typeof null</code></pre>
+      <p><strong>Expected Output:</strong> "object"</p>
+      <p><strong>Explanation:</strong> In the original JavaScript engine, values were represented as a type tag plus a payload, and objects were tagged with 0 as their type tag. null was represented as the machine null pointer (0x00), which also happened to have a 0 type tag, so typeof misread it as "object". The bug was discovered too late &mdash; fixing it would break existing websites that depended on the behavior, so it was written into the ECMAScript spec permanently for backward compatibility. General rule: never use typeof x === "object" alone to check for "is this a real object" &mdash; it will be true for null too. To reliably check for a plain object, use x !== null &amp;&amp; typeof x === "object", or Object.prototype.toString.call(x) === "[object Object]" if you also need to exclude arrays/dates/etc.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">11.</span> Spread is shallow</summary>
+    <div class="qa-body">
+      <pre><code>const b = {...a}</code></pre>
+      <p><strong>Expected Output:</strong> Nested objects shared</p>
+      <p><strong>Explanation:</strong> The spread operator ({...a}) performs a shallow copy: it creates a brand-new top-level object and copies each of a's own enumerable property values into it. When a property's value is itself a primitive (number, string, boolean), that value is copied outright, so mutating b's primitive fields never affects a. But when a property's value is a reference type (a nested object or array), only the reference (the pointer) is copied &mdash; both a and b end up pointing at the exact same nested object in memory, so mutating a.nested.x through b also changes it for a. General rule: {...a} / [...arr] / Object.assign({}, a) are all shallow-copy mechanisms; for true independence at every level you need a deep clone (structuredClone(a), JSON.parse(JSON.stringify(a)) with its caveats &mdash; see Q34, or a library like lodash's cloneDeep).</p>
+      <pre><code>const a = { name: "x", nested: { count: 1 } };
+const b = { ...a };
+b.nested.count = 99;
+console.log(a.nested.count); // 99 — shared reference</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">12.</span> Promise.all</summary>
+    <div class="qa-body">
+      <pre><code>Promise.all([...])</code></pre>
+      <p><strong>Expected Output:</strong> Rejects on first error</p>
+      <p><strong>Explanation:</strong> Promise.all takes an iterable of promises and returns a single promise that resolves with an array of all the results, but only if every input promise fulfills. It uses fail-fast semantics: the instant any one promise rejects, the combined promise immediately rejects with that same reason, without waiting for the other promises to settle (they keep running in the background, but their results/errors are discarded). General rule: reach for Promise.all when you need every result and a single failure should abort the whole operation (e.g. loading several required resources before rendering a page); reach for Promise.allSettled (Q13) when partial success is acceptable and you want to know the outcome of every promise regardless of failures.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">13.</span> Promise.allSettled</summary>
+    <div class="qa-body">
+      <pre><code>Promise.allSettled([...])</code></pre>
+      <p><strong>Expected Output:</strong> Status array</p>
+      <p><strong>Explanation:</strong> Promise.allSettled never short-circuits: it waits for every input promise to settle (either fulfill or reject) and then resolves with an array of outcome objects, one per input, in the original order &mdash; each is either {status: "fulfilled", value} or {status: "rejected", reason}. The returned promise itself never rejects. General rule: use allSettled whenever you're firing off independent operations where one failure shouldn't hide the results of the others (e.g. batch-uploading files, pinging several APIs for a dashboard) and you need to inspect each result individually afterward.</p>
+      <pre><code>const results = await Promise.allSettled([p1, p2, p3]);
+results.forEach(r =&gt; {
+  if (r.status === "fulfilled") console.log(r.value);
+  else console.error(r.reason);
+});</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">14.</span> async useEffect</summary>
+    <div class="qa-body">
+      <pre><code>useEffect(async ()=>{}, [])</code></pre>
+      <p><strong>Expected Output:</strong> Bad practice</p>
+      <p><strong>Explanation:</strong> React's contract for the useEffect callback is: return either nothing (undefined) or a synchronous cleanup function that React calls before the next effect run / on unmount. Marking the callback async makes it implicitly return a Promise (every async function returns one), regardless of what you return inside it. React does not await that Promise, and it will try to treat whatever you return as a cleanup function; when it isn't one (or is a Promise instead), React logs a warning and cannot run cleanup correctly, which can leak subscriptions/timers. General rule: never make the effect callback itself async &mdash; instead, define and immediately invoke an async function inside the effect, keeping the effect's own return value synchronous.</p>
+      <pre><code>useEffect(() => {
+  let cancelled = false;
+  async function load() {
+    const data = await fetchData();
+    if (!cancelled) setData(data);
+  }
+  load();
+  return () => { cancelled = true; }; // proper sync cleanup
+}, []);</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">15.</span> Race condition in useEffect</summary>
+    <div class="qa-body">
+      <pre><code>Fetch on id change</code></pre>
+      <p><strong>Expected Output:</strong> Old data can overwrite new</p>
+      <p><strong>Explanation:</strong> This is a network race condition: effects don't cancel in-flight requests just because their dependencies changed and the effect re-ran. Each render's effect closure captured its own userId and its own setUser call; if request A (userId=1) happens to resolve after request B (userId=2), A's .then still fires and calls setUser with stale data, overwriting the correct, newer state &mdash; because nothing tells the earlier effect "you're obsolete now." General rule: any effect that kicks off an async operation and later calls a state setter needs a guard that ties the eventual callback back to "am I still the latest/mounted effect instance?" The two idiomatic fixes are a boolean/ref flag flipped in the cleanup function (shown below), or an AbortController whose abort() is called from cleanup so the fetch itself is cancelled (more efficient, since it also stops the network request rather than just ignoring its result).</p>
+      <pre><code>useEffect(() => {
+  const controller = new AbortController();
+  fetch(`/api/users/${userId}`, { signal: controller.signal })
+    .then(res => res.json())
+    .then(data => setUser(data))
+    .catch(err => { if (err.name !== "AbortError") throw err; });
+  return () => controller.abort();
+}, [userId]);</code></pre>
+      <pre><code>function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    fetch(`/api/users/${userId}`)
+      .then(res => res.json())
+      .then(data => setUser(data));
+  }, [userId]);
+  return &lt;div&gt;{user?.name}&lt;/div&gt;;
+}</code></pre>
+      <p>User selects userId = 1 → Request A starts. Immediately selects userId = 2 → Request B starts. Request B finishes first → UI shows User 2 (correct). Request A finishes later → UI shows User 1 (wrong, overwrote newer data).</p>
+      <pre><code>useEffect(() => {
+  let isMounted = true;
+  fetch(`/api/users/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (isMounted) {
+        setUser(data);
+      }
+    });
+  return () => {
+    isMounted = false;
+  };
+}, [userId]);</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">16.</span> React state batching</summary>
+    <div class="qa-body">
+      <pre><code>setCount(count+1); setCount(count+1);</code></pre>
+      <p><strong>Expected Output:</strong> Increments once</p>
+      <p><strong>Explanation:</strong> Both calls to setCount(count + 1) read count from the same render's closure, which hasn't changed yet, so both compute the identical new value (count + 1) and schedule the same state update &mdash; React batches them into a single re-render, and the result is one increment, not two. This is because setCount doesn't mutate state synchronously; it queues an update, and count inside that render stays fixed until the next render happens. General rule: whenever a state update depends on the previous state, use the functional updater form, setCount(prev =&gt; prev + 1), which receives the latest pending value rather than a stale snapshot &mdash; calling it twice in the same event handler then correctly produces +2. React 18+ also auto-batches updates across timeouts/promises/native event handlers (not just React event handlers), so this batching behavior is even more pervasive than before.</p>
+      <pre><code>setCount(prev => prev + 1);
+setCount(prev => prev + 1);
+// count increases by 2, correctly</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">17.</span> Missing dependencies</summary>
+    <div class="qa-body">
+      <pre><code>useEffect(()=>console.log(name), [])</code></pre>
+      <p><strong>Expected Output:</strong> Stale closure</p>
+      <p><strong>Explanation:</strong> useEffect(fn, []) runs fn only once, after the first mount, using the closure created during that first render &mdash; the name variable it captured is whatever name equaled at mount time, forever. Even if the component re-renders later with a new name prop/state value, this effect is never re-run (empty deps mean "run once"), so it keeps logging the original, now-stale value: this is a stale closure. General rule: the dependency array isn't a performance knob you tune to "run less often" &mdash; it's a correctness contract that must list every reactive value (props, state, and anything derived from them) that the effect reads, so the effect always sees fresh data. If you deliberately want "mount only" behavior for a value that legitimately shouldn't retrigger the effect, use a ref to always read the latest value without adding it as a dependency, rather than lying to the dependency array.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">18.</span> useMemo vs useCallback</summary>
+    <div class="qa-body">
+      <pre><code>useCallback(fn,deps)</code></pre>
+      <p><strong>Expected Output:</strong> Equivalent to useMemo(()=>fn,deps)</p>
+      <p><strong>Explanation:</strong> Both hooks skip recomputation across re-renders as long as the dependency array is referentially unchanged, but they memoize different things: useMemo(() =&gt; computeValue(), deps) caches the *return value* of the function you pass, re-running the function only when deps change; useCallback(fn, deps) caches the *function reference itself*, only handing out a new reference when deps change &mdash; it never calls fn for you. useCallback(fn, deps) is exactly equivalent to useMemo(() =&gt; fn, deps). General rule: reach for useCallback when passing a stable function reference to a memoized child (React.memo) or to another hook's dependency array, so that referential equality checks don't fail every render; reach for useMemo when the cost you want to avoid is an expensive computation (filtering/sorting large arrays, derived objects) rather than function identity. Neither hook guarantees the cached value is kept forever &mdash; React may discard the memoization cache under memory pressure, so never use these hooks purely for correctness (e.g. as a substitute for useEffect).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">19.</span> Array(5).map</summary>
+    <div class="qa-body">
+      <pre><code>Array(5).map(...)</code></pre>
+      <p><strong>Expected Output:</strong> Sparse array</p>
+      <p><strong>Explanation:</strong> Array(5) creates an array with length 5 but no actual elements assigned &mdash; the slots are "empty" (holes), not set to undefined; you can see this as Array(5) logging as [ &lt;5 empty items&gt; ] in most consoles. Array iteration methods like map, forEach, and filter specifically skip empty slots (they check HasProperty before invoking the callback), so .map(callback) on Array(5) runs the callback zero times and simply returns another sparse array of the same length, full of holes. General rule: any time you need an array of N real elements, don't reach for Array(N) as if it "creates N items" &mdash; use Array.from({length: 5}, (_, i) =&gt; i) or [...Array(5).keys()] or [...Array(5)] (spreading does convert holes to actual undefined elements, since spread uses the iterator protocol), both of which produce dense arrays that map/forEach will actually iterate over.</p>
+      <pre><code>Array.from({ length: 5 }, (_, i) => i); // [0, 1, 2, 3, 4]
+[...Array(5)].map((_, i) => i);          // [0, 1, 2, 3, 4]</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">20.</span> Object.freeze</summary>
+    <div class="qa-body">
+      <pre><code>Object.freeze(obj)</code></pre>
+      <p><strong>Expected Output:</strong> Shallow freeze</p>
+      <p><strong>Explanation:</strong> Object.freeze only locks the object it's directly called on: it makes existing own properties non-writable and non-configurable, and prevents adding or removing properties on that one object. It does not recursively freeze property values, so if a frozen property holds a reference to another object, that nested object's own properties remain fully writable. Also note: in non-strict mode, assigning to a frozen property fails silently (no error, no effect); in strict mode (including all ES modules and class bodies), the same assignment throws a TypeError. General rule: "frozen" in JS means "shallow frozen" &mdash; for deep immutability you must recursively freeze every nested object yourself (or use a library/Immutable structure), and always test with 'use strict' so violations throw instead of failing silently.</p>
+      <pre><code>const obj = Object.freeze({ inner: { count: 1 } });
+obj.inner.count = 99;      // succeeds — inner isn't frozen
+console.log(obj.inner.count); // 99</code></pre>
+      <p><strong>Object.freeze(obj)</strong> → Disallows adding, deleting, or modifying properties (they become non-configurable and non-writable).<br>
+      <strong>Object.seal(obj)</strong> → Disallows adding or deleting properties, but existing properties can still be modified (they become non-configurable).<br>
+      <strong>Object.preventExtensions(obj)</strong> → Disallows adding new properties, but existing properties can still be modified or deleted.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">21.</span> NaN === NaN</summary>
+    <div class="qa-body">
+      <pre><code>NaN === NaN</code></pre>
+      <p><strong>Expected Output:</strong> false</p>
+      <p><strong>Explanation:</strong> Per the IEEE-754 floating point spec (which JS numbers follow), NaN ("Not a Number") is defined so that it never equals anything, including another NaN &mdash; this holds for ==, ===, and even Object.is in most cases people expect (Object.is(NaN, NaN) is actually true, making it the one exception). This is intentional: NaN represents "the result of an undefined/unrepresentable numeric operation," and two such results (e.g. 0/0 and Math.sqrt(-1)) shouldn't be assumed equal just because both are NaN. General rule: never test for NaN with === or ==; use Number.isNaN(x) (strict, doesn't coerce non-numbers) or the global isNaN(x) (coerces its argument first, so isNaN("abc") is also true &mdash; usually not what you want). Number.isNaN is the safer, more predictable choice in modern code.</p>
+      <pre><code>Number.isNaN(NaN); // true
+Number.isNaN(123); // false
+Number.isNaN("abc"); // false</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">22.</span> 0.1 + 0.2</summary>
+    <div class="qa-body">
+      <pre><code>0.1 + 0.2</code></pre>
+      <p><strong>Expected Output:</strong> 0.30000000000000004</p>
+      <p><strong>Explanation:</strong> Humans normally write numbers in base 10 (decimal), but computers store floating-point values in base 2 (binary), using powers of two such as 1/2, 1/4, 1/8, and 1/16.</p>
+      <p>Just as 1/3 cannot be represented as a finite decimal and repeats as 0.33333..., the decimal fractions 0.1 and 0.2 cannot be represented exactly with a finite number of binary digits. Their binary forms repeat:</p>
+      <pre><code>0.1 = 0.000110011001100110011... (binary)
+0.2 = 0.001100110011001100110... (binary)</code></pre>
+      <p>JavaScript stores numbers as IEEE-754 double-precision floating-point values. Because only a finite number of bits are available, these repeating patterns must be cut off and rounded to nearby representable values. Adding those approximations produces <code>0.30000000000000004</code> instead of exactly <code>0.3</code>.</p>
+      <p>This is not a JavaScript bug; other languages that use IEEE-754 floating-point arithmetic have the same limitation. General rule: avoid direct equality checks for calculated floating-point values and do not store money as raw floating point. Compare using an appropriate tolerance, round only for display, or store currency in the smallest integer unit (such as cents). For exact decimal arithmetic, use a decimal library.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">23.</span> Array equality</summary>
+    <div class="qa-body">
+      <pre><code>[] === []</code></pre>
+      <p><strong>Expected Output:</strong> false</p>
+      <p><strong>Explanation:</strong> Arrays (and objects, functions, and all non-primitive types) are reference types in JS: a variable holding an array doesn't hold the array's contents directly, it holds a pointer to a location in memory. [] === [] creates two separate, independent arrays at two separate memory addresses, so comparing them checks "do these two variables point at the identical memory location?" &mdash; the answer is no, even though both are empty. Only when two variables reference the exact same array instance (const b = a) does === return true. General rule: === and == both use reference equality for objects/arrays; to compare contents you need a deep-equality check (JSON.stringify(a) === JSON.stringify(b) for simple cases, or a proper deep-equal utility like lodash's isEqual for anything with nested structures, dates, or non-JSON-safe values).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">24.</span> Object equality</summary>
+    <div class="qa-body">
+      <pre><code>{x:1} === {x:1}</code></pre>
+      <p><strong>Expected Output:</strong> false</p>
+      <p><strong>Explanation:</strong> Same underlying reason as array equality (Q23): objects are reference types, so {x:1} === {x:1} allocates two distinct objects and compares their memory addresses, not their contents &mdash; the result is false even though the two objects are structurally identical. This is a very common source of bugs in React specifically: passing a fresh object/array literal as a prop or dependency-array entry on every render (e.g. style={{color: "red"}} or useEffect(fn, [{id: 1}])) creates a new reference each time, so referential-equality checks (React.memo, useMemo/useCallback deps, Object.is used internally by React) always see "changed," defeating memoization. General rule: to compare object contents use a deep-equality helper, not ===; to avoid the React performance pitfall, hoist constant object/array literals outside the component or memoize them so the reference stays stable across renders.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">25.</span> Destructuring defaults</summary>
+    <div class="qa-body">
+      <pre><code>const {a=10} = {a:undefined}</code></pre>
+      <p><strong>Expected Output:</strong> 10</p>
+      <p><strong>Explanation:</strong> Destructuring default values are triggered by one condition and one only: the property's value is strictly undefined (either because the key is missing entirely, or, as here, the key exists but its value is literally the undefined value). Since a's value is undefined, the default 10 kicks in. General rule (a very common gotcha): defaults do NOT apply for other "empty-ish" values like null, 0, "", or false &mdash; const {a = 10} = {a: null} destructures a as null, not 10, which surprises people expecting default-means-"any falsy value." If you need a fallback for null as well as undefined, combine destructuring with the nullish coalescing operator explicitly, or normalize the value before destructuring.</p>
+      <pre><code>const {a = 10} = {a: null};
+console.log(a); // null, not 10 — defaults don't cover null</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">26.</span> || vs ??</summary>
+    <div class="qa-body">
+      <pre><code>0 || 100; 0 ?? 100</code></pre>
+      <p><strong>Expected Output:</strong> 100 and 0</p>
+      <p><strong>Explanation:</strong> || (logical OR) evaluates its left operand's truthiness and falls back to the right operand whenever the left is any falsy value &mdash; false, 0, -0, 0n, "", null, undefined, or NaN. Since 0 is falsy, 0 || 100 falls through to 100. ?? (nullish coalescing, ES2020) is narrower and more precise: it falls back to the right operand only when the left is exactly null or undefined, treating every other falsy value (0, "", false, NaN) as a legitimate value to keep. Since 0 is neither null nor undefined, 0 ?? 100 returns 0. General rule: use ?? whenever 0, "", or false are valid, meaningful values you don't want silently replaced by a fallback (e.g. a quantity, a form field, a boolean setting) &mdash; this is the single most common bug || causes in real form/config code. Keep using || only when you genuinely want to treat every falsy value as "absent."</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">27.</span> Optional chaining</summary>
+    <div class="qa-body">
+      <pre><code>user?.name</code></pre>
+      <p><strong>Expected Output:</strong> undefined</p>
+      <p><strong>Explanation:</strong> user?.name (optional chaining, ES2020) first checks whether user is null or undefined; if it is, the entire expression short-circuits immediately and evaluates to undefined without ever attempting to read .name &mdash; this avoids the classic "Cannot read properties of undefined/null" TypeError that a plain user.name would throw. If user is any other value (including a falsy-but-valid one like 0 or ""), the property access proceeds normally. The short-circuiting also propagates through longer chains: a?.b.c.d stops at the very first nullish link and returns undefined for the whole expression, rather than partially evaluating. General rule: optional chaining is for defensive access to properties/methods/array indices that might legitimately be absent (a?.method?.(), arr?.[0]); it should not be sprinkled everywhere as a substitute for validating your data shape, since it can silently mask bugs where a value is unexpectedly missing.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">28.</span> Function expression hoisting</summary>
+    <div class="qa-body">
+      <pre><code>foo(); var foo=function(){}</code></pre>
+      <p><strong>Expected Output:</strong> TypeError</p>
+      <p><strong>Explanation:</strong> var foo = function(){} is two separate steps under the hood: the var foo declaration is hoisted to the top of scope (initialized to undefined, per Q8), but the assignment of the function expression to foo happens in place, at its original source position &mdash; it is NOT hoisted. So when foo() executes before the assignment line runs, foo is still undefined, and undefined() throws "TypeError: foo is not a function". Contrast with Q9, where a function *declaration* hoists its entire definition, so calling it early works fine. General rule: only function declarations (function foo(){}) get their full body hoisted; function expressions and arrow functions assigned via var/let/const only hoist the binding (as undefined, or as TDZ for let/const), never the function value itself. Always define functions before referencing them to avoid depending on hoisting nuances.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">29.</span> Arrow function this</summary>
+    <div class="qa-body">
+      <pre><code>greet: ()=>console.log(this.name)</code></pre>
+      <p><strong>Expected Output:</strong> undefined</p>
+      <p><strong>Explanation:</strong> Regular functions get their this determined by the call-site (Q3's rule: "what's left of the dot at call time?"). Arrow functions are different by design: they have no this binding of their own at all &mdash; they capture this lexically from the nearest enclosing non-arrow function scope at the time and place they were *defined*, and that binding can never be changed later, even with call/apply/bind. If greet: () =&gt; console.log(this.name) is defined as an object literal property at the top level / module scope, the arrow's enclosing scope has this as undefined (in strict mode / ES modules) or the global object, not the object literal &mdash; object literals don't create their own scope. So this.name resolves to undefined. General rule: don't use arrow functions for object methods that need to reference the object via this; use them specifically when you want to inherit this from the surrounding context, e.g. inside a class method or callback where you want `this` to keep referring to the class instance rather than being rebound by the caller.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">30.</span> setState is async</summary>
+    <div class="qa-body">
+      <pre><code>setState(); console.log(state)</code></pre>
+      <p><strong>Expected Output:</strong> Old value</p>
+      <p><strong>Explanation:</strong> setState (class components) and the dispatch function from useState (function components) never mutate state synchronously; they schedule a state update and a re-render. Inside React event handlers (and, since React 18, inside promises/timeouts/native events too via automatic batching), multiple updates are queued and processed together before the component re-renders, so reading the state variable immediately after calling the setter still returns the value from the current, in-progress render's closure &mdash; the "old" value &mdash; not the freshly requested one. The updated value only becomes visible on the *next* render, when the component function runs again with the new state. General rule: never assume state is updated the line after you call its setter; if you need to act on the new value, do it in a useEffect that depends on that state, or use the functional-updater form when the next update depends on the previous state (see Q16).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">31.</span> Stale closures</summary>
+    <div class="qa-body">
+      <pre><code>setInterval inside useEffect</code></pre>
+      <p><strong>Expected Output:</strong> Old state value</p>
+      <p><strong>Explanation:</strong> The effect runs once (empty deps), and inside it setInterval's callback is created exactly once, closing over the count variable as it existed during that first render &mdash; which is 0, and stays 0 forever inside that closure, no matter how many times count actually changes in React's state and re-renders the component. Each re-render creates a *new* count variable and a *new* would-be interval callback, but that new callback is never used because the effect (and its setInterval call) only ran on mount; the original interval keeps firing the original, stale closure. This is the stale closure problem: an async/deferred callback keeps referencing variables from the render in which it was created, not the latest render. General rule: fix by (a) using the functional updater form setCount(c =&gt; c + 1) inside the interval, which doesn't need to read the outer count at all, or (b) keeping a ref that's updated every render and reading ref.current inside the interval, or (c) adding count to the dependency array and recreating the interval each time (clearing the old one in cleanup) if the interval logic must see the true latest value.</p>
+      <pre><code>function Counter() {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    setInterval(() => {
+      console.log(count);
+    }, 1000);
+  }, []);
+  return (
+    &lt;button onClick={() => setCount(count + 1)}&gt;
+      {count}
+    &lt;/button&gt;
+  );
+}
+Expected:
+0
+1
+2
+3
+...
+Actual:
+0
+0
+0
+0
+...</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">32.</span> forEach with async</summary>
+    <div class="qa-body">
+      <pre><code>arr.forEach(async x=>{})</code></pre>
+      <p><strong>Expected Output:</strong> Does not await</p>
+      <p><strong>Explanation:</strong> Array.prototype.forEach is a purely synchronous method: it calls the callback for every element, in order, but it never looks at the callback's return value and never awaits it &mdash; even when the callback is an async function (which returns a Promise). forEach fires off all three async callbacks essentially back-to-back without pausing between them, then returns immediately (synchronously) after the loop, so console.log("Done") runs before any of the awaited setTimeout delays complete. General rule: forEach, map, and filter are all synchronous-only iteration methods &mdash; none of them will pause a loop for a Promise. Whenever iteration steps must run sequentially and each must complete before the next starts, use a plain for or for...of loop with await inside it, since await only pauses the enclosing async function, and a for...of loop's body is inline in that same function (unlike forEach's separate callback function).</p>
+      <pre><code>const nums = [1, 2, 3];
+nums.forEach(async (num) => {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  console.log(num);
+});
+console.log("Done");
+
+// Output:
+// Done
+// 1
+// 2
+// 3</code></pre>
+      <p>If each operation must wait for the previous one:</p>
+      <pre><code>for (const num of nums) {
+  await doSomething(num);
+}</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">33.</span> await in map</summary>
+    <div class="qa-body">
+      <pre><code>const arr = [1, 2, 3];
+const result = arr.map(async x => x);
+console.log(result);
+// [
+//   Promise.resolve(1),
+//   Promise.resolve(2),
+//   Promise.resolve(3)
+// ]</code></pre>
+      <p><strong>Expected Output:</strong> Array of promises</p>
+      <p><strong>Explanation:</strong> Every async function, no matter what it returns internally, always returns a Promise that wraps that return value &mdash; async x =&gt; x is really async x =&gt; { return x; }, which is equivalent to x =&gt; Promise.resolve(x). map calls this callback once per element and simply collects whatever each call returns into a new array; it has no special awareness of Promises, so it produces an array of pending/resolved Promise objects, not their resolved values, and it does not wait for any of them before returning. General rule: map (and forEach, filter) never "await" a callback's Promise for you &mdash; if you want an array of resolved values from an async mapper, wrap the whole thing in Promise.all(arr.map(async x =&gt; ...)) so all the promises run concurrently and you await the combined array afterward.</p>
+      <pre><code>const arr = [1, 2, 3];
+const result = await Promise.all(arr.map(async x => x * 2));
+console.log(result); // [2, 4, 6]</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">34.</span> JSON deep clone</summary>
+    <div class="qa-body">
+      <pre><code>JSON.parse(JSON.stringify(obj))</code></pre>
+      <p><strong>Expected Output:</strong> Loses Dates/functions</p>
+      <p><strong>Explanation:</strong> JSON.stringify serializes a value into JSON text, and JSON.parse reads it back into a brand-new object graph &mdash; which does give you a deep clone, but only for the subset of data JSON itself can represent (objects, arrays, strings, finite numbers, booleans, null). Anything outside that subset is lossy or breaks: Date objects are stringified via toJSON into ISO strings and come back as plain strings, not Dates; functions and undefined values are silently dropped from objects (or turned into null inside arrays); NaN and Infinity become null; Map, Set, and RegExp lose their special behavior entirely. General rule: this trick is fine for quick clones of plain JSON-safe data (e.g. duplicating a simple config object) but is unsafe for domain objects containing dates, class instances, or functions. Prefer the native structuredClone(obj) (available in modern browsers/Node 17+), which correctly clones Dates, Maps, Sets, and more (though it still can't clone functions or DOM nodes), or a dedicated deep-clone utility for full control.</p>
+      <p><strong>No Functions:</strong> throws a DataCloneError on functions/methods.<br>
+      <strong>Prototype Chains:</strong> discards the original prototype, returning a plain object — class instances lose their methods.<br>
+      <strong>Uncloneable Types:</strong> DOM nodes or specific Error types throw an exception.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">35.</span> Nested spread</summary>
+    <div class="qa-body">
+      <pre><code>const b=[...a]</code></pre>
+      <p><strong>Expected Output:</strong> Inner arrays shared</p>
+      <p><strong>Explanation:</strong> Just like object spread (Q11), array spread ([...a]) only copies the top-level array structure: it creates a brand-new outer array and copies each element's value into it. When an element is a primitive, the value itself is copied and the two arrays are independent at that index. When an element is itself an array or object (e.g. a matrix represented as an array of arrays), only the reference to that inner array is copied &mdash; both the original and the copy point to the same nested array in memory, so b[0].push(x) also mutates a[0]. General rule: [...a] (and a.slice(), Array.from(a)) are all shallow-copy operations, regardless of how "copy-like" the syntax looks. For a true independent copy of nested arrays/objects, deep-clone each level manually, use structuredClone(a), or map over the outer array creating new inner copies: a.map(row =&gt; [...row]).</p>
+      <pre><code>const a = [[1, 2], [3, 4]];
+const b = [...a];
+b[0].push(99);
+console.log(a[0]); // [1, 2, 99] — inner array is shared</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">36.</span> reduce</summary>
+    <div class="qa-body">
+      <pre><code>arr.reduce((a,b)=>a+b,0)</code></pre>
+      <p><strong>Expected Output:</strong> Accumulator pattern</p>
+      <p><strong>Explanation:</strong> reduce((accumulator, current, index, array) =&gt; ..., initialValue) walks the array once, left to right, threading a running "accumulator" value through every element: on each call the callback's return value becomes the accumulator for the next call, and after the final element that value is reduce's overall return value. With arr.reduce((a,b) =&gt; a+b, 0), the accumulator starts at 0 (the initialValue) and each step adds the next element, producing a running sum. General rule: reduce is the most general array-transformation tool &mdash; map, filter, and even forEach can all be implemented in terms of reduce &mdash; making it the right choice whenever you're folding a list down into a single summary value (a sum/count/average), building a lookup object from an array (grouping/indexing by key), or flattening nested structures. Gotcha: always pass an explicit initialValue when the array might be empty; without one, reduce on an empty array throws a TypeError instead of returning a sensible default.</p>
+      <pre><code>// group an array of objects by a key
+const groups = people.reduce((acc, p) => {
+  (acc[p.role] ??= []).push(p);
+  return acc;
+}, {});</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">37.</span> useRef vs useState</summary>
+    <div class="qa-body">
+      <pre><code>useRef()</code></pre>
+      <p><strong>Expected Output:</strong> No rerender</p>
+      <p><strong>Explanation:</strong> useState's setter schedules a re-render every time it's called (even if you set the same value, React still re-runs the component to check, though it bails out of the actual DOM update if the value is identical via Object.is). useRef, by contrast, returns a plain mutable object ({ current: ... }) that persists across renders but changing ref.current never triggers a re-render and never participates in React's reconciliation &mdash; it's just a mutable box React happens to remember for you between renders. General rule: use useState for any value whose changes should be reflected in what's rendered on screen (it needs to trigger a re-render); use useRef for values you need to persist across renders but that are "out of band" from rendering &mdash; DOM node handles (via the ref attribute), interval/timeout IDs, previous-value tracking, or any mutable instance variable equivalent in a class component. Mixing them up either causes unnecessary re-renders (mutable ref-like data stored in state) or a UI that silently doesn't update (render-relevant data stored in a ref).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">38.</span> React keys</summary>
+    <div class="qa-body">
+      <pre><code>key={item.id}</code></pre>
+      <p><strong>Expected Output:</strong> Stable reconciliation</p>
+      <p><strong>Explanation:</strong> When React reconciles a list, it needs a stable identity for each item so it can tell "this is the same logical item, just possibly moved/updated" apart from "this item was removed and a different one was added." The key prop is that identity signal: React diffs the new list of keys against the previous render's keys, matches up elements with the same key (reusing their existing DOM nodes and component state rather than tearing them down and recreating them), and only mounts/unmounts elements whose keys are genuinely new/gone. Using a stable, unique identifier like item.id (which doesn't change even if the item's position in the array changes) lets React correctly preserve component state, focus, and animation continuity across re-renders, insertions, deletions, and reordering. General rule: keys must be unique among siblings (not globally) and stable across renders for the same logical item &mdash; never derive them from something that changes on every render (like Math.random() or Date.now()), which defeats the whole purpose by making every item look "new" every time.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">39.</span> key={index}</summary>
+    <div class="qa-body">
+      <pre><code>Dynamic lists</code></pre>
+      <p><strong>Expected Output:</strong> Can cause bugs</p>
+      <p><strong>Explanation:</strong> Using the array index as key ties an item's "identity" to its position, not to the actual data it represents. As long as the list never reorders, never has items inserted/removed from the middle, and never filters, index keys behave fine because index-to-item mapping never changes. But the moment an item is inserted at the front, removed from the middle, or the list is reordered/filtered, every item after that point shifts to a different index &mdash; React now sees "the item at key=2" as unchanged even though the underlying data at that position is completely different, so it reuses the wrong DOM node/component state for it. This causes real bugs: form input values, checkbox states, or component-local state (via useState) can end up attached to the wrong row, and CSS transitions can animate the wrong elements. General rule: index keys are only safe for lists that are static and never reorder/filter/insert in the middle (e.g. a fixed set of tabs); for any dynamic list, always key by a stable, unique field from the data itself (item.id), never by array position.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">40.</span> StrictMode</summary>
+    <div class="qa-body">
+      <pre><code>useEffect(...,[])</code></pre>
+      <p><strong>Expected Output:</strong> Runs twice in dev</p>
+      <p><strong>Explanation:</strong> StrictMode is a development-only diagnostic tool with zero effect in production builds. Since React 18, StrictMode intentionally double-invokes component function bodies and simulates mount &rarr; unmount &rarr; remount for effects (running the effect, then immediately its cleanup function, then the effect again) specifically to surface code that isn't resilient to being mounted more than once &mdash; a scenario that will genuinely occur in production once React's upcoming features (like reusable component state / offscreen rendering) ship. If your effect doesn't clean up properly (e.g. it starts a subscription/interval and doesn't cancel it on cleanup), the double-run under StrictMode will visibly duplicate side effects (double network calls, double timers), which is the intended warning sign rather than a bug in React. General rule: don't try to detect or work around "am I running in StrictMode" &mdash; instead, treat every effect as if it may run, clean up, and re-run at any time, always returning a cleanup function that fully undoes what the effect set up (unsubscribe, clearInterval, abort fetch).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">41.</span> Controlled inputs</summary>
+    <div class="qa-body">
+      <pre><code>value + onChange</code></pre>
+      <p><strong>Expected Output:</strong> React owns state</p>
+      <p><strong>Explanation:</strong> A controlled input's displayed value is derived entirely from React state: value={state} forces the input's rendered content to always match state, and onChange={e =&gt; setState(e.target.value)} is the only path by which that state (and therefore the input) changes &mdash; React, not the DOM, is the single source of truth, which is what makes the value fully predictable, validatable, and resettable from code at any time. An uncontrolled input instead lets the browser's native DOM manage the input's value internally; React only reaches in on demand via a ref (inputRef.current.value) to read the current value when needed (e.g. on submit), and doesn't re-render on every keystroke. General rule: use controlled inputs when you need to validate/transform input as the user types, keep multiple fields in sync, or conditionally disable/reset fields programmatically; use uncontrolled inputs (with refs, or defaultValue for an initial value) for simple forms, file inputs (which can't be controlled at all since browsers don't allow scripts to set a file input's value), or when integrating with non-React code, since they avoid a re-render on every keystroke.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">42.</span> useMemo misuse</summary>
+    <div class="qa-body">
+      <pre><code>Wrong dependency array</code></pre>
+      <p><strong>Expected Output:</strong> Stale values</p>
+      <p><strong>Explanation:</strong> useMemo(() =&gt; computeValue(a, b), deps) only recomputes computeValue when a value in deps changes since the last render; React compares each dependency to its previous value with Object.is and skips recomputation (returning the cached result) if none changed. If the dependency array omits a value that the memoized function actually reads (e.g. it uses b internally but deps is only [a]), React will keep returning the stale cached result even after b changes, because from React's point of view "nothing in deps changed" &mdash; this is the same category of bug as Q17's stale closure, just for useMemo instead of useEffect. General rule: the dependency array is not a manual optimization dial, it's a correctness contract &mdash; every reactive value read inside the memoized function must be listed. Use the eslint-plugin-react-hooks exhaustive-deps rule to catch missing dependencies automatically rather than relying on manual review.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">43.</span> Promise.resolve</summary>
+    <div class="qa-body">
+      <pre><code>Promise.resolve(10)</code></pre>
+      <p><strong>Expected Output:</strong> Resolved Promise</p>
+      <p><strong>Explanation:</strong> Promise.resolve(value) returns a Promise that is already in the "fulfilled" state, with value as its resolution value &mdash; it's a convenience constructor for "I already have this value, but I need to work with it as a Promise" (e.g. to kick off a .then() chain, or to normalize a function that might return either a plain value or a Promise). Its callbacks (.then()) are still scheduled as microtasks, not executed synchronously, even though the value was available immediately &mdash; per spec, .then() callbacks always run asynchronously (in the microtask queue), never during the same synchronous turn they were attached in. One subtlety: if value is itself a thenable/Promise, Promise.resolve() doesn't double-wrap it &mdash; it returns a Promise that adopts the state of that inner promise/thenable instead of creating Promise&lt;Promise&lt;T&gt;&gt;.</p>
+      <pre><code>console.log("start");
+Promise.resolve(10).then(v => console.log(v));
+console.log("end");
+// start, end, 10 — the .then callback is still a microtask</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">44.</span> Promise chaining</summary>
+    <div class="qa-body">
+      <pre><code>.then(()=>Promise.resolve(x))</code></pre>
+      <p><strong>Expected Output:</strong> Automatically flattened</p>
+      <p><strong>Explanation:</strong> Every call to .then() returns a brand-new Promise, which is what makes chaining possible. If the callback passed to .then() returns a plain value, the new Promise resolves immediately with that value. But if the callback returns another Promise (or any thenable), the spec requires the outer Promise to "adopt" that inner Promise's eventual state instead of resolving to "a Promise containing a Promise" &mdash; it automatically waits for the inner Promise to settle and flattens the result, so the next .then() in the chain receives the final unwrapped value, not a nested Promise object. This automatic flattening is what lets you write sequential async steps as a flat chain of .then() calls (or equivalently, sequential await statements) rather than nesting deeper and deeper callbacks ("callback hell"). General rule: always return the inner Promise from a .then() callback (rather than calling it without returning, which "forks" the chain and stops the outer chain from waiting for it) so subsequent steps execute only after that async step truly completes.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">45.</span> finally</summary>
+    <div class="qa-body">
+      <pre><code>promise.finally(...)</code></pre>
+      <p><strong>Expected Output:</strong> Always executes</p>
+      <p><strong>Explanation:</strong> .finally() attaches a callback that runs when the Promise settles, regardless of whether it fulfilled or rejected, and regardless of what value/reason it settled with &mdash; the callback receives no arguments, because its purpose is side effects, not consuming the result. Crucially, .finally()'s callback does not change the outcome of the chain: unless it throws or returns a rejected Promise itself, the original fulfillment value or rejection reason passes through unchanged to the next .then()/.catch() in the chain, as if .finally() weren't there. General rule: use .finally() for cleanup logic that must always run no matter the outcome &mdash; hiding a loading spinner, closing a connection, releasing a lock &mdash; exactly analogous to a try/finally block in synchronous code, which is the async/await equivalent.</p>
+      <pre><code>setLoading(true);
+fetchData()
+  .then(data => setData(data))
+  .catch(err => setError(err))
+  .finally(() => setLoading(false)); // always runs</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">46.</span> instanceof</summary>
+    <div class="qa-body">
+      <pre><code>[] instanceof Array</code></pre>
+      <p><strong>Expected Output:</strong> true</p>
+      <p><strong>Explanation:</strong> x instanceof Constructor checks whether Constructor.prototype appears anywhere in x's prototype chain (the chain of internal [[Prototype]] links traversed via Object.getPrototypeOf). Array.isArray-style objects created via array literals ([]) have their [[Prototype]] set to Array.prototype at creation time, so [] instanceof Array walks up from the array, finds Array.prototype in the chain, and returns true. General rule/gotcha: instanceof relies on prototype identity, which breaks across execution realms &mdash; an array created in a different iframe/window/worker has a different Array constructor and Array.prototype object, so instanceof would incorrectly return false for a genuine array from another realm. For a realm-safe array check, use the dedicated Array.isArray(x) instead of x instanceof Array. Also remember instanceof only works for prototype-chain checks; it can't tell you about an object's actual "shape" (duck typing) the way TypeScript's structural types can.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">47.</span> Object.keys</summary>
+    <div class="qa-body">
+      <pre><code>Object.keys({a:1,b:2})</code></pre>
+      <p><strong>Expected Output:</strong> ["a","b"]</p>
+      <p><strong>Explanation:</strong> Object.keys(obj) returns an array of obj's own (not inherited from the prototype chain) enumerable string-keyed property names, in a defined enumeration order: integer-like keys first in ascending numeric order, then string keys in insertion order, then Symbol keys are excluded entirely (use Object.getOwnPropertySymbols for those). "Own" means properties defined directly on the object, not ones it inherits via its prototype (so keys added via Object.defineProperty with enumerable: false, or inherited methods from a class, are skipped). General rule: Object.keys/values/entries all share this "own + enumerable + string-keyed" filter; if you need to include inherited properties too, use a for...in loop (which does traverse the prototype chain), and if you need Symbol keys, use Object.getOwnPropertySymbols or Reflect.ownKeys(obj) for the complete set of every own key regardless of type or enumerability.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">48.</span> bind</summary>
+    <div class="qa-body">
+      <pre><code>fn.bind(obj)</code></pre>
+      <p><strong>Expected Output:</strong> New function</p>
+      <p><strong>Explanation:</strong> fn.bind(obj) doesn't call fn &mdash; it returns a brand-new function whose this is permanently, irrevocably locked to obj, no matter how that new function is later invoked (as a bare call, as a method on another object, via call/apply, or even with another .bind()). This solves exactly the problem from Q3: passing a method around as a value (to setTimeout, as an event handler, into another module) normally strips its this, but a bound function carries its this with it wherever it goes. bind can also partially apply leading arguments (fn.bind(obj, arg1) "pre-fills" arg1 for every future call), which is why it's sometimes used for currying, not just this-binding. General rule: once a function is bound, its this can never be overridden again by any later call/apply/bind &mdash; this makes bind the right tool specifically when you need to guarantee a stable this for a callback that will be invoked by code you don't control (a library, an event system, a timer).</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">49.</span> call vs apply vs bind</summary>
+    <div class="qa-body">
+      <pre><code>fn.call/apply/bind</code></pre>
+      <p><strong>Expected Output:</strong> Different invocation styles</p>
+      <p><strong>Explanation:</strong> All three methods let you explicitly set the this value a function executes with, overriding whatever the call-site would normally determine (Q3's rule). They differ in when they run and how they pass arguments: fn.call(thisArg, a, b, c) invokes fn immediately with this=thisArg and arguments passed individually, comma-separated; fn.apply(thisArg, [a, b, c]) also invokes immediately with the same this-binding, but takes arguments as a single array (useful when you already have an array of arguments, or historically for spreading arguments before the ...spread syntax existed); fn.bind(thisArg, a, b) does not invoke fn at all &mdash; it returns a new function with this permanently bound (and optionally some leading arguments pre-filled), to be called later, possibly many times. General rule: reach for call/apply for a one-off invocation with a borrowed this (e.g. calling Array.prototype.slice.call(arrayLikeObject) on an array-like object), and reach for bind when you need a reusable, this-safe function reference to hand off to something else (an event listener, a callback registry, setTimeout).</p>
+      <pre><code>function greet(greeting) { return `${greeting}, ${this.name}`; }
+const user = { name: "Asha" };
+greet.call(user, "Hi");           // "Hi, Asha" — runs now
+greet.apply(user, ["Hi"]);        // "Hi, Asha" — runs now, args as array
+const bound = greet.bind(user);   // new function, not run yet
+bound("Hi");                       // "Hi, Asha" — runs later</code></pre>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>

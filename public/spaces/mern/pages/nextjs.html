@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Next.js — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html" class="active">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Next.js Interview Questions</h1>
+  <p class="page-sub">25 questions on rendering, routing, Server Components, data fetching, caching, optimization, and deployment.</p>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is Next.js?</summary>
+    <div class="qa-body">
+      <p>Next.js is a React framework for building full-stack web applications. It adds file-system routing, server rendering, static generation, Server Components, route handlers, image and font optimization, code splitting, and production build tooling around React.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> What is the difference between React and Next.js?</summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>React</th><th>Next.js</th></tr>
+        <tr><td>A library for building component-based user interfaces</td><td>A framework built on React for complete applications</td></tr>
+        <tr><td>Does not prescribe routing or deployment</td><td>Provides routing, server features, build tooling, and deployment options</td></tr>
+        <tr><td>Rendering architecture depends on the chosen setup</td><td>Supports static, dynamic server, streamed, and client rendering</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> What are the main features of Next.js?</summary>
+    <div class="qa-body">
+      <p>Important features include file-system routing, nested layouts, React Server Components, static and dynamic rendering, streaming with Suspense, route handlers, Server Functions, automatic code splitting, optimized images and fonts, metadata APIs, middleware-style request interception, and multiple deployment targets.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> What is file-system routing?</summary>
+    <div class="qa-body">
+      <p>Routes are created from folders and special files. In the App Router, a <code>page.js</code> file exposes a route and <code>layout.js</code> wraps pages below its segment.</p>
+      <pre><code>app/
+├── page.js                 → /
+├── about/page.js           → /about
+└── blog/[slug]/page.js     → /blog/:slug</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> What is the difference between the App Router and Pages Router?</summary>
+    <div class="qa-body">
+      <p>The <strong>App Router</strong> uses the <code>app</code> directory and supports Server Components, nested layouts, streaming, and colocated loading and error UI. The older <strong>Pages Router</strong> uses the <code>pages</code> directory and APIs such as <code>getStaticProps</code> and <code>getServerSideProps</code>. Both are supported, but new applications generally use the App Router.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> What are static, dynamic server, and client rendering?</summary>
+    <div class="qa-body">
+      <p><strong>Static rendering</strong> creates reusable output ahead of requests. <strong>Dynamic rendering</strong> produces output at request time using current data. <strong>Client rendering</strong> runs component logic in the browser after JavaScript loads. A Next.js route can combine server-rendered HTML with interactive Client Components.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> What is Server-Side Rendering (SSR)?</summary>
+    <div class="qa-body">
+      <p>SSR generates HTML on the server for a request. It is useful when content must be current or depends on request data such as cookies. It can improve the initial content and SEO, but adds server work and may require caching to handle high traffic efficiently.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q8.</span> What are Static Site Generation (SSG) and Incremental Static Regeneration (ISR)?</summary>
+    <div class="qa-body">
+      <p><strong>SSG</strong> creates route output before users request it, making it fast to serve and cache. <strong>ISR</strong> allows cached static content to be revalidated after deployment instead of rebuilding the entire site. Use these for content that can be shared across users and tolerate controlled staleness.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q9.</span> What are React Server Components in Next.js?</summary>
+    <div class="qa-body">
+      <p>Pages and layouts in the App Router are Server Components by default. They can fetch from databases and use server-only secrets, and their component code is not added to the client JavaScript bundle. They cannot use browser APIs, event handlers, or stateful hooks such as <code>useState</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q10.</span> When do you need <code>"use client"</code>?</summary>
+    <div class="qa-body">
+      <p>Add <code>"use client"</code> at a module boundary when a component needs state, effects, event handlers, custom client hooks, or browser APIs. Everything imported below that boundary joins the client bundle, so keep the boundary as small and deep in the component tree as practical.</p>
+      <pre><code>"use client";
+
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  return &lt;button onClick={() =&gt; setCount(count + 1)}&gt;{count}&lt;/button&gt;;
+}</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q11.</span> What is hydration?</summary>
+    <div class="qa-body">
+      <p>Hydration is React attaching event handlers and client behavior to server-generated HTML. Server Components themselves are not hydrated; Client Components are. A hydration mismatch occurs when the initial client render produces different markup from the server, often because rendering uses time, randomness, or browser-only values inconsistently.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q12.</span> What are layouts and templates?</summary>
+    <div class="qa-body">
+      <p>Both wrap child routes. A <code>layout.js</code> persists across navigation and preserves its state and DOM. A <code>template.js</code> receives a new instance when its segment changes, so state resets and effects rerun. Layouts suit navigation and shared shells; templates suit transitions or UI that must reset.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q13.</span> How do loading and error files work in the App Router?</summary>
+    <div class="qa-body">
+      <p><code>loading.js</code> provides instant fallback UI and automatically wraps the route segment in Suspense. <code>error.js</code> is a Client Component that acts as an error boundary for a segment and can expose a retry action. <code>not-found.js</code> renders missing-resource UI, commonly triggered with <code>notFound()</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q14.</span> How is data fetched in the App Router?</summary>
+    <div class="qa-body">
+      <p>Server Components can be asynchronous and call <code>fetch</code>, an ORM, or a database client directly. Fetch data near the component that needs it and use parallel requests where possible. Client-side data that updates frequently can use libraries such as SWR or TanStack Query.</p>
+      <pre><code>export default async function Page() {
+  const response = await fetch("https://api.example.com/posts");
+  const posts = await response.json();
+  return &lt;PostList posts={posts} /&gt;;
+}</code></pre>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q15.</span> What are <code>getStaticProps</code>, <code>getServerSideProps</code>, and <code>getStaticPaths</code>?</summary>
+    <div class="qa-body">
+      <p>These are <strong>Pages Router</strong> APIs. <code>getStaticProps</code> supplies build-time data, <code>getServerSideProps</code> runs for each request, and <code>getStaticPaths</code> selects dynamic paths to pre-render. App Router projects instead fetch in Server Components and use APIs such as <code>generateStaticParams</code> and revalidation controls.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q16.</span> How do caching and revalidation work?</summary>
+    <div class="qa-body">
+      <p>Caching stores data or rendered output so work can be reused. Revalidation refreshes cached content by time or on demand. Choose caching intentionally: personalized request data should be dynamic, while shared product or article data may be cached and invalidated after a mutation.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q17.</span> What are Route Handlers?</summary>
+    <div class="qa-body">
+      <p>A <code>route.js</code> file in the App Router defines HTTP handlers using the Web Request and Response APIs. It can implement methods such as <code>GET</code>, <code>POST</code>, and <code>DELETE</code>.</p>
+      <pre><code>// app/api/users/route.js
+export async function GET() {
+  const users = await db.user.findMany();
+  return Response.json(users);
+}</code></pre>
+      <p>Server Components should usually access the data source directly rather than calling an internal Route Handler and adding an unnecessary HTTP round trip.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q18.</span> What are Server Functions and Server Actions?</summary>
+    <div class="qa-body">
+      <p>A Server Function is an asynchronous function marked with <code>"use server"</code>. When passed to a Client Component or form action, it is commonly called a Server Action. They are primarily useful for mutations such as form submissions; input must still be validated and every action must perform authentication and authorization.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q19.</span> How do dynamic routes and navigation work?</summary>
+    <div class="qa-body">
+      <p>A folder such as <code>[slug]</code> creates a dynamic segment, <code>[...slug]</code> creates a catch-all, and <code>[[...slug]]</code> creates an optional catch-all. Use <code>&lt;Link&gt;</code> for normal navigation because it enables client-side transitions and prefetching. App Router client code can use hooks from <code>next/navigation</code>.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q20.</span> What are redirects, rewrites, and request interception?</summary>
+    <div class="qa-body">
+      <p>A <strong>redirect</strong> sends the browser to a different URL. A <strong>rewrite</strong> serves content from another destination while preserving the visible URL. Request interception can run before matching routes to redirect, rewrite, or modify headers and cookies; keep it lightweight and always enforce authorization again near the data or action.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q21.</span> How do environment variables work?</summary>
+    <div class="qa-body">
+      <p>Server code reads variables through <code>process.env</code>. Variables prefixed with <code>NEXT_PUBLIC_</code> may be bundled into browser code and therefore must never contain secrets. Keep credentials in uncommitted environment files or the deployment platform's secret store, and access them only in server-only modules.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q22.</span> How do the Image component and other built-in optimizations help?</summary>
+    <div class="qa-body">
+      <p><code>next/image</code> can size images responsively, lazy-load them, and serve efficient formats. <code>next/font</code> self-hosts and optimizes fonts. Next.js also performs route-based code splitting and supports dynamic imports. Correct image dimensions help prevent layout shift.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q23.</span> How should authentication and authorization be implemented?</summary>
+    <div class="qa-body">
+      <p>Use a trusted authentication library or a carefully designed server session. Prefer secure, HTTP-only, same-site cookies for browser sessions. Check authorization close to every protected database query, Route Handler, and Server Action; hiding UI or redirecting in request interception is not sufficient security by itself.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q24.</span> How can you improve Next.js performance?</summary>
+    <div class="qa-body">
+      <p>Keep Client Component boundaries small, fetch on the server where appropriate, avoid sequential data waterfalls, stream slow sections with Suspense, cache shared work, optimize images and fonts, dynamically import heavy client code, use <code>Link</code> navigation, analyze bundles, and measure real performance rather than assuming every server-rendered route is fast.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q25.</span> How can a Next.js application be deployed?</summary>
+    <div class="qa-body">
+      <p>It can run on a managed Next.js platform, as a Node.js server, in a Docker container, or as a static export when the application needs no runtime server features. A production pipeline should run linting, type checks, tests, and <code>next build</code>, then deploy an immutable artifact with environment configuration supplied at the correct runtime or build stage.</p>
+      <p><strong>Static export note:</strong> configure <code>output: "export"</code> in <code>next.config.js</code>; the older <code>next export</code> command is no longer the preferred setup.</p>
+      <p><strong>Source:</strong> adapted from the linked <a href="https://github.com/niteshgadghar-tech/Interview-Notes/blob/main/next%20js.md" target="_blank" rel="noopener">Next.js Interview Preparation Guide</a> and updated for modern App Router conventions.</p>
+    </div>
+  </details>
+</main>
+
+<footer class="site"><a href="../index.html">&larr; Back to all topics</a></footer>
+
+</body>
+</html>

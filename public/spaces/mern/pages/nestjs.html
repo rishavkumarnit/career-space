@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NestJS — MERN Interview Revision</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1><a href="../index.html">MERN Interview Revision</a></h1>
+    <nav class="topics">
+      <a href="js-quirks.html">JS &amp; React Quirks</a>
+      <a href="js-fundamentals.html">JS Fundamentals</a>
+      <a href="html-css.html">HTML &amp; CSS</a>
+      <a href="sql.html">SQL</a>
+      <a href="mongodb.html">MongoDB</a>
+      <a href="operating-systems.html">Operating Systems</a>
+      <a href="computer-networks.html">Computer Networks</a>
+      <a href="kafka.html">Kafka</a>
+      <a href="node-express.html">Node &amp; Express</a>
+      <a href="nestjs.html" class="active">Nest.js</a>
+      <a href="react.html">React</a>
+      <a href="nextjs.html">Next.js</a>
+      <a href="java-spring-boot.html">Java &amp; Spring Boot</a>
+      <a href="java-interview.html">Java Interview</a>
+      <a href="ruby-on-rails.html">Ruby on Rails</a>
+      <a href="cicd.html">CI/CD</a>
+      <a href="scenario-based-1.html">Scenario-Based 1</a>
+      <a href="scenario-based-2.html">Scenario-Based 2</a>
+      <a href="misc.html">Misc</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">NestJS — Interview Prep</h1>
+  <p class="page-sub">Architecture, dependency injection, and the request lifecycle — the core concepts interviewers probe for Nest-based backend roles.</p>
+
+  <details class="qa">
+    <summary><span class="q-num">Q1.</span> What is NestJS, and how does it differ from Express? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>NestJS is a progressive Node.js framework for building server-side applications. It's TypeScript-first (plain JS is supported too), and borrows heavily from Angular's playbook — modules, decorators, and a built-in dependency injection container.</p>
+      <p>Under the hood, Nest doesn't replace Express — by default it runs <strong>on top of</strong> Express (Fastify is a drop-in alternative), using it as the underlying HTTP adapter. You can still reach the raw request/response via <code>@Req()</code>/<code>@Res()</code>, and existing Express middleware keeps working.</p>
+      <table>
+        <tr><th></th><th>Express</th><th>NestJS</th></tr>
+        <tr><td>Architecture</td><td>Unopinionated — you design the structure</td><td>Opinionated — Modules/Controllers/Providers enforced</td></tr>
+        <tr><td>Language</td><td>JS, TS optional</td><td>TypeScript-first</td></tr>
+        <tr><td>Dependency injection</td><td>None built-in</td><td>Built-in IoC container</td></tr>
+        <tr><td>Scaling structure</td><td>Manual discipline required</td><td>CLI conventions + module boundaries</td></tr>
+        <tr><td>HTTP layer</td><td>Is the HTTP layer</td><td>Sits on top of Express or Fastify</td></tr>
+      </table>
+      <p><strong>Common follow-up:</strong> "so does Nest replace Express?" — no, it wraps it. Nest adds architecture and DI on top; Express (or Fastify) still handles the actual HTTP server underneath.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q2.</span> What are the core building blocks of a Nest application? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Every Nest app is assembled from three primitives:</p>
+      <h3>Modules</h3>
+      <p><code>@Module()</code> — organizes related code into a cohesive unit. Declares which controllers and providers belong to it, what it imports from other modules, and what it exports for others to use. Every app has at least one root module (<code>AppModule</code>).</p>
+      <h3>Controllers</h3>
+      <p><code>@Controller()</code> — handles incoming requests and returns responses. Routes are defined with method decorators (<code>@Get()</code>, <code>@Post()</code>, etc.) and delegate the actual work to providers rather than containing business logic themselves.</p>
+      <h3>Providers</h3>
+      <p><code>@Injectable()</code> — services, repositories, factories, or anything else that can be injected as a dependency. Registered in a module's <code>providers</code> array and handed to whichever controller or provider asks for them in its constructor.</p>
+      <pre><code>// cats.service.ts
+@Injectable()
+export class CatsService {
+  private cats = [];
+  findAll() { return this.cats; }
+}
+
+// cats.controller.ts
+@Controller('cats')
+export class CatsController {
+  constructor(private catsService: CatsService) {}
+
+  @Get()
+  findAll() {
+    return this.catsService.findAll();
+  }
+}
+
+// cats.module.ts
+@Module({
+  controllers: [CatsController],
+  providers: [CatsService],
+})
+export class CatsModule {}</code></pre>
+      <p>The controller never instantiates <code>CatsService</code> itself — Nest's DI container hands it a ready-made instance, which is the whole point of Q3.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q3.</span> What is Dependency Injection in NestJS, and how does it work under the hood? <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>Dependency Injection means a class receives its dependencies from an external source instead of constructing them itself. In Nest, that external source is the Nest IoC (Inversion of Control) container.</p>
+      <p>At startup, Nest reads each class's constructor parameter types — using TypeScript's design-time type metadata, emitted via <code>emitDecoratorMetadata</code> and read back with <code>reflect-metadata</code> — resolves a matching registered provider for each parameter, and injects the instance automatically. Providers are singletons by default: one shared instance per application, reused everywhere they're injected.</p>
+      <p>Not every dependency is a class you can type-hint, though — config values, constants, or third-party clients need a custom token:</p>
+      <pre><code>@Module({
+  providers: [
+    { provide: 'CONFIG_OPTIONS', useValue: { apiKey: '123' } },
+    CatsService,
+  ],
+})
+export class CatsModule {}
+
+@Injectable()
+export class CatsService {
+  constructor(@Inject('CONFIG_OPTIONS') private config: { apiKey: string }) {}
+}</code></pre>
+      <p>Providers can be registered as <code>useClass</code> (swap implementations), <code>useValue</code> (a plain object/constant), or <code>useFactory</code> (computed at runtime, can itself have injected dependencies) — useful for things like picking a different service implementation per environment.</p>
+      <p><strong>Common pitfall:</strong> forgetting to add a provider to its module's <code>exports</code> array. Providers are private to the module that declares them by default — another module that imports yours still can't inject that provider unless you explicitly export it.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q4.</span> Explain the NestJS request lifecycle — Middleware vs Guards vs Interceptors vs Pipes vs Exception Filters <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>This is the question Nest interviews circle back to most. Five different layers can touch a request, and the order matters:</p>
+      <pre><code>Incoming Request
+      │
+      ▼
+  Middleware            ← raw req/res/next; runs before routing is resolved
+      │
+      ▼
+  Guards                ← canActivate(): allow or deny the request
+      │
+      ▼
+  Interceptors (pre)    ← runs before the handler
+      │
+      ▼
+  Pipes                 ← validate/transform params, query, body
+      │
+      ▼
+  Route Handler          (your controller method)
+      │
+      ▼
+  Interceptors (post)   ← can transform the outgoing response
+      │
+      ▼
+  Exception Filters     ← only invoked if something threw
+      │
+      ▼
+  Response</code></pre>
+      <table>
+        <tr><th>Layer</th><th>Purpose</th><th>Example</th></tr>
+        <tr><td>Middleware</td><td>Runs before routing; sees raw req/res, no knowledge of the target handler</td><td>Logging, cookie parsing</td></tr>
+        <tr><td>Guards</td><td><code>canActivate()</code> decides if the request is allowed to proceed</td><td>AuthGuard, RolesGuard</td></tr>
+        <tr><td>Interceptors</td><td>Wrap the handler call; can modify the call or its result on the way out</td><td>Logging, caching, response mapping</td></tr>
+        <tr><td>Pipes</td><td>Validate or transform arguments before the handler runs</td><td>ValidationPipe, ParseIntPipe</td></tr>
+        <tr><td>Exception Filters</td><td>Catch thrown exceptions and format the error response</td><td>HttpExceptionFilter</td></tr>
+      </table>
+      <p><strong>Common follow-up:</strong> "why can't Middleware do authorization?" — Middleware executes before Nest has matched the request to a route handler, so it has no <code>ExecutionContext</code> and can't read route-level metadata (like a custom <code>@Roles()</code> decorator). Guards run after routing is resolved and do get the full context, which is exactly why authorization belongs in a Guard, not Middleware.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q5.</span> What are Pipes used for, and how does the built-in ValidationPipe work? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Pipes operate on the arguments going into a route handler, for two purposes: <strong>transformation</strong> (e.g. a route param string coerced to a number via <code>ParseIntPipe</code>) and <strong>validation</strong> (reject the request with a 400 if the input doesn't pass).</p>
+      <p>The standard pattern combines a DTO class, <code>class-validator</code> decorators, and a global <code>ValidationPipe</code>:</p>
+      <pre><code>// create-cat.dto.ts
+export class CreateCatDto {
+  @IsString()
+  name: string;
+
+  @IsInt()
+  @Min(0)
+  age: number;
+}
+
+// main.ts
+app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+
+// cats.controller.ts
+@Post()
+create(@Body() dto: CreateCatDto) {
+  return this.catsService.create(dto);
+}</code></pre>
+      <p><code>whitelist: true</code> strips any incoming properties that aren't declared on the DTO — a cheap guard against clients sneaking in fields your handler never asked for.</p>
+      <p><strong>Common pitfall:</strong> adding <code>class-validator</code> decorators to a DTO and expecting validation "for free." The decorators are inert until a <code>ValidationPipe</code> is actually wired up (globally, or per-route via <code>@UsePipes()</code>) — without it, invalid payloads sail straight through to the handler.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q6.</span> What are Guards used for? <span class="priority">**</span></summary>
+    <div class="qa-body">
+      <p>Guards decide whether a given request should reach the route handler at all — implementing <code>CanActivate</code>, returning (or resolving to) a boolean. They're applied with <code>@UseGuards()</code> at the method, controller, or global level.</p>
+      <pre><code>@Injectable()
+export class AuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const request = context.switchToHttp().getRequest();
+    return !!request.headers['authorization'];
+  }
+}
+
+@UseGuards(AuthGuard)
+@Get('profile')
+getProfile() { /* ... */ }</code></pre>
+      <p>Role-based access typically pairs a Guard with a custom <code>@Roles()</code> decorator (built on <code>SetMetadata</code>) and Nest's <code>Reflector</code> to read that metadata back inside the guard — <code>reflector.getAllAndOverride('roles', [...])</code> — so one generic <code>RolesGuard</code> can enforce different role requirements per route.</p>
+      <p><strong>Why not just do this in Middleware?</strong> Same answer as Q4 — Guards run with full route context (including custom decorator metadata), Middleware doesn't.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q7.</span> What are Provider scopes in NestJS — DEFAULT vs REQUEST vs TRANSIENT? <span class="priority">*</span></summary>
+    <div class="qa-body">
+      <table>
+        <tr><th>Scope</th><th>Lifetime</th><th>When to use</th></tr>
+        <tr><td>DEFAULT (singleton)</td><td>One instance for the whole app, created once at bootstrap</td><td>The default — almost everything, for performance</td></tr>
+        <tr><td>REQUEST</td><td>A new instance per incoming request, discarded after the response</td><td>Provider needs per-request state, e.g. data read off the request itself</td></tr>
+        <tr><td>TRANSIENT</td><td>A new instance every time the provider is injected</td><td>Rare — stateful helper that must never be shared, even within one request</td></tr>
+      </table>
+      <pre><code>@Injectable({ scope: Scope.REQUEST })
+export class CatsService {}</code></pre>
+      <p><strong>Common pitfall:</strong> reaching for <code>REQUEST</code> scope casually. Scope bubbles up the injection chain — any provider that depends (even indirectly) on a request-scoped provider becomes request-scoped too, so a single request-scoped dependency deep in the graph can force re-instantiation of a large chunk of the app on every request. Default to singleton unless you have a concrete need for per-request state.</p>
+    </div>
+  </details>
+
+</main>
+
+<footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>
+
+</body>
+</html>
