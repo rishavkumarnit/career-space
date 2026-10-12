@@ -1,187 +1,84 @@
-'use client';
+import { BrainCircuit, Code2, ExternalLink, ListChecks } from 'lucide-react';
 
-import { useEffect, useRef, useState } from 'react';
-import { ArrowDownToLine, BrainCircuit, Check, Code2, ExternalLink, FileText, FolderOpen, ListChecks, Plus, Search, Star, Trash2, Upload, X } from 'lucide-react';
-
-type Item = { id: string; title: string; category: string; kind: 'Question' | 'Note' | 'Document'; content: string; done: boolean; starred: boolean; date: string; file?: string; fileName?: string };
-const categories = ['MERN Stack', 'AI & Machine Learning', 'Career & Personal'];
-const seed: Item[] = [];
-const isStarterItem = (item: Item) => /^starter-\d+$/.test(item.id);
-const blank = (): Item => ({ id: crypto.randomUUID(), title: '', category: categories[0], kind: 'Note', content: '', done: false, starred: false, date: new Date().toISOString().slice(0,10) });
 const studySpaces = [
-  { title: 'MERN Interview Questions', description: 'JavaScript, React, Node, databases, system topics, and behavioral prep.', href: '/spaces/mern/index.html', icon: Code2, meta: '20 topic collections' },
-  { title: 'GenAI Interview Prep', description: 'GenAI, RAG, Python, FastAPI, deep learning, evaluation, and production.', href: '/spaces/genai/index.html', icon: BrainCircuit, meta: '9 focused guides' },
-  { title: 'My DSA Sheet', description: 'Searchable problem lists with filters and progress saved in your browser.', href: '/spaces/dsa/index.html', icon: ListChecks, meta: 'DSA practice tracker' },
+  {
+    title: 'MERN Interview Questions',
+    description: 'JavaScript, React, Node, databases, system topics, and behavioral prep.',
+    href: '/spaces/mern/index.html',
+    icon: Code2,
+    meta: '20 topic collections',
+  },
+  {
+    title: 'GenAI Interview Prep',
+    description: 'GenAI, RAG, Python, FastAPI, deep learning, evaluation, and production.',
+    href: '/spaces/genai/index.html',
+    icon: BrainCircuit,
+    meta: '9 focused guides',
+  },
+  {
+    title: 'My DSA Sheet',
+    description: 'Searchable problem lists with filters and progress saved in your browser.',
+    href: '/spaces/dsa/index.html',
+    icon: ListChecks,
+    meta: 'DSA practice tracker',
+  },
 ];
+
 export default function Home() {
-  const [items,setItems] = useState<Item[]>(seed); const [ready,setReady] = useState(false); const [page,setPage] = useState('Overview'); const [query,setQuery] = useState(''); const [category,setCategory] = useState('All topics'); const [editing,setEditing] = useState<Item|null>(null); const [notice,setNotice] = useState(''); const [storageFailed,setStorageFailed] = useState(false); const importRef = useRef<HTMLInputElement>(null);
-  useEffect(()=>{try {const saved=localStorage.getItem('career-space-v1'); if(saved) { const parsed=JSON.parse(saved); if(!validItems(parsed)) throw Error(); setItems(parsed.filter(item=>!isStarterItem(item))); }} catch {setNotice('Saved data could not be loaded. Import a backup to restore it.');setStorageFailed(true);} setReady(true);},[]);
-  useEffect(()=>{if(ready&&!storageFailed) try{localStorage.setItem('career-space-v1',JSON.stringify(items));}catch{setNotice('Browser storage is full or unavailable. Export a backup to preserve your changes.');}},[items,ready,storageFailed]);
-  const patch=(id:string, values:Partial<Item>)=>setItems(a=>a.map(i=>i.id===id?{...i,...values}:i));
-  const questions=items.filter(i=>i.kind==='Question'); const completed=questions.filter(i=>i.done).length;
-  const filtered=items.filter(i=>(page!=='Interview prep'||i.kind==='Question')&&(page!=='My notes'||i.kind==='Note')&&(page!=='Documents'||i.kind==='Document')&&(page!=='Saved items'||i.starred)&&(category==='All topics'||i.category===category)&&`${i.title} ${i.content} ${i.category}`.toLowerCase().includes(query.toLowerCase()));
-  function exportData(){const url=URL.createObjectURL(new Blob([JSON.stringify(items,null,2)],{type:'application/json'})); const a=document.createElement('a');a.href=url;a.download='career-space-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  async function importData(file?:File){if(!file)return;try{const data=JSON.parse(await file.text());if(!validItems(data))throw Error();const personalItems=data.filter(item=>!isStarterItem(item));setItems(old=>[...old.filter(i=>!personalItems.some((d:Item)=>d.id===i.id)),...personalItems]);setStorageFailed(false);setNotice('Backup imported. Matching items were updated.');}catch{setNotice('This backup is not valid. Choose a Career Space JSON export.');} if(importRef.current)importRef.current.value='';}
-  async function attach(file?:File){if(!file)return;if(file.size>2*1024*1024){setNotice('Please choose a file under 2 MB for this browser-based version.');return;}if(!/\.(pdf|docx?|txt|md)$/i.test(file.name)){setNotice('Choose a PDF, Word, text, or Markdown file.');return;}const reader=new FileReader();reader.onerror=()=>setNotice('Could not read this file. Please try again.');reader.onload=()=>setEditing(e=>e?{...e,file:reader.result as string,fileName:file.name,kind:'Document',title:e.title||file.name}:e);reader.readAsDataURL(file);}
-  function openSection(name:string, topic='All topics'){setPage(name);setCategory(topic);setQuery('');}
-  return <div className="shell">
-<aside className="sidebar">
-<a className="brand" href="/">Career Space</a>
-<div className="sidebar-topics">
-<h2>Study spaces</h2>{studySpaces.map(space=>
-<a key={space.href} className="space-link" href={space.href} target="_blank" rel="noopener noreferrer">
-<space.icon size={16}/>{space.title}<ExternalLink size={12}/>
-</a>)}
-<h2 className="topics-heading">Your topics</h2>{categories.map((c,i)=>
-<button key={c} className={`topic-link ${category===c?'active':''}`} aria-pressed={category===c} onClick={()=>openSection('Overview',c)}>
-<span className={`topic-dot topic-dot-${i}`}/>{c}</button>)}</div>
-<div className="sidebar-bottom">
-<div className="local-card">
-<strong>
-<span className="status-dot"/> A space of your own</strong>
-<p>Saved in this browser.<br/>Back up your space anytime.</p>
-<div className="backup-actions">
-<button onClick={exportData}>
-<ArrowDownToLine size={18}/> Export backup</button>
-<button onClick={()=>importRef.current?.click()}>
-<Upload size={18}/> Import backup</button>
-<input ref={importRef} type="file" accept=".json" hidden onChange={e=>importData(e.target.files?.[0])}/>
-</div>
-</div>
-<div className="profile">
-<span className="avatar">ME</span>
-<div>
-<strong>My workspace</strong>
-<small>Personal · Local</small>
-</div>
-</div>
-</div>
-</aside>
-<main>
-<header>
-<span>My workspace</span>
-<span className="header-status">
-<span className="status-dot"/> Browser storage</span>
-</header>
-<div className="content">
-<div className="page-heading">
-<div>
-<h1>My resources</h1>
-<p>Notes, interview prep, and documents in one place.</p>
-</div>
-<button className="primary" disabled={!ready} onClick={()=>setEditing({...blank(),kind:page==='Interview prep'?'Question':page==='Documents'?'Document':'Note'})}>
-<Plus size={20}/> Add resource</button>
-</div>
-<section className="study-section" aria-labelledby="study-spaces-title">
-<div className="study-heading">
-<h2 id="study-spaces-title">Study spaces</h2>
-<p>Your main preparation material, together in Career Space.</p>
-</div>
-<div className="study-grid">{studySpaces.map(space=>
-<a className="study-card" key={space.href} href={space.href} target="_blank" rel="noopener noreferrer">
-<span className="study-icon"><space.icon size={20}/></span>
-<span className="study-card-copy"><strong>{space.title}</strong><small>{space.description}</small><em>{space.meta}</em></span>
-<ExternalLink className="study-open" size={16}/>
-</a>)}</div>
-</section>
-  {notice&&<div className="notice" role="status">{notice}<button aria-label="Dismiss message" onClick={()=>setNotice('')}>
-<X size={16}/>
-</button>
-</div>}
-  <section className="library">
-<div className="library-toolbar">
-<span>{filtered.length} resources · {completed}/{questions.length} questions practiced</span>
-<label className="view-filter">Show<select aria-label="Filter resource type" value={page} onChange={e=>openSection(e.target.value)}>
-<option value="Overview">Everything</option>
-<option value="Interview prep">Questions</option>
-<option value="My notes">Notes</option>
-<option value="Documents">Documents</option>
-<option value="Saved items">Favorites</option>
-</select>
-</label>
-</div>
-<div className="filters">
-<div className="tabs">{['All topics',...categories].map(c=>
-<button key={c} onClick={()=>setCategory(c)} className={category===c?'selected':''}>{c==='AI & Machine Learning'?'AI & ML':c==='Career & Personal'?'Career & Personal':c}</button>)}</div>
-<label className="search">
-<Search size={16}/>
-<input aria-label="Search resources" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search resources…"/>
-</label>
-</div>
-<div className="resource-table">
-<div className="table-head">
-<span>RESOURCE NAME</span>
-<span>TOPIC</span>
-<span>TYPE</span>
-<span>STATUS</span>
-<span/>
-</div>{filtered.map(item=>
-<div className="resource-row" key={item.id}>
-<button className="resource-title" onClick={()=>setEditing({...item})}>
-<span className={`file-icon ${item.kind==='Question'?'purple':item.kind==='Document'?'orange':'blue'}`}>{item.kind==='Question'?<Code2 size={18}/>:<FileText size={18}/>}</span>
-<span>
-<strong>{item.title}</strong>
-<small>{item.kind==='Question'?'Interview question':item.fileName||'Personal knowledge'}</small>
-</span>
-</button>
-<span className={`tag topic-${categories.indexOf(item.category)}`}>{item.category==='AI & Machine Learning'?'AI & ML':item.category==='Career & Personal'?'Career':item.category}</span>
-<span className="type">{item.kind}</span>
-<button className={`practice ${item.done?'done':''}`} onClick={()=>patch(item.id,{done:!item.done})} aria-label={`${item.done?'Mark as in progress':'Mark complete'}: ${item.title}`}>{item.done?<>
-<Check size={12}/> Completed</>:<>○ {item.kind==='Question'?'To practice':'In progress'}</>}</button>
-<button className={`star ${item.starred?'starred':''}`} aria-label={`${item.starred?'Unsave':'Save'} ${item.title}`} onClick={()=>patch(item.id,{starred:!item.starred})}>
-<Star size={17} fill={item.starred?'currentColor':'none'}/>
-</button>
-</div>)}{filtered.length===0&&<div className="empty">
-<FolderOpen size={32}/>
-<h3>A fresh space for your ideas</h3>
-<p>{query?'No resources match your search. Try another term.':'Add your first resource to start building this collection.'}</p>
-<button className="primary" onClick={()=>setEditing({...blank(),kind:page==='Documents'?'Document':page==='Interview prep'?'Question':'Note'})}>
-<Plus size={16}/> Add resource</button>
-</div>}</div>
-</section>
-<footer>
-<span>
-<span className="status-dot"/> {ready?'Your space, saved on this device':'Loading your space…'}</span>
-<span>Personal use · Browser storage</span>
-</footer>
-</div>
-</main>
-  {editing&&<div className="modal-backdrop" onClick={e=>{if(e.target===e.currentTarget)setEditing(null)}}>
-<section className="modal" role="dialog" aria-modal="true" aria-labelledby="editor-title">
-<div className="modal-heading">
-<div>
-<h2 id="editor-title">{items.some(i=>i.id===editing.id)?'Edit resource':'Add a resource'}</h2>
-</div>
-<button aria-label="Close editor" onClick={()=>setEditing(null)}>
-<X/>
-</button>
-</div>
-<form onSubmit={e=>{e.preventDefault();if(!editing.title.trim())return;setItems(a=>a.some(i=>i.id===editing.id)?a.map(i=>i.id===editing.id?editing:i):[editing,...a]);setEditing(null);}}>
-<label>Title<input autoFocus required maxLength={180} value={editing.title} onChange={e=>setEditing({...editing,title:e.target.value})} placeholder="Give your resource a name"/>
-</label>
-<div className="form-row">
-<label>Topic<select value={editing.category} onChange={e=>setEditing({...editing,category:e.target.value})}>{categories.map(c=>
-<option key={c}>{c}</option>)}</select>
-</label>
-<label>Type<select value={editing.kind} onChange={e=>setEditing({...editing,kind:e.target.value as Item['kind']})}>
-<option>Note</option>
-<option>Question</option>
-<option>Document</option>
-</select>
-</label>
-</div>
-<label>{editing.kind==='Question'?'Answer & explanation':'Notes & links'}<textarea rows={8} value={editing.content} onChange={e=>setEditing({...editing,content:e.target.value})} placeholder="Capture an idea, write an answer, or paste a useful link…"/>
-</label>{editing.kind==='Document'&&<div className="upload-box">
-<Upload size={22}/>
-<label>Attach a document<input type="file" accept=".pdf,.doc,.docx,.txt,.md" onChange={e=>attach(e.target.files?.[0])}/>
-</label>
-<small>PDF, Word, TXT or Markdown · Up to 2 MB</small>{editing.file&&<a href={editing.file} download={editing.fileName}>Download {editing.fileName}</a>}</div>}<div className="modal-actions">{items.some(i=>i.id===editing.id)&&<button type="button" className="danger" onClick={()=>{if(confirm('Delete this resource?')){setItems(a=>a.filter(i=>i.id!==editing.id));setEditing(null);}}}>
-<Trash2 size={16}/> Delete</button>}<button type="button" className="secondary" onClick={()=>setEditing(null)}>Cancel</button>
-<button type="submit" className="primary">
-<Check size={16}/> Save resource</button>
-</div>
-</form>
-</section>
-</div>}</div>;
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <a className="brand" href="/">Career Space</a>
+        <div className="sidebar-topics">
+          <h2>Study spaces</h2>
+          {studySpaces.map((space) => (
+            <a
+              key={space.href}
+              className="space-link"
+              href={space.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <space.icon size={16} />
+              {space.title}
+              <ExternalLink size={12} />
+            </a>
+          ))}
+        </div>
+      </aside>
+
+      <main className="simple-main">
+        <div className="content simple-content">
+          <div className="page-heading simple-heading">
+            <div>
+              <h1>Study spaces</h1>
+              <p>Your interview preparation and practice material in one place.</p>
+            </div>
+          </div>
+
+          <section className="study-section" aria-label="Study spaces">
+            <div className="study-grid">
+              {studySpaces.map((space) => (
+                <a
+                  className="study-card"
+                  key={space.href}
+                  href={space.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="study-icon"><space.icon size={20} /></span>
+                  <span className="study-card-copy">
+                    <strong>{space.title}</strong>
+                    <small>{space.description}</small>
+                    <em>{space.meta}</em>
+                  </span>
+                  <ExternalLink className="study-open" size={16} />
+                </a>
+              ))}
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  );
 }
-function validItems(value:unknown): value is Item[]{return Array.isArray(value)&&value.length<=10000&&new Set(value.map(i=>i?.id)).size===value.length&&value.every(i=>i&&typeof i.id==='string'&&typeof i.title==='string'&&categories.includes(i.category)&&['Question','Note','Document'].includes(i.kind)&&typeof i.content==='string'&&typeof i.done==='boolean'&&typeof i.starred==='boolean'&&typeof i.date==='string'&&(i.file===undefined||(typeof i.file==='string'&&/^data:[^,]*;base64,[A-Za-z0-9+/=]*$/.test(i.file)))&&(i.fileName===undefined||typeof i.fileName==='string'));}
