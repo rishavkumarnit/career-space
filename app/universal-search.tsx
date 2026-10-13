@@ -35,7 +35,7 @@ export default function UniversalSearch({ entries }: { entries: SearchEntry[] })
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search MERN, GenAI, and DSA…"
+          placeholder="Search MERN, GenAI, DSA, and LLD…"
           aria-label="Search all study spaces"
         />
         {query && <button type="button" onClick={() => setQuery('')} aria-label="Clear search"><X size={16} /></button>}

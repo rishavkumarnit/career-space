@@ -3,7 +3,7 @@ import path from 'node:path';
 
 export type SearchEntry = {
   title: string;
-  source: 'MERN' | 'GenAI' | 'DSA';
+  source: 'MERN' | 'GenAI' | 'DSA' | 'LLD';
   section: string;
   href: string;
   content: string;
@@ -105,6 +105,20 @@ function buildDsaEntries(): SearchEntry[] {
   });
 }
 
+function buildLldEntries(): SearchEntry[] {
+  const filename = path.join(publicRoot, 'lld', 'index.html');
+  if (!fs.existsSync(filename)) return [];
+  const html = fs.readFileSync(filename, 'utf8');
+
+  return [{
+    title: 'LLD',
+    source: 'LLD',
+    section: 'Low-Level Design',
+    href: '/spaces/lld/index.html',
+    content: plainText(html),
+  }];
+}
+
 export function buildSearchIndex() {
-  return [...buildMernEntries(), ...buildGenAiEntries(), ...buildDsaEntries()];
+  return [...buildMernEntries(), ...buildGenAiEntries(), ...buildDsaEntries(), ...buildLldEntries()];
 }

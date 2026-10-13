@@ -1,4 +1,4 @@
-import { BrainCircuit, Code2, ExternalLink, ListChecks } from 'lucide-react';
+import { Boxes, BrainCircuit, Code2, ExternalLink, ListChecks } from 'lucide-react';
 import UniversalSearch from './universal-search';
 import { buildSearchIndex } from '../lib/search-index';
 
@@ -23,6 +23,13 @@ const studySpaces = [
     href: '/spaces/dsa/index.html',
     icon: ListChecks,
     meta: 'DSA practice tracker',
+  },
+  {
+    title: 'LLD',
+    description: 'Low-level design notes, patterns, examples, and interview preparation.',
+    href: '/spaces/lld/index.html',
+    icon: Boxes,
+    meta: 'Low-level design workspace',
   },
 ];
 
