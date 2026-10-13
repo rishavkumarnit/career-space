@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Design Splitwise — LLD</title>
-  <meta name="description" content="Splitwise low-level design with a single-file Java implementation.">
+  <title>Splitwise Low-Level Design (LLD) in Java</title>
+  <meta name="description" content="Splitwise Low-Level Design (LLD) in Java">
   <link rel="stylesheet" href="../topic.css">
 </head>
 <body>
@@ -12,125 +12,11 @@
     <a class="brand" href="/">Career Space</a>
     <nav aria-label="Breadcrumb"><a href="../index.html">LLD</a><span>/</span><strong>Splitwise</strong></nav>
   </header>
-  <div class="layout">
-    <aside>
-      <p>On this page</p>
-      <a href="#requirements">Requirements</a>
-      <a href="#model">Domain model</a>
-      <a href="#strategies">Split strategies</a>
-      <a href="#balances">Balance logic</a>
-      <a href="#flow">Request flow</a>
-      <a href="#implementation">Java implementation</a>
-      <a href="#complexity">Complexity</a>
-      <a href="#topics">Interview topics</a>
-      <a href="#extensions">Extensions</a>
-    </aside>
-    <main>
-      <section id="requirements">
-        <p class="eyebrow">LLD · Topic 02</p>
-        <h1>Design Splitwise</h1>
-        <p class="lead">A low-level design for recording shared expenses, calculating equal, exact, and percentage splits, tracking net balances, and settling debts. The complete example runs as one Java file.</p>
-        <h2>Functional requirements</h2>
-        <ul>
-          <li>Add users.</li>
-          <li>Record an expense paid by one user for multiple participants.</li>
-          <li>Support <strong>equal</strong>, <strong>exact</strong>, and <strong>percentage</strong> splits.</li>
-          <li>Show who owes whom and how much.</li>
-          <li>Net reverse debts automatically.</li>
-          <li>Allow partial or full settlement.</li>
-        </ul>
-        <div class="note"><strong>Money rule:</strong> Use <code>BigDecimal</code>, a fixed two-decimal scale, and an explicit rounding policy. Binary floating-point types such as <code>double</code> can introduce rounding errors.</div>
-        <img class="chat-diagram" src="../images/splitwise-expense-example.png" alt="Example showing a ₹900 expense paid by A and split equally among A, B, and C">
-      </section>
-
-      <section id="model">
-        <h2>2. Class design</h2>
-        <img class="chat-diagram" src="../images/splitwise-class-design.png" alt="Splitwise class design diagram from the linked chat response">
-      </section>
-
-      <section id="strategies">
-        <h2>Split strategies</h2>
-        <p>The Strategy pattern isolates the calculation rules. Adding another method, such as shares or adjustments, does not require changing balance storage.</p>
-        <div class="table-wrap"><table><thead><tr><th>Strategy</th><th>Input</th><th>Validation</th></tr></thead><tbody>
-          <tr><td>Equal</td><td>Participants</td><td>Divide total by count; give the final participant the rounding remainder.</td></tr>
-          <tr><td>Exact</td><td>One amount per participant</td><td>All amounts must sum to the expense total.</td></tr>
-          <tr><td>Percent</td><td>One percentage per participant</td><td>Percentages must sum to 100; correct the final rounding remainder.</td></tr>
-        </tbody></table></div>
-        <p>The factory maps <code>SplitType</code> to the correct strategy. The service calls only the common <code>SplitStrategy.calculate()</code> contract.</p>
-      </section>
-
-      <section id="balances">
-        <h2>Balance and netting logic</h2>
-        <p>The balance sheet stores a directed edge:</p>
-        <pre><code>balances[creditor][debtor] = amount the debtor owes the creditor</code></pre>
-        <p>When Rishav pays ₹600 for Aman, add an edge <code>Rishav ← Aman: ₹600</code>. If Aman later pays ₹250 for Rishav, subtract the reverse edge and keep only the net debt:</p>
-        <pre><code>Rishav ← Aman: 600
-Aman   ← Rishav: 250
-----------------------
-Rishav ← Aman: 350</code></pre>
-        <p>This pairwise netting keeps output readable and avoids simultaneously storing opposite debts between two users. It does not globally minimize the number of transactions across a large group; that can be a separate simplification step.</p>
-      </section>
-
-      <section id="flow">
-        <h2>Expense request flow</h2>
-        <ol class="steps">
-          <li><strong>Validate</strong><span>Check payer, participants, uniqueness, and positive total.</span></li>
-          <li><strong>Select strategy</strong><span>Choose equal, exact, or percent from the expense type.</span></li>
-          <li><strong>Calculate shares</strong><span>Produce one monetary share per participant.</span></li>
-          <li><strong>Update balances</strong><span>Every participant except the payer owes their share to the payer.</span></li>
-          <li><strong>Save expense</strong><span>Keep an immutable expense record for history and audit.</span></li>
-        </ol>
-      </section>
-
-      <section id="implementation">
-        <h2>Single-file Java implementation</h2>
-        <p>The example includes validation, three split strategies, reverse-debt netting, settlements, and a runnable <code>main</code> method.</p>
-        <p><a class="file-link" href="../examples/SplitwiseLLD.java" download>Download SplitwiseLLD.java</a></p>
-        <pre class="code-file"><code id="java-code">Loading Java source…</code></pre>
-        <div class="note"><strong>Run:</strong> <code>javac SplitwiseLLD.java</code>, then <code>java SplitwiseLLD</code>. Java 17 or newer is required because the example uses records and switch expressions.</div>
-      </section>
-
-      <section id="complexity">
-        <h2>Complexity</h2>
-        <div class="table-wrap"><table><thead><tr><th>Operation</th><th>Time</th><th>Reason</th></tr></thead><tbody>
-          <tr><td>Add expense</td><td>O(P)</td><td>Calculate and apply one share for each of P participants.</td></tr>
-          <tr><td>Settle debt</td><td>O(1)</td><td>Direct lookup of one creditor–debtor pair.</td></tr>
-          <tr><td>Show balances</td><td>O(E)</td><td>Traverse stored non-zero debt edges.</td></tr>
-          <tr><td>Storage</td><td>O(X + E)</td><td>X expense records plus E non-zero debt edges.</td></tr>
-        </tbody></table></div>
-      </section>
-
-      <section id="topics">
-        <h2>Topics to know for the interview</h2>
-        <details open><summary>Object-oriented design</summary><p>Entities, value objects, immutability, encapsulation, composition, and assigning each class one responsibility.</p></details>
-        <details><summary>Strategy and Factory patterns</summary><p>Strategy makes split rules interchangeable. Factory centralizes strategy selection. Discuss when dependency injection would replace direct construction.</p></details>
-        <details><summary>Money and rounding</summary><p>Explain why <code>BigDecimal</code> is safer than <code>double</code>, how scale and rounding mode work, and how to allocate the remainder without losing money.</p></details>
-        <details><summary>Validation and invariants</summary><p>Exact shares equal the total, percentages equal 100, participant IDs are valid and unique, totals are positive, and settlements never exceed current debt.</p></details>
-        <details><summary>Concurrency and consistency</summary><p>Two expenses may update the same balance concurrently. A production design needs database transactions, optimistic or pessimistic locking, idempotency keys, and a clear consistency model.</p></details>
-        <details><summary>Persistence design</summary><p>Separate users, groups, expenses, splits, and settlements. Balances can be computed from a ledger or maintained as a projection for faster reads.</p></details>
-      </section>
-
-      <section id="extensions">
-        <h2>Production extensions</h2>
-        <ul class="memory">
-          <li><strong>01</strong><span>Groups, group membership, and group-specific currencies.</span></li>
-          <li><strong>02</strong><span>Recurring expenses, comments, receipts, and notifications.</span></li>
-          <li><strong>03</strong><span>A ledger of immutable expense and settlement events for auditability.</span></li>
-          <li><strong>04</strong><span>Global debt simplification to reduce the number of payments.</span></li>
-          <li><strong>05</strong><span>REST APIs, authentication, authorization, pagination, and idempotency.</span></li>
-          <li><strong>06</strong><span>Multi-currency conversion with an exchange-rate snapshot per expense.</span></li>
-        </ul>
-      </section>
-    </main>
-  </div>
-  <script>
-    fetch('../examples/SplitwiseLLD.java')
-      .then((response) => {
-        if (!response.ok) throw new Error('Unable to load source');
-        return response.text();
-      })
-      .then((source) => { document.getElementById('java-code').textContent = source; })
-      .catch(() => { document.getElementById('java-code').textContent = 'Open the download link above to view the Java source.'; });
-  </script>
+  <main class="source-response">
+    <h1>Splitwise Low-Level Design (LLD) in Java</h1>
+    <article id="original-response" aria-label="Original Splitwise LLD response"></article>
+    <noscript>JavaScript is required to display the original response.</noscript>
+  </main>
+  <script src="../splitwise-render.js"></script>
 </body>
 </html>

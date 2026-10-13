@@ -112,6 +112,18 @@ function buildLldEntries(): SearchEntry[] {
   return fs.readdirSync(directory).filter((file) => file.endsWith('.html')).flatMap((file) => {
     const html = fs.readFileSync(path.join(directory, file), 'utf8');
     const sections = [...html.matchAll(/<section\b[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/section>/gi)];
+    const companion = path.join(publicRoot, 'lld', 'content', file.replace(/\.html$/, '-response.txt'));
+
+    if (!sections.length) {
+      const title = htmlTitle(html, file.replace(/\.html$/, ''));
+      return [{
+        title,
+        source: 'LLD' as const,
+        section: title,
+        href: `/spaces/lld/pages/${file}`,
+        content: fs.existsSync(companion) ? fs.readFileSync(companion, 'utf8') : plainText(html),
+      }];
+    }
 
     return sections.map((section) => {
       const heading = section[2].match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i)?.[1] || htmlTitle(html, file);
