@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOLID Principles in Java — LLD</title>
+  <meta name="description" content="SOLID principles explained with Java and Spring Boot code examples.">
+  <link rel="stylesheet" href="../topic.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">Career Space</a>
+    <nav aria-label="Breadcrumb"><a href="../index.html">LLD</a><span>/</span><strong>SOLID</strong></nav>
+  </header>
+  <div class="layout">
+    <aside>
+      <p>On this page</p>
+      <a href="#overview">Overview</a>
+      <a href="#srp">S — SRP</a>
+      <a href="#ocp">O — OCP</a>
+      <a href="#lsp">L — LSP</a>
+      <a href="#isp">I — ISP</a>
+      <a href="#dip">D — DIP</a>
+      <a href="#comparison">Quick comparison</a>
+      <a href="#questions">Interview questions</a>
+      <a href="#remember">Remember SOLID</a>
+    </aside>
+    <main>
+      <section id="overview">
+        <p class="eyebrow">LLD · Topic 01</p>
+        <h1>SOLID Principles in Java</h1>
+        <p class="lead">SOLID is a set of five object-oriented design principles used to write code that is maintainable, extensible, testable, and loosely coupled. These principles are especially useful when building Java and Spring Boot applications.</p>
+        <div class="table-wrap"><table><thead><tr><th>Principle</th><th>Full form</th><th>Main idea</th></tr></thead><tbody>
+          <tr><td>S</td><td>Single Responsibility Principle</td><td>One class, one responsibility</td></tr>
+          <tr><td>O</td><td>Open/Closed Principle</td><td>Extend behavior without modifying existing code</td></tr>
+          <tr><td>L</td><td>Liskov Substitution Principle</td><td>Subclasses must behave correctly in place of their parent</td></tr>
+          <tr><td>I</td><td>Interface Segregation Principle</td><td>Don't force classes to implement unused methods</td></tr>
+          <tr><td>D</td><td>Dependency Inversion Principle</td><td>Depend on abstractions, not concrete implementations</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="srp">
+        <p class="letter">S</p><h2>Single Responsibility Principle (SRP)</h2>
+        <p class="definition"><strong>Definition:</strong> A class should have only one reason to change.</p>
+        <p>Suppose we are developing an e-commerce application.</p>
+        <h3><span class="bad">Bad</span> Violates SRP</h3>
+<pre><code>public class OrderService {
+    public void createOrder(Order order) {
+        System.out.println("Order saved");
+    }
+
+    public void sendEmail(Order order) {
+        System.out.println("Email sent");
+    }
+
+    public void generateInvoice(Order order) {
+        System.out.println("Invoice generated");
+    }
+}</code></pre>
+        <p><strong>Problem:</strong> <code>OrderService</code> has three responsibilities: order persistence, email notifications, and invoice generation. A change to any one of these concerns requires changing the same class.</p>
+        <h3><span class="good">Good</span> Follows SRP</h3>
+<pre><code>public class OrderRepository {
+    public void save(Order order) {
+        System.out.println("Order saved");
+    }
+}
+
+public class EmailService {
+    public void sendEmail(Order order) {
+        System.out.println("Email sent");
+    }
+}
+
+public class InvoiceService {
+    public void generateInvoice(Order order) {
+        System.out.println("Invoice generated");
+    }
+}</code></pre>
+        <p>Each class now handles one responsibility. An orchestrator can coordinate them:</p>
+<pre><code>public class OrderService {
+    private final OrderRepository repository;
+    private final EmailService emailService;
+    private final InvoiceService invoiceService;
+
+    public OrderService(OrderRepository repository,
+                        EmailService emailService,
+                        InvoiceService invoiceService) {
+        this.repository = repository;
+        this.emailService = emailService;
+        this.invoiceService = invoiceService;
+    }
+
+    public void placeOrder(Order order) {
+        repository.save(order);
+        emailService.sendEmail(order);
+        invoiceService.generateInvoice(order);
+    }
+}</code></pre>
+        <div class="note"><strong>Important:</strong> SRP doesn't mean a class can have only one method. Its methods should serve one cohesive responsibility.</div>
+      </section>
+
+      <section id="ocp">
+        <p class="letter">O</p><h2>Open/Closed Principle (OCP)</h2>
+        <p class="definition"><strong>Definition:</strong> Software entities should be open for extension but closed for modification.</p>
+        <p>Imagine a payment system supporting UPI, credit cards, and PayPal.</p>
+        <h3><span class="bad">Bad</span> Violates OCP</h3>
+<pre><code>public class PaymentService {
+    public void pay(String paymentType, double amount) {
+        if (paymentType.equals("UPI")) {
+            System.out.println("UPI payment");
+        } else if (paymentType.equals("CARD")) {
+            System.out.println("Card payment");
+        } else if (paymentType.equals("PAYPAL")) {
+            System.out.println("PayPal payment");
+        }
+    }
+}</code></pre>
+        <p><strong>Problem:</strong> Every new payment method requires modifying the existing <code>PaymentService</code>.</p>
+        <h3><span class="good">Good</span> Follows OCP</h3>
+<pre><code>public interface PaymentMethod {
+    void pay(double amount);
+}
+
+public class UpiPayment implements PaymentMethod {
+    @Override
+    public void pay(double amount) {
+        System.out.println("Paid using UPI");
+    }
+}
+
+public class CardPayment implements PaymentMethod {
+    @Override
+    public void pay(double amount) {
+        System.out.println("Paid using Card");
+    }
+}
+
+public class PaymentService {
+    public void processPayment(PaymentMethod method, double amount) {
+        method.pay(amount);
+    }
+}</code></pre>
+        <p>Usage:</p>
+<pre><code>PaymentService service = new PaymentService();
+service.processPayment(new UpiPayment(), 1000);
+service.processPayment(new CardPayment(), 2000);</code></pre>
+        <p>A cryptocurrency implementation can now be added without changing <code>PaymentService</code>:</p>
+<pre><code>public class CryptoPayment implements PaymentMethod {
+    @Override
+    public void pay(double amount) {
+        System.out.println("Paid using Crypto");
+    }
+}</code></pre>
+        <div class="note"><strong>Key idea:</strong> Use interfaces and polymorphism to extend behavior without repeatedly changing stable business logic.</div>
+      </section>
+
+      <section id="lsp">
+        <p class="letter">L</p><h2>Liskov Substitution Principle (LSP)</h2>
+        <p class="definition"><strong>Definition:</strong> Objects of a subclass should be replaceable with objects of their parent class without breaking expected behavior.</p>
+        <h3><span class="bad">Bad</span> Violates LSP</h3>
+<pre><code>public class Bird {
+    public void fly() {
+        System.out.println("Flying...");
+    }
+}
+
+public class Sparrow extends Bird {}
+
+public class Penguin extends Bird {
+    @Override
+    public void fly() {
+        throw new UnsupportedOperationException("Penguins cannot fly");
+    }
+}
+
+public void makeBirdFly(Bird bird) {
+    bird.fly();
+}
+
+makeBirdFly(new Sparrow()); // Works
+makeBirdFly(new Penguin()); // Runtime exception</code></pre>
+        <p><strong>Problem:</strong> <code>Penguin</code> cannot fulfill the flying behavior promised by its parent class.</p>
+        <h3><span class="good">Good</span> Follows LSP</h3>
+<pre><code>public abstract class Bird {
+    public abstract void eat();
+}
+
+public interface Flyable {
+    void fly();
+}
+
+public class Sparrow extends Bird implements Flyable {
+    @Override
+    public void eat() { System.out.println("Sparrow eating"); }
+
+    @Override
+    public void fly() { System.out.println("Sparrow flying"); }
+}
+
+public class Penguin extends Bird {
+    @Override
+    public void eat() { System.out.println("Penguin eating"); }
+}
+
+public void makeBirdFly(Flyable bird) {
+    bird.fly();
+}</code></pre>
+        <p>A penguin cannot be passed to <code>makeBirdFly()</code> because it doesn't implement <code>Flyable</code>.</p>
+        <div class="note"><strong>Key idea:</strong> Inheritance should preserve behavioral contracts, not merely represent an is-a relationship. LSP also applies to return values, exceptions, preconditions, and postconditions.</div>
+      </section>
+
+      <section id="isp">
+        <p class="letter">I</p><h2>Interface Segregation Principle (ISP)</h2>
+        <p class="definition"><strong>Definition:</strong> Clients should not be forced to depend on methods they do not use.</p>
+        <h3><span class="bad">Bad</span> Violates ISP</h3>
+<pre><code>public interface Employee {
+    void work();
+    void attendMeeting();
+    void writeCode();
+}
+
+public class SecurityGuard implements Employee {
+    public void work() { System.out.println("Guarding"); }
+    public void attendMeeting() { throw new UnsupportedOperationException(); }
+    public void writeCode() { throw new UnsupportedOperationException(); }
+}</code></pre>
+        <p><strong>Problem:</strong> <code>SecurityGuard</code> is forced to implement methods irrelevant to its responsibility.</p>
+        <h3><span class="good">Good</span> Follows ISP</h3>
+<pre><code>public interface Workable {
+    void work();
+}
+
+public interface MeetingAttendee {
+    void attendMeeting();
+}
+
+public interface Programmer {
+    void writeCode();
+}
+
+public class Developer implements Workable, MeetingAttendee, Programmer {
+    public void work() { System.out.println("Working"); }
+    public void attendMeeting() { System.out.println("Attending meeting"); }
+    public void writeCode() { System.out.println("Writing code"); }
+}
+
+public class SecurityGuard implements Workable {
+    public void work() { System.out.println("Guarding"); }
+}</code></pre>
+        <div class="note"><strong>Key idea:</strong> Prefer small, focused interfaces instead of large interfaces containing unrelated methods.</div>
+      </section>
+
+      <section id="dip">
+        <p class="letter">D</p><h2>Dependency Inversion Principle (DIP)</h2>
+        <p class="definition"><strong>Definition:</strong> High-level modules should not depend on low-level modules. Both should depend on abstractions.</p>
+        <p>This is particularly important in Spring Boot applications.</p>
+        <h3><span class="bad">Bad</span> Violates DIP</h3>
+<pre><code>public class MySQLDatabase {
+    public void save(String data) {
+        System.out.println("Saved to MySQL");
+    }
+}
+
+public class UserService {
+    private MySQLDatabase database = new MySQLDatabase();
+
+    public void createUser(String name) {
+        database.save(name);
+    }
+}</code></pre>
+        <p><strong>Problem:</strong> <code>UserService</code> depends directly on <code>MySQLDatabase</code>. Switching to PostgreSQL requires changing the service.</p>
+        <h3><span class="good">Good</span> Follows DIP</h3>
+<pre><code>public interface Database {
+    void save(String data);
+}
+
+public class MySQLDatabase implements Database {
+    @Override
+    public void save(String data) { System.out.println("Saved to MySQL"); }
+}
+
+public class PostgreSQLDatabase implements Database {
+    @Override
+    public void save(String data) { System.out.println("Saved to PostgreSQL"); }
+}
+
+public class UserService {
+    private final Database database;
+
+    public UserService(Database database) {
+        this.database = database;
+    }
+
+    public void createUser(String name) {
+        database.save(name);
+    }
+}</code></pre>
+        <p>Usage:</p>
+<pre><code>Database db = new PostgreSQLDatabase();
+UserService service = new UserService(db);
+service.createUser("Rahul");</code></pre>
+        <h3>How DIP works in Spring Boot</h3>
+<pre><code>public interface NotificationService {
+    void send(String message);
+}
+
+@Service
+public class EmailNotificationService implements NotificationService {
+    @Override
+    public void send(String message) {
+        System.out.println("Email: " + message);
+    }
+}
+
+@Service
+public class OrderService {
+    private final NotificationService notificationService;
+
+    public OrderService(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+
+    public void placeOrder() {
+        notificationService.send("Order placed");
+    }
+}</code></pre>
+        <p>Spring injects <code>EmailNotificationService</code> into <code>OrderService</code>. With multiple implementations, use <code>@Qualifier</code> or <code>@Primary</code> to choose one.</p>
+        <div class="note"><strong>Important distinction:</strong> Dependency Injection is a technique; Dependency Inversion is a design principle. You can use DI without fully following DIP.</div>
+      </section>
+
+      <section id="comparison">
+        <h2>SOLID principles — Quick comparison</h2>
+        <div class="table-wrap"><table><thead><tr><th>Principle</th><th>What it prevents</th><th>Common Java technique</th></tr></thead><tbody>
+          <tr><td>SRP</td><td>Classes with unrelated responsibilities</td><td>Separate services/classes</td></tr>
+          <tr><td>OCP</td><td>Constant modification of existing code</td><td>Interfaces, polymorphism, Strategy pattern</td></tr>
+          <tr><td>LSP</td><td>Subclasses breaking parent contracts</td><td>Correct inheritance and contracts</td></tr>
+          <tr><td>ISP</td><td>Large interfaces with unnecessary methods</td><td>Smaller capability-based interfaces</td></tr>
+          <tr><td>DIP</td><td>Tight coupling to concrete classes</td><td>Abstractions, constructor injection</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="questions">
+        <h2>Common interview questions</h2>
+        <details><summary>What is the difference between SRP and ISP?</summary><p>SRP focuses on the responsibilities of a class or module. ISP prevents clients from depending on interface methods they don't need.</p></details>
+        <details><summary>What is the difference between OCP and DIP?</summary><p>OCP says behavior should be extendable without modifying existing code. DIP helps achieve that by making high-level logic depend on abstractions.</p></details>
+        <details><summary>Does using an interface automatically satisfy SOLID?</summary><p>No. Interfaces are tools. Poorly designed interfaces can still violate SRP, LSP, or ISP.</p></details>
+        <details><summary>Which SOLID principles are most commonly used in Spring Boot?</summary><p>All five are relevant, but SRP, OCP, and DIP are especially visible in service-layer architecture, strategy implementations, and dependency injection.</p></details>
+        <details><summary>Is inheritance required for LSP?</summary><p>LSP applies to behavioral subtyping, including both class inheritance and interface implementations in Java.</p></details>
+      </section>
+
+      <section id="remember">
+        <h2>A useful way to remember SOLID</h2>
+        <ul class="memory">
+          <li><strong>S</strong><span>Give each class a focused responsibility.</span></li>
+          <li><strong>O</strong><span>Add new behavior without changing stable existing logic.</span></li>
+          <li><strong>L</strong><span>A subtype must honor its parent's contract.</span></li>
+          <li><strong>I</strong><span>Don't make clients depend on capabilities they don't need.</span></li>
+          <li><strong>D</strong><span>Depend on interfaces or abstractions rather than concrete implementations.</span></li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

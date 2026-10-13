@@ -106,17 +106,24 @@ function buildDsaEntries(): SearchEntry[] {
 }
 
 function buildLldEntries(): SearchEntry[] {
-  const filename = path.join(publicRoot, 'lld', 'index.html');
-  if (!fs.existsSync(filename)) return [];
-  const html = fs.readFileSync(filename, 'utf8');
+  const directory = path.join(publicRoot, 'lld', 'pages');
+  if (!fs.existsSync(directory)) return [];
 
-  return [{
-    title: 'LLD',
-    source: 'LLD',
-    section: 'Low-Level Design',
-    href: '/spaces/lld/index.html',
-    content: plainText(html),
-  }];
+  return fs.readdirSync(directory).filter((file) => file.endsWith('.html')).flatMap((file) => {
+    const html = fs.readFileSync(path.join(directory, file), 'utf8');
+    const sections = [...html.matchAll(/<section\b[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/section>/gi)];
+
+    return sections.map((section) => {
+      const heading = section[2].match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i)?.[1] || htmlTitle(html, file);
+      return {
+        title: plainText(heading),
+        source: 'LLD' as const,
+        section: htmlTitle(html, 'Low-Level Design').replace(/\s+[—|-]\s+LLD$/i, ''),
+        href: `/spaces/lld/pages/${file}#${section[1]}`,
+        content: plainText(section[2]),
+      };
+    });
+  });
 }
 
 export function buildSearchIndex() {
