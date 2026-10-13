@@ -26,6 +26,6 @@ The app uses Next.js static export, so the production files are written to `out/
 
 ## Deploy to Vercel
 
-Import this repository in Vercel and keep the detected **Next.js** framework settings. The included `vercel.json` runs the production build and deploys the complete `out/` directory, including all three study spaces. No environment variables are required.
+Import this repository in Vercel. The included `vercel.json` selects Vercel's **Other** framework mode, runs the Next.js static-export build, and deploys the complete `out/` directory, including all three study spaces. No environment variables are required.
 
 If `CENTRAL_REPO` is selected as the Git repository root, set Vercel's **Root Directory** to `career-space`. If the `career-space` folder itself is the repository, leave Root Directory empty.
