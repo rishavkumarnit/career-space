@@ -40,23 +40,12 @@
           <li>Allow partial or full settlement.</li>
         </ul>
         <div class="note"><strong>Money rule:</strong> Use <code>BigDecimal</code>, a fixed two-decimal scale, and an explicit rounding policy. Binary floating-point types such as <code>double</code> can introduce rounding errors.</div>
+        <img class="chat-diagram" src="../images/splitwise-expense-example.png" alt="Example showing a ₹900 expense paid by A and split equally among A, B, and C">
       </section>
 
       <section id="model">
-        <h2>Domain model</h2>
-        <div class="table-wrap"><table><thead><tr><th>Type</th><th>Responsibility</th></tr></thead><tbody>
-          <tr><td><code>User</code></td><td>Identity and display name.</td></tr>
-          <tr><td><code>Expense</code></td><td>Immutable record of the payer, total, split type, and calculated shares.</td></tr>
-          <tr><td><code>Split</code></td><td>One participant's share of an expense.</td></tr>
-          <tr><td><code>SplitStrategy</code></td><td>Calculates shares for a split method.</td></tr>
-          <tr><td><code>BalanceSheet</code></td><td>Stores and nets directed debts.</td></tr>
-          <tr><td><code>SplitwiseService</code></td><td>Validates commands and coordinates strategies, expenses, and balances.</td></tr>
-        </tbody></table></div>
-        <div class="model-diagram" aria-label="Class relationship diagram">
-          <span>SplitwiseService</span><b>→</b><span>SplitStrategy</span><b>→</b><span>Split</span>
-          <span>SplitwiseService</span><b>→</b><span>Expense</span><b>→</b><span>User</span>
-          <span>SplitwiseService</span><b>→</b><span>BalanceSheet</span><b>→</b><span>Debt</span>
-        </div>
+        <h2>2. Class design</h2>
+        <img class="chat-diagram" src="../images/splitwise-class-design.png" alt="Splitwise class design diagram from the linked chat response">
       </section>
 
       <section id="strategies">
