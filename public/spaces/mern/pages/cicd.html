@@ -49,8 +49,43 @@
   <details class="qa">
     <summary><span class="q-num">Q2.</span> What stages would you include in a CI/CD pipeline for a MERN application?</summary>
     <div class="qa-body">
-      <p>A typical pipeline installs locked dependencies, runs linting and type checks, executes unit and integration tests, builds the React client and Node server, scans dependencies and images, creates an immutable artifact or Docker image, deploys it to staging, runs smoke tests, and then promotes the same artifact to production after any required approval.</p>
-      <p>Each stage should fail fast and prevent later stages from running when a quality or security check fails.</p>
+      <p>A mature pipeline takes one reviewed commit through verification, packaging, release, deployment, and production validation. The exact tools vary, but the responsibilities below should be explicit.</p>
+      <table>
+        <thead><tr><th>Stage</th><th>What happens</th><th>Output/gate</th></tr></thead>
+        <tbody>
+          <tr><td>1. Trigger and checkout</td><td>A pull request, branch push, tag, or manual release starts the pipeline. The runner checks out the exact commit and records commit, branch, actor, and pipeline IDs.</td><td>Traceable source revision</td></tr>
+          <tr><td>2. Environment setup</td><td>Select pinned Node/runtime versions, restore safe caches, and install the exact dependency graph with <code>npm ci</code>.</td><td>Reproducible toolchain and dependencies</td></tr>
+          <tr><td>3. Fast static checks</td><td>Run formatting verification, ESLint, TypeScript compilation, schema/config validation, and secret detection.</td><td>Fail quickly before expensive work</td></tr>
+          <tr><td>4. Unit tests</td><td>Test isolated business logic with coverage and test reports. Parallelize independent suites.</td><td>Core behavior verified</td></tr>
+          <tr><td>5. Integration and contract tests</td><td>Test the API with real disposable dependencies where valuable, database migrations, service contracts, and serialization boundaries.</td><td>Components work together</td></tr>
+          <tr><td>6. Build</td><td>Compile the server, create the optimized frontend bundle, and generate any static output. The build must be deterministic.</td><td>Deployable application files</td></tr>
+          <tr><td>7. Security and compliance checks</td><td>Run dependency/SCA, SAST, license, container, and infrastructure-as-code scans; generate an SBOM where required.</td><td>Policy gates with owned exceptions</td></tr>
+          <tr><td>8. Package and publish</td><td>Create an immutable Docker image or archive, attach metadata, sign it where appropriate, tag it with a unique version/commit SHA, and push it to the registry.</td><td>One versioned release artifact</td></tr>
+          <tr><td>9. Deploy to test/staging</td><td>Inject environment configuration at runtime, apply backward-compatible migrations, deploy the exact artifact, and wait for readiness.</td><td>Production-like environment running</td></tr>
+          <tr><td>10. Post-deploy verification</td><td>Run smoke tests, API/UI end-to-end tests, health checks, and optionally performance or DAST checks against staging.</td><td>Release candidate verified</td></tr>
+          <tr><td>11. Approval and promotion</td><td>Apply automated policy gates and, for continuous delivery, a human production approval. Promote the existing artifact instead of rebuilding it.</td><td>Auditable release decision</td></tr>
+          <tr><td>12. Production deployment</td><td>Use rolling, blue-green, or canary delivery; control traffic gradually; preserve capacity and connection draining.</td><td>New version serving traffic</td></tr>
+          <tr><td>13. Production validation</td><td>Check smoke tests, errors, latency, saturation, logs, traces, and business KPIs during a defined observation window.</td><td>Automatic continue, stop, or rollback decision</td></tr>
+          <tr><td>14. Rollback or roll-forward</td><td>Restore the previous artifact or deliver a forward fix. Database changes must remain compatible with both versions until the release is stable.</td><td>Service returned to a healthy state</td></tr>
+          <tr><td>15. Evidence and notification</td><td>Retain test reports, scan results, artifact digest, approvals, deployment events, and release notes; notify the owning team.</td><td>Audit trail and operational visibility</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Fail-fast ordering:</strong> put cheap checks before expensive tests and deployments. Independent lint, unit-test, and security jobs can run in parallel after dependency setup, while packaging must wait for required gates. A failed required stage stops promotion.</p>
+      <p><strong>Build once, promote many:</strong> build one immutable artifact and promote its exact digest through staging and production. Rebuilding per environment can silently introduce different dependencies or content. Environment-specific URLs, credentials, and feature settings should be supplied at deployment/runtime rather than compiled into separate artifacts.</p>
+      <p><strong>Database path:</strong> validate migrations in CI, run them with a dedicated controlled job, and use expand-and-contract changes: add compatible schema, deploy code that supports old and new versions, backfill, switch usage, then remove the old schema in a later release.</p>
+      <p><strong>Example flow:</strong></p>
+      <pre><code>pull request
+  -&gt; install
+  -&gt; lint + typecheck + unit tests + security scans (parallel)
+  -&gt; integration/contract tests
+  -&gt; build image once
+  -&gt; publish image by commit SHA/digest
+  -&gt; deploy staging
+  -&gt; migrate + smoke/E2E tests
+  -&gt; production approval
+  -&gt; canary 5% -&gt; 25% -&gt; 100%
+  -&gt; observe SLOs
+  -&gt; finalize or automatically roll back</code></pre>
     </div>
   </details>
 
@@ -238,6 +273,71 @@ return user;</code></pre>
     <summary><span class="q-num">Q26.</span> How can Redis be used for rate limiting?</summary>
     <div class="qa-body">
       <p>Create a key based on the client and time window, increment it for every request, and set an expiration. If the counter exceeds the allowed limit, reject the request. The increment and expiration must be applied atomically—using a transaction or Lua script—to avoid race conditions under concurrent traffic.</p>
+    </div>
+  </details>
+
+  <details class="qa" open>
+    <summary><span class="q-num">Q27.</span> How does Redis work internally?</summary>
+    <div class="qa-body">
+      <p>Redis is a networked data-structure server. Clients send commands through the Redis serialization protocol (RESP), Redis finds the key in its in-memory dictionary, runs an operation implemented for that data type, and returns a RESP response. Most commands complete without reading application data from disk.</p>
+      <h3>Command lifecycle</h3>
+      <ol>
+        <li><strong>Connection:</strong> a client opens or reuses a TCP connection and may authenticate and select a logical database.</li>
+        <li><strong>Protocol parsing:</strong> Redis parses a RESP command such as <code>SET user:42 "..." EX 300</code>.</li>
+        <li><strong>Event loop:</strong> readiness-based I/O lets Redis manage many connections without assigning one application thread per client. Modern Redis can use I/O threads for network read/write work.</li>
+        <li><strong>Command execution:</strong> the main command path executes commands in a serialized order. A single command such as <code>INCR</code> is atomic relative to other commands, avoiding per-key application locks for that operation.</li>
+        <li><strong>Data-structure operation:</strong> Redis selects an internal encoding suited to the value's type and size, updates memory, expiry metadata, persistence buffers, and replication stream as configured.</li>
+        <li><strong>Response:</strong> the result is encoded as RESP and written back to the client.</li>
+      </ol>
+      <p>“Single-threaded” is shorthand for the primary command execution model, not the entire server. Background threads/processes can handle tasks such as asynchronous memory freeing, persistence, and network I/O. A slow O(n) command, large Lua script, or huge key can still delay unrelated clients because it occupies the command execution path.</p>
+      <h3>Keys, values, and internal encodings</h3>
+      <p>The keyspace is essentially a hash table mapping binary-safe keys to Redis objects. The public types—string, hash, list, set, sorted set, stream—have optimized internal encodings. A small hash may use a compact list-like encoding and later convert to a hash table as it grows. A sorted set typically combines a dictionary for direct member lookup with a skip list for ordered range operations.</p>
+      <pre><code>SET user:42:name "Rishav" EX 300
+HSET user:42 name "Rishav" role "developer"
+INCR api:requests:2026-10-15
+ZADD leaderboard 980 "player-7"
+
+# Common complexity expectations
+GET key                 # O(1)
+HGET hash field         # O(1) average
+LPUSH queue value       # O(1)
+ZRANGE board 0 9        # O(log N + M), M returned members</code></pre>
+      <h3>Expiration and eviction</h3>
+      <p>Redis stores TTL metadata separately. It removes expired keys in two ways: <strong>passive expiration</strong> deletes a key when a client accesses it and finds it expired; <strong>active expiration</strong> periodically samples expiring keys and deletes overdue ones so untouched expired keys do not occupy memory indefinitely.</p>
+      <p>Expiration and eviction are different. Expiration follows a key's TTL. Eviction occurs when memory exceeds <code>maxmemory</code>; the configured policy may reject writes or select keys using all-keys/volatile LRU, LFU, random, or TTL-based rules. Redis uses sampled approximations for policies such as LRU rather than maintaining a costly exact global order.</p>
+      <h3>Persistence</h3>
+      <table>
+        <thead><tr><th>Mode</th><th>How it works</th><th>Tradeoff</th></tr></thead>
+        <tbody>
+          <tr><td>RDB</td><td>Creates a point-in-time snapshot, normally using a forked child process and copy-on-write memory behavior</td><td>Compact and fast to restore, but writes after the last snapshot can be lost</td></tr>
+          <tr><td>AOF</td><td>Appends write commands to a log and can fsync always, every second, or according to OS behavior</td><td>Smaller loss window and replayable history, with more disk I/O and a larger file</td></tr>
+          <tr><td>RDB + AOF</td><td>Uses both mechanisms</td><td>Combines recovery options at additional resource cost</td></tr>
+        </tbody>
+      </table>
+      <p>Persistence happens alongside in-memory serving; Redis does not become a disk-first database. Forking and copy-on-write can temporarily increase memory pressure during a snapshot or AOF rewrite, especially under a write-heavy workload.</p>
+      <h3>Replication and high availability</h3>
+      <p>A primary streams its replication data to replicas. Initial synchronization can send a snapshot, followed by buffered incremental commands. Replication is normally asynchronous, so a newly acknowledged primary write may be lost if the primary fails before a replica receives it. Sentinel monitors non-clustered deployments and coordinates failover. Redis Cluster shards keys across 16,384 hash slots, assigns slot ranges to primaries, and redirects clients to the node owning a key.</p>
+      <p>Replication improves availability and read capacity; it is not a backup. Cluster improves capacity and failover but constrains multi-key operations to keys in the same hash slot unless hash tags such as <code>{account}:balance</code> deliberately colocate them.</p>
+      <h3>Atomicity, transactions, and Lua</h3>
+      <p>One Redis command is atomic on the command execution path. <code>MULTI</code>/<code>EXEC</code> queues commands and executes them without another client command interleaving, but it does not provide relational rollback if one queued command fails. <code>WATCH</code> adds optimistic concurrency by aborting when watched keys change. Lua scripts/functions execute atomically, so they are useful for a read-check-write sequence, but long scripts block other command execution.</p>
+      <pre><code>-- Atomic fixed-window limiter
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then
+  redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return count</code></pre>
+      <h3>Cache-aside request example</h3>
+      <pre><code>request
+  -&gt; GET product:42
+     -&gt; hit: deserialize and return
+     -&gt; miss: query database
+              -&gt; SET product:42 &lt;json&gt; EX 300
+              -&gt; return result
+
+update
+  -&gt; commit database transaction
+  -&gt; DEL product:42</code></pre>
+      <p>The database remains authoritative. Protect misses with request coalescing or a short lock to prevent a cache stampede, add TTL jitter so hot keys do not expire together, and define safe fallback behavior when Redis is slow or unavailable. Avoid very large values and unbounded collections because they increase memory, network transfer, persistence work, and command latency.</p>
     </div>
   </details>
 </main>

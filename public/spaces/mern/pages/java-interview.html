@@ -910,6 +910,187 @@ COMMIT;</code></pre>
     </ol>
   </div></details>
 
+  <details class="qa"><summary><span class="q-num">19.</span> Java and Spring Deep Dives</summary><div class="qa-body">
+    <h3>1. Type casting in Java: internal working and why data is lost</h3>
+    <p><strong>Type casting</strong> converts a value or reference from one type to another. Java has two distinct forms: primitive conversion changes the value's representation, while reference casting changes the type through which an existing object reference is viewed.</p>
+
+    <h4>Primitive widening</h4>
+    <p>A widening conversion moves a value to a type with a wider supported range and is usually automatic:</p>
+    <pre><code>int count = 42;
+long largeCount = count;   // int -&gt; long: exact
+double result = count;     // int -&gt; double: exact for this value</code></pre>
+    <p>The JVM does not copy the original variable's raw bytes and add empty bytes blindly. It converts the numeric value into the target type's representation. Signed integers are sign-extended when widened, so negative values remain negative.</p>
+    <p>Widening does not always mean perfect precision. A <code>float</code> and <code>double</code> have a much larger range than integer types but store only a fixed number of significant binary digits. For example, a <code>long</code> has 64 bits of integer precision, while a <code>double</code> has 53 bits of integer precision:</p>
+    <pre><code>long id = 9_007_199_254_740_993L; // 2^53 + 1
+double approximate = id;
+long restored = (long) approximate;
+
+System.out.println(approximate); // 9.007199254740992E15
+System.out.println(restored);    // 9007199254740992: one was lost</code></pre>
+
+    <h4>Primitive narrowing and data loss</h4>
+    <p>A narrowing conversion moves to a type with a smaller range or less precision and requires an explicit cast because information may be discarded:</p>
+    <pre><code>int value = 130;
+byte small = (byte) value;
+System.out.println(small); // -126
+
+double price = 99.99;
+int whole = (int) price;
+System.out.println(whole); // 99</code></pre>
+    <p>A Java <code>byte</code> is an 8-bit signed two's-complement value with range -128 to 127. The binary representation of 130 ends with <code>10000010</code>. Narrowing to <code>byte</code> keeps only those low 8 bits and discards the higher bits. Because the retained sign bit is 1, the same bit pattern represents -126. Java does not clamp the result to 127 and does not raise an overflow exception.</p>
+    <p>Floating-point to integer conversion first removes the fractional part by truncating toward zero. <code>NaN</code> becomes zero; values outside the target integer range become the nearest endpoint before any further narrowing. This is why money should use <code>BigDecimal</code> with an explicit rounding rule rather than casts from <code>double</code>.</p>
+
+    <h4>Numeric promotion inside expressions</h4>
+    <p>Java promotes <code>byte</code>, <code>short</code>, and <code>char</code> operands to <code>int</code> before arithmetic. The calculation may therefore produce an <code>int</code> even when both inputs are bytes:</p>
+    <pre><code>byte a = 10;
+byte b = 20;
+// byte sum = a + b;       // compile error: a + b is int
+byte sum = (byte) (a + b); // explicit narrowing back to byte</code></pre>
+
+    <h4>Reference casting</h4>
+    <pre><code>Animal animal = new Dog(); // upcasting: automatic and safe
+Dog dog = (Dog) animal;    // downcasting: checked at runtime
+
+Animal cat = new Cat();
+// Dog invalid = (Dog) cat; // ClassCastException</code></pre>
+    <p>Upcasting does not modify the object; it only exposes the members defined by the parent type. Downcasting also does not transform a <code>Cat</code> into a <code>Dog</code>. The JVM checks the object's real runtime class, and an incompatible cast throws <code>ClassCastException</code>. Prefer pattern matching when the type is genuinely variable:</p>
+    <pre><code>if (animal instanceof Dog dog) {
+    dog.fetch();
+}</code></pre>
+    <p><strong>Interview summary:</strong> primitive narrowing can lose high-order bits, fractional data, or floating-point precision because the target representation cannot hold all source information. Reference casting preserves the object but may fail when its runtime type is incompatible.</p>
+
+    <h3>2. Do Java threads share memory?</h3>
+    <p>Threads in the same JVM process share the <strong>heap</strong>, which contains objects and arrays, and shared class data such as <code>static</code> fields. They also use the same loaded classes and native process resources. Each thread has its own <strong>Java stack</strong>, program counter, and native stack. Method parameters and local variables live in that thread's stack frame, but a local variable can hold a reference to an object on the shared heap.</p>
+    <table>
+      <thead><tr><th>Memory/resource</th><th>Shared?</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Heap objects and arrays</td><td>Yes</td><td>Two threads can read or modify the same object when both can reach it</td></tr>
+        <tr><td><code>static</code> fields</td><td>Yes</td><td>One class-level value is visible across threads, subject to memory-visibility rules</td></tr>
+        <tr><td>Thread stack and stack frames</td><td>No</td><td>Each thread has its own method calls, primitive locals, and reference variables</td></tr>
+        <tr><td>Object referenced by a local variable</td><td>Possibly</td><td>The reference is local; the referenced heap object can still be shared</td></tr>
+        <tr><td>Program counter and registers</td><td>No</td><td>Each thread tracks its own current instruction and execution state</td></tr>
+      </tbody>
+    </table>
+    <p>Sharing memory creates two separate correctness problems:</p>
+    <ol>
+      <li><strong>Atomicity:</strong> <code>counter++</code> is a read, calculation, and write. Two threads can read the same old value and overwrite one another's increments.</li>
+      <li><strong>Visibility and ordering:</strong> without a happens-before relationship, one thread is not guaranteed to observe another thread's latest writes in the expected order because values may be cached and operations may be reordered.</li>
+    </ol>
+    <pre><code>class UnsafeCounter {
+    private int value;
+    void increment() { value++; } // race condition
+}
+
+class SafeCounter {
+    private final AtomicInteger value = new AtomicInteger();
+    void increment() { value.incrementAndGet(); }
+    int get() { return value.get(); }
+}</code></pre>
+    <p>Use immutable objects, confinement, <code>synchronized</code>, locks, atomic classes, concurrent collections, or message passing according to the operation. <code>volatile</code> provides visibility and ordering for reads/writes of that field, but it does not make a compound action such as <code>counter++</code> atomic.</p>
+    <p>A lock release happens-before a later successful acquisition of the same lock. A write to a <code>volatile</code> field happens-before a later read of that field. Thread start/join and concurrent utilities provide additional happens-before guarantees defined by the Java Memory Model.</p>
+
+    <h3>3. DTO and view layer in Spring Boot</h3>
+    <p>A <strong>DTO (Data Transfer Object)</strong> is the explicit data contract crossing an application boundary. Request DTOs define accepted input; response DTOs define returned output. A DTO should contain the fields required by the use case, without persistence behavior.</p>
+    <p>The <strong>view layer</strong> is the presentation boundary. In a REST Spring Boot application, the controller and JSON response form the view layer. In server-rendered Spring MVC, a controller supplies a model and returns a template name for Thymeleaf or another view engine.</p>
+    <pre><code>// API contracts: no JPA annotations
+public record CreateUserRequest(
+    @NotBlank String name,
+    @Email String email
+) {}
+
+public record UserResponse(
+    long id,
+    String name,
+    String email
+) {}
+
+@RestController
+@RequestMapping("/api/users")
+class UserController {
+    private final UserService userService;
+
+    UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping
+    ResponseEntity&lt;UserResponse&gt; create(
+            @Valid @RequestBody CreateUserRequest request) {
+        UserResponse response = userService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+}
+
+@Service
+class UserService {
+    private final UserRepository repository;
+
+    @Transactional
+    public UserResponse create(CreateUserRequest request) {
+        User user = new User(request.name(), request.email());
+        User saved = repository.save(user);
+        return new UserResponse(saved.getId(), saved.getName(), saved.getEmail());
+    }
+}</code></pre>
+    <p>This flow is <code>HTTP request → controller/view boundary → request DTO → service/domain → entity/repository → response DTO → JSON</code>. The controller handles HTTP concerns; the service owns the use case and transaction; the repository owns persistence.</p>
+    <p>Returning JPA entities directly can expose internal or sensitive fields, create recursive JSON through bidirectional relationships, trigger lazy-loading queries during serialization, and accidentally break the API when the schema changes. DTOs provide an allow-list of fields, stable versionable contracts, validation at the boundary, and use-case-specific shapes.</p>
+    <p>A DTO is not automatically a security boundary: still enforce authorization in the service and never trust client-supplied ownership, role, price, or audit fields. For large read-only lists, use a JPA DTO projection so the database selects only required columns instead of loading full entities and mapping them afterward.</p>
+    <pre><code>@Query("""
+    select new com.example.UserSummary(u.id, u.name)
+    from User u
+    where u.active = true
+    """)
+Page&lt;UserSummary&gt; findActiveSummaries(Pageable pageable);</code></pre>
+    <p>For server-rendered MVC, the view model follows the same boundary principle:</p>
+    <pre><code>@Controller
+class UserPageController {
+    @GetMapping("/users/{id}")
+    String show(@PathVariable long id, Model model) {
+        model.addAttribute("user", userService.getView(id));
+        return "users/details"; // resolves templates/users/details.html
+    }
+}</code></pre>
+
+    <h3>4. REST statelessness in depth</h3>
+    <p>REST's stateless constraint means every request contains all information the server needs to understand and authorize that request. The server does not rely on hidden conversational state from earlier requests. Any application state required between requests is held by the client and sent again, or is stored as a resource in a shared durable system.</p>
+    <p>Statelessness does <strong>not</strong> mean the server or database stores no data. Orders, users, carts, and idempotency records are server-side resource state. The constraint concerns per-client session context required to process the next request.</p>
+    <h4>Stateful design that breaks horizontal scaling</h4>
+    <pre><code>// Instance A stores hidden conversation state in local memory.
+POST /checkout/start       -&gt; session step = ADDRESS
+POST /checkout/next        -&gt; expects the previous request to be on the same instance</code></pre>
+    <p>If the load balancer sends the second request to instance B, or instance A restarts, B does not know the current step. Sticky sessions reduce this symptom but create uneven load, complicate failover, and keep correctness tied to one instance.</p>
+    <h4>Stateless resource-oriented design</h4>
+    <pre><code>POST /checkouts
+Authorization: Bearer &lt;token&gt;
+Idempotency-Key: 8f1f...
+{ "cartId": "c-42" }
+
+201 Created
+Location: /checkouts/ch-901
+{ "id": "ch-901", "status": "ADDRESS_REQUIRED" }
+
+PUT /checkouts/ch-901/address
+Authorization: Bearer &lt;token&gt;
+If-Match: "version-1"
+{ "line1": "...", "city": "...", "postalCode": "..." }
+
+POST /checkouts/ch-901/confirm
+Authorization: Bearer &lt;token&gt;
+Idempotency-Key: d941...</code></pre>
+    <p>Every request identifies the resource, carries credentials, declares the intended operation and representation, and includes concurrency/idempotency metadata when needed. Any API instance can handle it by reading shared resource state. This enables horizontal scaling, retries, failover, observability, and caching because requests do not depend on one server's memory.</p>
+    <p>A bearer JWT is one way to send authentication context, but REST does not require JWT. An opaque session token can still support stateless application servers when the session record is in a shared store accessible to every instance. From the REST viewpoint, the request remains self-contained because it carries the token; operationally, the server performs a shared lookup.</p>
+    <h4>Consequences and design rules</h4>
+    <ul>
+      <li><strong>Authentication:</strong> send credentials or a token on every protected request. Do not assume a prior login request established local server memory.</li>
+      <li><strong>Pagination:</strong> send the cursor, limit, filters, and sort order each time rather than storing the user's current page in process memory.</li>
+      <li><strong>Retries:</strong> use idempotent HTTP methods where possible and idempotency keys for operations such as payments.</li>
+      <li><strong>Concurrency:</strong> use ETags/<code>If-Match</code>, entity versions, or database constraints instead of a server-local flag.</li>
+      <li><strong>Caching:</strong> explicit methods, resource URLs, and cache headers let intermediaries understand when a response can be reused.</li>
+      <li><strong>Workflow state:</strong> model a long workflow as a resource with an ID and explicit state, rather than an invisible sequence tied to a connection or instance.</li>
+    </ul>
+    <p><strong>Tradeoff:</strong> self-contained requests may repeat headers and require token validation or state lookups. That overhead buys loose coupling between requests and instances. WebSockets can maintain a stateful connection for real-time transport while the underlying business commands still carry user and resource identity explicitly.</p>
+  </div></details>
+
 </main>
 
 <footer class="site">Personal revision notes &middot; static HTML, no build step.</footer>

@@ -1679,6 +1679,50 @@ app.get('/jobs/:id', authenticate, async (req, res) => {
 cron.schedule('0 9 * * *', async () =&gt; {
   await sendDailyReport();
 }, { timezone: 'Asia/Kolkata' });</code></pre>
+      <h3>How a cron job works internally</h3>
+      <ol>
+        <li><strong>Parse the expression:</strong> the scheduler converts fields such as minute, hour, day of month, month, and day of week into allowed-value sets. Some Node libraries support a sixth seconds field.</li>
+        <li><strong>Calculate or detect the next match:</strong> a system cron daemon calculates when the command should next start. An in-process library such as <code>node-cron</code> keeps a timer/tick loop and compares the current wall-clock time with the parsed schedule.</li>
+        <li><strong>Register a timer:</strong> Node delegates waiting to the platform timer mechanism through libuv. JavaScript does not continuously spin while waiting, and no JavaScript callback runs before the event loop reaches the timer phase.</li>
+        <li><strong>Queue the callback:</strong> when the scheduled time is due, the timer callback becomes eligible. The event loop runs it only after currently executing JavaScript and earlier queued work release the main thread.</li>
+        <li><strong>Execute the handler:</strong> the scheduler invokes the function in the same Node process. The asynchronous operations may use the OS, network stack, database, or libuv worker pool, but synchronous CPU work still blocks that process's event loop.</li>
+        <li><strong>Find the following occurrence:</strong> after triggering, the scheduler continues tracking the next time that satisfies the expression.</li>
+      </ol>
+      <pre><code># Standard five-field cron expression
+# minute hour day-of-month month day-of-week
+   0     9        *         *        1-5
+# At 09:00 every Monday through Friday</code></pre>
+      <p>A cron schedule is a <strong>time trigger</strong>, not a durable job queue. It says when to request execution; it does not inherently persist job progress, retry a failure, guarantee exactly-once delivery, or prevent the previous run from overlapping the next.</p>
+      <h3>Event-loop delay and overlapping runs</h3>
+      <pre><code>let running = false;
+
+cron.schedule('*/5 * * * *', async () =&gt; {
+  if (running) {
+    console.warn('Skipping: previous run is still active');
+    return;
+  }
+
+  running = true;
+  const startedAt = Date.now();
+  try {
+    await generateReport();
+    console.log('cron_success', { durationMs: Date.now() - startedAt });
+  } catch (error) {
+    console.error('cron_failure', { error });
+  } finally {
+    running = false;
+  }
+});</code></pre>
+      <p>If the event loop is blocked at 09:00, the callback runs late after the thread becomes available; Node does not interrupt running JavaScript. If a job takes seven minutes but is scheduled every five minutes, runs may overlap unless the application or scheduler prevents it. The boolean guard above works only inside one process and is insufficient when several replicas are running.</p>
+      <h3>What changes in production</h3>
+      <p>With three API replicas, an in-process cron definition exists three times, so all three can start the same job. A distributed system normally uses one of these designs:</p>
+      <ul>
+        <li><strong>External scheduler → durable queue:</strong> a cloud scheduler or Kubernetes CronJob publishes a job with a unique occurrence ID; workers claim it from Redis/SQS/Kafka and record success or failure.</li>
+        <li><strong>Leader/single scheduler:</strong> only the elected scheduler creates work, while any number of workers execute queued jobs.</li>
+        <li><strong>Distributed lock:</strong> each replica tries to acquire a lease in Redis or the database. The lock needs a unique owner token, expiry, compare-and-delete release, and renewal for long jobs. The handler must still be idempotent because leases can expire during pauses.</li>
+      </ul>
+      <p>Persist a business execution key such as <code>daily-report:2026-10-15</code> under a unique constraint. That makes retries safe when the scheduler fires twice or crashes after completing work but before acknowledging it. Add retry limits, exponential backoff, dead-letter handling, timeout/cancellation, structured logs, duration and last-success metrics, and an alert when an expected execution is missing.</p>
+      <p><strong>Time behavior:</strong> specify a time zone deliberately. Daylight-saving transitions can skip or repeat local wall-clock times. For globally consistent processing, schedule in UTC and derive the target business date explicitly. Decide whether downtime should cause missed runs to be skipped or caught up after restart; a basic in-process library commonly skips them because its timers did not exist while the process was down.</p>
       <p><code>setTimeout()</code> and <code>setInterval()</code> are suitable for short-lived, non-critical timers, but their schedules are lost when the process restarts. An in-process cron job also runs once in <em>every</em> application replica, which may duplicate work when the service is horizontally scaled.</p>
       <p>For production-critical jobs, use a durable queue or external scheduler such as BullMQ with Redis, Agenda with MongoDB, a cloud scheduler, or Kubernetes CronJob. Store job state, configure retries and backoff, make the handler idempotent, monitor failures, and use a distributed lock or a single scheduler/worker when only one execution is allowed.</p>
     </div>
