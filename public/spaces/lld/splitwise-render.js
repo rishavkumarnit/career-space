@@ -13,6 +13,8 @@
 
   const response = document.getElementById('original-response');
   let activeMajor = '';
+  let implementationDetails = null;
+  let simpleImplementation = '';
 
   function element(tag, text, className) {
     const node = document.createElement(tag);
@@ -48,12 +50,17 @@
     return index - 1;
   }
 
-  fetch('../content/splitwise-response.txt')
-    .then((result) => {
-      if (!result.ok) throw new Error('Unable to load the original response');
-      return result.text();
+  Promise.all([
+    fetch('../content/splitwise-response.txt'),
+    fetch('../content/splitwise-simple-implementation.java')
+  ])
+    .then(async ([responseResult, simpleResult]) => {
+      if (!responseResult.ok) throw new Error('Unable to load the original response');
+      if (!simpleResult.ok) throw new Error('Unable to load the simple implementation');
+      return [await responseResult.text(), await simpleResult.text()];
     })
-    .then((text) => {
+    .then(([text, simpleText]) => {
+      simpleImplementation = simpleText;
       const lines = text.replace(/\r\n/g, '\n').split('\n');
 
       for (let i = 1; i < lines.length; i += 1) {
@@ -91,12 +98,12 @@
           const pre = document.createElement('pre');
           pre.className = 'code-file';
           pre.appendChild(element('code', code.join('\n').trimEnd()));
-          response.appendChild(pre);
+          implementationDetails.appendChild(pre);
           continue;
         }
 
         if (line === 'Run the code') {
-          response.appendChild(element('h3', line));
+          implementationDetails.appendChild(element('h3', line));
           const commands = [];
           i += 1;
           while (i < lines.length && lines[i] !== 'Expected output') {
@@ -106,12 +113,12 @@
           i -= 1;
           const pre = document.createElement('pre');
           pre.appendChild(element('code', commands.join('\n')));
-          response.appendChild(pre);
+          implementationDetails.appendChild(pre);
           continue;
         }
 
         if (line === 'Expected output') {
-          response.appendChild(element('h3', line));
+          implementationDetails.appendChild(element('h3', line));
           const output = [];
           i += 1;
           while (i < lines.length && lines[i] !== '4. Most important logic: BalanceSheet') {
@@ -122,7 +129,7 @@
           const pre = document.createElement('pre');
           pre.className = 'expected-output';
           pre.appendChild(element('code', output.join('\n').trim()));
-          response.appendChild(pre);
+          implementationDetails.appendChild(pre);
           continue;
         }
 
@@ -136,6 +143,21 @@
           const heading = element('h2', line);
           heading.id = majorHeadings.get(line);
           response.appendChild(heading);
+
+          if (line === '3. Complete single-file Java implementation') {
+            implementationDetails = element('details', undefined, 'implementation-toggle');
+            implementationDetails.appendChild(element('summary', 'Complete implementation'));
+            response.appendChild(implementationDetails);
+          } else if (line === '4. Most important logic: BalanceSheet') {
+            const simpleDetails = element('details', undefined, 'implementation-toggle');
+            simpleDetails.appendChild(element('summary', 'Simple implementation'));
+            const simpleCode = document.createElement('pre');
+            simpleCode.className = 'code-file';
+            simpleCode.appendChild(element('code', simpleImplementation));
+            simpleDetails.appendChild(simpleCode);
+            heading.before(simpleDetails);
+            implementationDetails = null;
+          }
           continue;
         }
 
@@ -149,7 +171,7 @@
 
         const className = line.startsWith('[ ] ') ? 'checklist-line' :
           line.startsWith('- ') ? 'bullet-line' : 'response-line';
-        response.appendChild(element('p', line, className));
+        (implementationDetails || response).appendChild(element('p', line, className));
       }
     })
     .catch((error) => {
