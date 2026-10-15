@@ -37,7 +37,7 @@
 
 <main>
   <h1 class="page-title">SQL — Interview Prep</h1>
-  <p class="page-sub">Theory fundamentals, then 29 scenario questions across window functions, CTEs, joins, subqueries, aggregates, and indexing. Examples use ANSI/PostgreSQL syntax, with notes wherever MySQL/SQL Server diverge meaningfully. Priority noted where marked (*** highest).</p>
+  <p class="page-sub">Theory fundamentals, scenario questions, and advanced topics across window functions, CTEs, joins, subqueries, aggregates, indexing, procedures, triggers, and execution plans. Examples use ANSI/PostgreSQL syntax, with notes wherever MySQL/SQL Server diverge meaningfully. Priority noted where marked (*** highest).</p>
 
   <aside class="resource-links" aria-labelledby="sql-interview-resources-heading">
     <h2 id="sql-interview-resources-heading">SQL Interview Resources</h2>
@@ -704,6 +704,262 @@ SELECT * FROM orders WHERE customer_email LIKE '%@example.com';
 SELECT * FROM orders IGNORE INDEX (idx_customer_email)
 WHERE customer_email = 'jane@example.com';</code></pre>
       <p>These are exactly the patterns to <em>avoid</em> in production for the same reason they're useful here: transforming the column (<code>UPPER(...)</code>) or anchoring a <code>LIKE</code> pattern with a leading wildcard both prevent the optimizer from using a standard index range scan, giving a reliable, deliberate full-scan baseline to compare against. Postgres also supports a blunter, connection-level override for testing — <code>SET enable_seqscan = off/on</code> — without touching the query text at all.</p>
+    </div>
+  </details>
+
+  <h2 class="section-heading" id="advanced-sql">8. Advanced SQL</h2>
+
+  <details class="qa" open>
+    <summary><span class="q-num">Q42.</span> Stored procedures in detail <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>A <strong>stored procedure</strong> is a named program stored and executed inside the database. It can accept input/output parameters, run multiple SQL statements, use variables and control flow, modify data, and centralize a transaction-sensitive operation close to the data.</p>
+      <p>For example, transferring money requires the debit and credit to succeed as one unit. The procedure below validates the amount, locks both account rows against concurrent updates, checks the balance, and performs both updates.</p>
+      <pre><code>CREATE OR REPLACE PROCEDURE transfer_funds(
+  p_from_account bigint,
+  p_to_account   bigint,
+  p_amount       numeric(12, 2)
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_balance numeric(12, 2);
+BEGIN
+  IF p_amount &lt;= 0 THEN
+    RAISE EXCEPTION 'Transfer amount must be positive';
+  END IF;
+
+  -- Lock in a stable order to reduce deadlock risk.
+  PERFORM 1
+  FROM accounts
+  WHERE account_id IN (p_from_account, p_to_account)
+  ORDER BY account_id
+  FOR UPDATE;
+
+  SELECT balance INTO v_balance
+  FROM accounts
+  WHERE account_id = p_from_account;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Source account % does not exist', p_from_account;
+  END IF;
+
+  IF v_balance &lt; p_amount THEN
+    RAISE EXCEPTION 'Insufficient balance';
+  END IF;
+
+  UPDATE accounts
+  SET balance = balance - p_amount
+  WHERE account_id = p_from_account;
+
+  UPDATE accounts
+  SET balance = balance + p_amount
+  WHERE account_id = p_to_account;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Destination account % does not exist', p_to_account;
+  END IF;
+END;
+$$;
+
+BEGIN;
+CALL transfer_funds(101, 202, 500.00);
+COMMIT;</code></pre>
+      <h3>Procedure vs function</h3>
+      <table>
+        <tr><th>Procedure</th><th>Function</th></tr>
+        <tr><td>Called with <code>CALL</code></td><td>Used in expressions such as <code>SELECT calculate_tax(100)</code></td></tr>
+        <tr><td>Designed for an operation or workflow</td><td>Designed to compute and return a value or result set</td></tr>
+        <tr><td>Can support transaction control when called outside an explicit transaction, depending on the database</td><td>Normally runs inside the caller's transaction and cannot commit independently</td></tr>
+        <tr><td>May expose values through <code>INOUT</code>/<code>OUT</code> parameters</td><td>Has a declared return type</td></tr>
+      </table>
+      <p><strong>When to use:</strong> use a procedure for multi-step data operations that need one consistent implementation, bulk data maintenance, administrative jobs, or logic shared by several clients. Keep presentation rules and rapidly changing business workflows in the application layer. Procedures add deployment, versioning, testing, and database portability costs.</p>
+      <p><strong>Security:</strong> grant applications permission to call the procedure instead of broad direct table-write access when appropriate. Parameterized procedure calls still matter; constructing a <code>CALL</code> string from user input can still create SQL injection.</p>
+      <p><strong>Dialect note:</strong> syntax and transaction behavior differ significantly. SQL Server uses <code>CREATE PROCEDURE ... AS</code> and <code>EXEC</code>; MySQL uses <code>DELIMITER</code> while defining multi-statement procedures; the example above is PostgreSQL.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q43.</span> Triggers in detail <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>A <strong>trigger</strong> is database code that runs automatically when a specified event occurs. A trigger can run <code>BEFORE</code>, <code>AFTER</code>, or—in supported cases—<code>INSTEAD OF</code> an <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, or other database event.</p>
+      <table>
+        <tr><th>Choice</th><th>Meaning</th><th>Typical use</th></tr>
+        <tr><td><code>BEFORE</code></td><td>Runs before the row is written and can validate or modify <code>NEW</code></td><td>Normalize data, reject invalid values</td></tr>
+        <tr><td><code>AFTER</code></td><td>Runs after the change succeeds</td><td>Audit history, downstream bookkeeping</td></tr>
+        <tr><td><code>INSTEAD OF</code></td><td>Replaces the original operation, commonly on a view</td><td>Make a complex view writable</td></tr>
+        <tr><td><code>FOR EACH ROW</code></td><td>Runs once for every affected row</td><td>Per-record validation or audit data</td></tr>
+        <tr><td><code>FOR EACH STATEMENT</code></td><td>Runs once for the entire statement</td><td>Statement-level logging or coordination</td></tr>
+      </table>
+      <p>This PostgreSQL example records every salary change. <code>OLD</code> contains the row before the update and <code>NEW</code> contains the row after it.</p>
+      <pre><code>CREATE TABLE employee_salary_audit (
+  audit_id    bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  employee_id bigint NOT NULL,
+  old_salary  numeric(12, 2) NOT NULL,
+  new_salary  numeric(12, 2) NOT NULL,
+  changed_by  text NOT NULL,
+  changed_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION audit_salary_change()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO employee_salary_audit (
+    employee_id, old_salary, new_salary, changed_by
+  )
+  VALUES (
+    OLD.employee_id, OLD.salary, NEW.salary, current_user
+  );
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER employee_salary_audit_trigger
+AFTER UPDATE OF salary ON employees
+FOR EACH ROW
+WHEN (OLD.salary IS DISTINCT FROM NEW.salary)
+EXECUTE FUNCTION audit_salary_change();
+
+UPDATE employees
+SET salary = salary * 1.05
+WHERE department_id = 10;</code></pre>
+      <p>The final update fires the trigger once per changed employee. The <code>WHEN</code> condition prevents audit rows when an update mentions <code>salary</code> but does not actually change its value. <code>IS DISTINCT FROM</code> is NULL-safe, unlike an ordinary <code>&lt;&gt;</code> comparison.</p>
+      <p><strong>Good uses:</strong> audit trails, enforcing a rule across every client, maintaining derived data that must stay transactionally consistent, and making views writable. Prefer declarative constraints such as <code>NOT NULL</code>, <code>CHECK</code>, <code>UNIQUE</code>, and foreign keys when they can express the rule more clearly.</p>
+      <p><strong>Pitfalls:</strong> triggers are implicit side effects. They can surprise developers, slow bulk operations, recursively activate other triggers, and create deadlocks if they touch tables in an inconsistent order. Document them, keep them small, monitor their cost, and test multi-row statements—not only single-row updates.</p>
+      <p><strong>Dialect note:</strong> PostgreSQL creates a trigger function separately. MySQL places the trigger body directly in <code>CREATE TRIGGER</code>. SQL Server triggers normally operate once per statement and use the <code>inserted</code> and <code>deleted</code> pseudo-tables, which may contain many rows.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q44.</span> How to read <code>EXPLAIN ANALYZE</code> <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p><code>EXPLAIN</code> shows the optimizer's estimated plan without running the query. <code>EXPLAIN ANALYZE</code> executes the query and adds actual time, rows, and loop counts, letting you compare the optimizer's prediction with reality.</p>
+      <pre><code>EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
+SELECT c.customer_id, c.name, SUM(o.total_amount) AS revenue
+FROM customers c
+JOIN orders o ON o.customer_id = c.customer_id
+WHERE o.created_at &gt;= DATE '2026-01-01'
+GROUP BY c.customer_id, c.name
+ORDER BY revenue DESC
+LIMIT 10;</code></pre>
+      <p>Read a PostgreSQL plan from the <strong>bottom upward</strong>: child nodes produce rows for their parent. A simplified plan might be:</p>
+      <pre><code>Limit  (actual time=48.1..48.2 rows=10 loops=1)
+  -&gt; Sort  (actual time=48.1..48.1 rows=10 loops=1)
+       Sort Key: (sum(o.total_amount)) DESC
+       Sort Method: top-N heapsort  Memory: 27kB
+       -&gt; HashAggregate (actual time=42.0..46.7 rows=8100 loops=1)
+            -&gt; Hash Join (actual time=3.2..31.4 rows=125000 loops=1)
+                 -&gt; Seq Scan on orders o
+                      Filter: created_at &gt;= '2026-01-01'
+                      Rows Removed by Filter: 875000
+                 -&gt; Hash
+                      -&gt; Seq Scan on customers c</code></pre>
+      <table>
+        <tr><th>Plan field</th><th>How to interpret it</th></tr>
+        <tr><td><code>cost=start..total</code></td><td>Optimizer units used to compare plans; they are not milliseconds</td></tr>
+        <tr><td><code>rows</code> before execution</td><td>Estimated rows produced by the node</td></tr>
+        <tr><td><code>actual time=a..b</code></td><td>Time to first row and time to finish one loop, in milliseconds</td></tr>
+        <tr><td><code>actual rows</code></td><td>Rows produced per loop; compare with estimated rows</td></tr>
+        <tr><td><code>loops</code></td><td>How many times the node ran; approximate total work with time or rows multiplied by loops</td></tr>
+        <tr><td><code>Buffers: shared hit</code></td><td>Pages served from database cache</td></tr>
+        <tr><td><code>Buffers: shared read</code></td><td>Pages that required reads from storage</td></tr>
+        <tr><td><code>Rows Removed by Filter</code></td><td>Rows scanned and discarded; a large number can reveal an unselective scan</td></tr>
+      </table>
+      <h3>What to investigate</h3>
+      <ol>
+        <li><strong>Estimate errors:</strong> if estimated rows are 10 but actual rows are 100,000, update statistics and inspect skew or correlated columns. Bad estimates often cause the wrong join type or join order.</li>
+        <li><strong>Expensive scans:</strong> a sequential scan is not automatically bad. It is efficient when much of a table is needed. For a selective predicate over a large table, consider an appropriate index such as <code>CREATE INDEX ON orders (created_at, customer_id) INCLUDE (total_amount)</code>.</li>
+        <li><strong>Repeated work:</strong> a fast node with a very high <code>loops</code> count can dominate the query, especially inside a nested-loop join.</li>
+        <li><strong>Disk spills:</strong> external merge sorts or multi-batch hashes indicate insufficient memory for that operation or an unnecessarily large intermediate result.</li>
+        <li><strong>Wide or unnecessary rows:</strong> returning fewer columns and filtering earlier can reduce I/O, memory, sorting, and network cost.</li>
+      </ol>
+      <p><strong>Safe workflow:</strong> capture the exact slow query and representative parameters, run it against production-like data, use <code>EXPLAIN (ANALYZE, BUFFERS)</code>, change one thing, rerun the same plan, and compare execution time, row estimates, buffers, and result correctness. Warm-cache and cold-cache timings can differ.</p>
+      <p><strong>Warning:</strong> <code>ANALYZE</code> really executes the statement. For <code>UPDATE</code>/<code>DELETE</code>/<code>INSERT</code>, use a safe environment or wrap the analysis in <code>BEGIN; ... ROLLBACK;</code> while accounting for trigger and locking side effects. On a busy production database, even analyzing a <code>SELECT</code> can be expensive.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q45.</span> <code>LATERAL JOIN</code> in detail <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>A <code>LATERAL</code> subquery in the <code>FROM</code> clause can reference columns from tables that appear before it. Conceptually, the database evaluates the right-side subquery for each left-side row. This is useful for a correlated query that must return columns or multiple rows.</p>
+      <p><strong>Example: latest three orders for every customer</strong></p>
+      <pre><code>SELECT
+  c.customer_id,
+  c.name,
+  recent.order_id,
+  recent.created_at,
+  recent.total_amount
+FROM customers c
+LEFT JOIN LATERAL (
+  SELECT o.order_id, o.created_at, o.total_amount
+  FROM orders o
+  WHERE o.customer_id = c.customer_id
+  ORDER BY o.created_at DESC
+  LIMIT 3
+) AS recent ON true
+ORDER BY c.customer_id, recent.created_at DESC;</code></pre>
+      <p>The subquery can see <code>c.customer_id</code> because it is lateral. <code>LEFT JOIN LATERAL</code> keeps customers with no orders and fills the <code>recent</code> columns with <code>NULL</code>. Using <code>JOIN LATERAL</code> or <code>CROSS JOIN LATERAL</code> would omit a customer when the subquery returns no row.</p>
+      <p>An index matching the correlation and ordering makes the top-N lookup efficient:</p>
+      <pre><code>CREATE INDEX idx_orders_customer_created
+ON orders (customer_id, created_at DESC)
+INCLUDE (order_id, total_amount);</code></pre>
+      <p><strong>Example: compute and reuse a value for each row</strong></p>
+      <pre><code>SELECT p.product_id, p.name, price.final_price
+FROM products p
+CROSS JOIN LATERAL (
+  SELECT ROUND(p.list_price * (1 - p.discount_percent / 100.0), 2)
+         AS final_price
+) AS price
+WHERE price.final_price &lt; 1000;</code></pre>
+      <p><strong>Compared with a correlated scalar subquery:</strong> a scalar subquery must return at most one row and usually one column. A lateral subquery can return several columns and several rows, can contain <code>ORDER BY ... LIMIT</code>, and acts like a table in the rest of the query.</p>
+      <p><strong>Compared with a window function:</strong> <code>ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC)</code> is another top-N-per-group solution. The window approach often processes all matching orders before filtering. With a good index and a small N, the lateral approach can perform a short index lookup per customer. Measure both on realistic data.</p>
+      <p><strong>Dialect note:</strong> PostgreSQL uses <code>LATERAL</code>. SQL Server's close equivalents are <code>CROSS APPLY</code> and <code>OUTER APPLY</code>. Modern MySQL supports lateral derived tables, but version and syntax support should be checked.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="q-num">Q46.</span> <code>CROSS JOIN</code> in detail <span class="priority">***</span></summary>
+    <div class="qa-body">
+      <p>A <code>CROSS JOIN</code> returns the Cartesian product: every row from the first input paired with every row from the second. If the left table has <code>m</code> rows and the right table has <code>n</code> rows, the result has <code>m × n</code> rows.</p>
+      <p><strong>Example: generate every product-size combination</strong></p>
+      <pre><code>SELECT p.product_id, p.name, s.size_code
+FROM products p
+CROSS JOIN sizes s
+ORDER BY p.product_id, s.size_code;</code></pre>
+      <p>With 100 products and 5 sizes, this intentionally generates 500 combinations. This is useful for building variant matrices, test data, schedules, grids, and every possible combination of small dimension tables.</p>
+      <p><strong>Example: create a complete date-by-store reporting grid</strong></p>
+      <pre><code>WITH calendar AS (
+  SELECT day::date
+  FROM generate_series(
+    DATE '2026-10-01',
+    DATE '2026-10-07',
+    INTERVAL '1 day'
+  ) AS day
+)
+SELECT
+  s.store_id,
+  c.day,
+  COALESCE(SUM(sa.amount), 0) AS daily_sales
+FROM stores s
+CROSS JOIN calendar c
+LEFT JOIN sales sa
+  ON sa.store_id = s.store_id
+ AND sa.sale_date &gt;= c.day
+ AND sa.sale_date &lt; c.day + INTERVAL '1 day'
+GROUP BY s.store_id, c.day
+ORDER BY s.store_id, c.day;</code></pre>
+      <p>The cross join first creates a row for every store and every date. The left join then attaches matching sales, so dates with no sale remain present with a total of zero. A normal aggregation over <code>sales</code> alone could not produce missing dates because no source row exists for them.</p>
+      <h3><code>CROSS JOIN</code> vs other joins</h3>
+      <table>
+        <tr><th>Join</th><th>Condition</th><th>Purpose</th></tr>
+        <tr><td><code>CROSS JOIN</code></td><td>No <code>ON</code> condition</td><td>Produce every combination intentionally</td></tr>
+        <tr><td><code>INNER JOIN</code></td><td>Requires a match condition</td><td>Return related pairs only</td></tr>
+        <tr><td><code>CROSS JOIN LATERAL</code></td><td>Right input can reference the current left row</td><td>Run a correlated table expression per left row</td></tr>
+      </table>
+      <p><strong>Common accident:</strong> forgetting a join condition can create an unintended Cartesian product. Joining 1 million orders to 100,000 customers without the intended relationship attempts to produce 100 billion rows before later operations. Use explicit <code>JOIN ... ON ...</code> for relationships and reserve <code>CROSS JOIN</code> for deliberate combinations.</p>
+      <p><strong>Filter behavior:</strong> <code>FROM a CROSS JOIN b WHERE a.key = b.key</code> is logically equivalent to <code>FROM a INNER JOIN b ON a.key = b.key</code>, and optimizers usually produce the same plan. The explicit inner join communicates intent more clearly.</p>
     </div>
   </details>
 
