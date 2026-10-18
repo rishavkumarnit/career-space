@@ -1275,6 +1275,34 @@
         <a href="https://www.reddit.com/r/Rag/comments/1thu5l6/free_rag_interview_qa_repo_with_all_10_types_of/" target="_blank" rel="noopener noreferrer">Reddit discussion</a>
       </div>
 
+      <details class="qa">
+        <summary>What are the main issues with standalone LLMs?</summary>
+        <div class="body">
+          <div class="ans">
+            <h3>1. Knowledge cutoff</h3>
+            <p>An LLM learns patterns and facts from the data available during training. Its internal knowledge does not automatically update after that training period, so it may not know about recent events, new policies, current prices, updated documentation, or changes inside an organisation.</p>
+            <p><b>Example:</b> A model trained before a new framework release may confidently explain an older API and miss a newly introduced feature or breaking change.</p>
+            <p><b>How to handle it:</b> Retrieve current information from approved sources at query time with RAG, search tools, databases, or APIs. Include timestamps and document versions so the system can prefer fresh evidence.</p>
+
+            <h3>2. Hallucination</h3>
+            <p>An LLM predicts the most likely next tokens; it does not directly verify that every generated statement is true. When its knowledge is incomplete, the prompt is ambiguous, or the supplied context is weak, it can produce fluent but incorrect facts, explanations, links, quotations, or code.</p>
+            <p><b>Example:</b> The model may invent a library method that looks consistent with the library's naming style but does not actually exist.</p>
+            <p><b>How to handle it:</b> Ground answers in retrieved evidence, require the model to say when evidence is insufficient, validate structured outputs, use tools for calculations and live facts, and measure factuality and groundedness with an evaluation set.</p>
+
+            <h3>3. No source attribution</h3>
+            <p>A standalone model normally generates an answer from learned statistical patterns without exposing the exact training documents behind each claim. Therefore, a confident answer does not provide a reliable audit trail or prove where the information came from.</p>
+            <p><b>Example:</b> The model may describe a company's leave policy but cannot identify the exact policy document, section, or revision that supports the answer.</p>
+            <p><b>How to handle it:</b> Retrieve source documents, preserve metadata such as title, URL, page, and version, and attach citations to the claims supported by each retrieved passage. Citation presence alone is not enough—the cited text must actually support the answer.</p>
+
+            <h3>4. No access to private data</h3>
+            <p>A general-purpose LLM does not automatically know an organisation's private documents, internal database records, emails, tickets, customer data, or unpublished code. That data was not part of the model's accessible context, and it should not be placed into the prompt without proper authorisation and protection.</p>
+            <p><b>Example:</b> The model cannot answer an employee's question about an internal reimbursement policy unless the relevant authorised policy content is supplied to it.</p>
+            <p><b>How to handle it:</b> Connect the application to approved private sources through access-controlled RAG or tools. Enforce user and document permissions before retrieval, isolate tenants, encrypt data, redact sensitive fields, minimise logging, and pass only the information needed for the current request.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Standalone LLMs can be outdated, hallucinate, lack verifiable citations, and cannot access private organisational knowledge. RAG and controlled tools supply current, attributable, authorised evidence, while validation and evaluations reduce the remaining risk.</div>
+        </div>
+      </details>
+
       <details class="qa" open>
         <summary>What is RAG?</summary>
         <div class="body">
