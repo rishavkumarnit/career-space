@@ -1356,16 +1356,22 @@
       <details class="qa">
         <summary>What are the main components of a RAG system?</summary>
         <div class="body">
-          <div class="ans"><p>A typical RAG system is built from these connected components:</p>
-          <ul>
-            <li><b>Document loaders:</b> read data from sources such as PDFs, text files, CSVs, web pages, databases, cloud drives, or APIs and convert it into a standard document format. In LangChain, examples include <code>PyPDFLoader</code>, <code>TextLoader</code>, <code>CSVLoader</code>, and <code>WebBaseLoader</code>.</li>
-            <li><b>Text splitters:</b> divide long documents into small, meaningful chunks that are easier to embed, retrieve, and fit into the LLM context window. Common options are recursive character, Markdown-header, and semantic splitters.</li>
-            <li><b>Embedding model:</b> converts each chunk and each user query into a dense vector that captures semantic meaning. Using the same embedding space lets the system compare a question with stored chunks.</li>
-            <li><b>Vector database / vector store:</b> stores embeddings alongside the original chunk text and metadata. It supports fast similarity search. Examples include FAISS, Chroma, Pinecone, Weaviate, Milvus, Qdrant, and MongoDB Atlas Vector Search.</li>
-            <li><b>Retriever:</b> takes the user query, runs the search, and returns the most relevant chunks. It may apply top-k selection, metadata filters, hybrid search, score thresholds, or reranking.</li>
-            <li><b>Prompt and LLM:</b> combine the question with retrieved context and generate a final answer that is grounded in the supplied evidence.</li>
-          </ul></div>
-          <div class="why"><b>Interview-ready version:</b> Load documents, split them into chunks, embed and store them, retrieve the most relevant chunks for a query, then give that context to the LLM to generate a grounded answer.</div>
+          <div class="ans">
+            <p>A complete RAG pipeline has an <b>indexing path</b>, which prepares the knowledge base, and a <b>query path</b>, which retrieves evidence and generates the answer.</p>
+            <ol>
+              <li><b>Loader:</b> Reads knowledge from PDFs, Word files, CSVs, web pages, databases, cloud drives, images processed with OCR, or APIs. The loader converts each source into a common document format containing text and source metadata.</li>
+              <li><b>Chunking:</b> Splits long documents into smaller, meaningful passages that can be embedded and retrieved independently. Chunk size and overlap must preserve enough context without creating oversized or repetitive results.</li>
+              <li><b>Embedding:</b> Passes every chunk through an embedding model and converts its meaning into a fixed-length numerical vector. Semantically related chunks should be located close to one another in the embedding space.</li>
+              <li><b>Vector store:</b> Stores each chunk’s embedding together with its original text and metadata such as document name, page, section, URL, date, tenant, and access level. It also maintains an index for efficient nearest-neighbour search.</li>
+              <li><b>Query vector:</b> At request time, the user’s question is passed through the same compatible embedding model to produce a query vector in the same vector space as the stored chunk embeddings.</li>
+              <li><b>Vector search:</b> The vector store compares the query vector with stored vectors using a similarity measure such as cosine similarity or dot product. It returns the top-<em>k</em> nearest candidates, optionally applying metadata filters, score thresholds, hybrid keyword search, or reranking.</li>
+              <li><b>Text and metadata retrieval:</b> The system retrieves the original text associated with the selected vectors, together with metadata needed for access checks, filtering, ordering, and citations. The vectors identify relevant records; the LLM receives readable text rather than raw vectors.</li>
+              <li><b>Final prompt:</b> The application assembles the instructions, user question, retrieved context, source labels, response rules, and conversation history into one augmented prompt. It should tell the model to use the supplied evidence and admit when that evidence is insufficient.</li>
+              <li><b>Generation:</b> The LLM reads the final prompt and generates a grounded response. The application can attach citations, validate the output, enforce a schema, or return a fallback when retrieval confidence is too low.</li>
+            </ol>
+            <p><b>End-to-end flow:</b> source documents → loader → chunks → chunk embeddings → vector store; then user query → query vector → vector search → retrieved text and metadata → final prompt → LLM-generated answer.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> During indexing, load documents, split them into chunks, embed them, and store each vector with its text and metadata. During querying, embed the question, run vector search, retrieve the matching text and metadata, assemble the final prompt, and let the LLM generate a grounded answer.</div>
         </div>
       </details>
 
