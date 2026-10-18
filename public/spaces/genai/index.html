@@ -1312,6 +1312,28 @@
       </details>
 
       <details class="qa">
+        <summary>What are the benefits of RAG?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>RAG improves an LLM application by assembling a small, relevant context for each request before generation. Instead of placing an entire knowledge base into the prompt, the system retrieves only the chunks most closely related to the user’s question and fits them inside the model’s limited context window.</p>
+            <ol>
+              <li><b>More current answers:</b> The knowledge base can be updated independently of the model. New policies, product documentation, prices, or records can become available as soon as they are indexed, without retraining the LLM.</li>
+              <li><b>Reduced hallucination risk:</b> The model receives concrete evidence and can be instructed to answer only from that evidence. This does not eliminate hallucinations, but it makes answers more grounded and gives the system a clear reason to abstain when relevant evidence is missing.</li>
+              <li><b>Source attribution:</b> Retrieved chunks can retain metadata such as document title, URL, page number, section, owner, and revision. The final response can cite these sources so users can verify important claims.</li>
+              <li><b>Access to private knowledge:</b> RAG can connect the model to authorised internal documents, databases, support tickets, or company policies that were never part of its training data. Retrieval must still enforce the requesting user’s permissions before any content reaches the prompt.</li>
+              <li><b>Relevant use of the context window:</b> A knowledge base may contain millions of documents, while an LLM can read only a limited number of tokens in one request. Retrieval selects the most useful passages dynamically, reducing noise and leaving more context space for the question, instructions, conversation, and answer.</li>
+              <li><b>Easier knowledge maintenance:</b> Teams can add, update, or delete source documents without retraining or redeploying the base model. Removing an outdated or unauthorised document from the retrieval index also prevents it from being selected in future requests.</li>
+              <li><b>Lower cost than frequent fine-tuning:</b> Fine-tuning changes model behaviour but is inefficient for facts that change often. RAG stores facts outside the model and supplies them only when needed, making frequent knowledge updates simpler and usually cheaper.</li>
+              <li><b>Domain-specific answers:</b> The same general LLM can answer questions using specialised legal, medical, technical, agricultural, or organisational material, provided the relevant sources are indexed and access is controlled.</li>
+              <li><b>Better debugging and evaluation:</b> Developers can inspect the retrieved chunks separately from the generated answer. This makes it possible to determine whether a failure came from ingestion, retrieval, reranking, prompt construction, or generation.</li>
+            </ol>
+            <p><b>Example:</b> For the question “What is our reimbursement limit?”, the retriever selects the current reimbursement-policy section instead of sending every HR document. The LLM answers from that passage and cites its document and revision. If no authorised policy passage is retrieved, the application can say that it does not have enough evidence rather than guessing.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> RAG gives an LLM fresh, private, relevant, and attributable evidence at query time. It uses the limited context window efficiently, reduces hallucination risk, avoids retraining for every knowledge update, and makes failures easier to trace.</div>
+        </div>
+      </details>
+
+      <details class="qa">
         <summary>What are the main steps in a RAG pipeline?</summary>
         <div class="body">
           <div class="ans"><p>A RAG pipeline has four high-level stages:</p><ol><li><b>Indexing:</b> prepare a searchable knowledge base before users ask questions.</li><li><b>Retrieval:</b> find the chunks most relevant to the user’s question at query time.</li><li><b>Augmentation:</b> combine those retrieved chunks with the user’s question to create an enriched prompt.</li><li><b>Generation:</b> let the LLM produce an answer using the retrieved evidence.</li></ol></div>
