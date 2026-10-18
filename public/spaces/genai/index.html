@@ -1376,6 +1376,58 @@
       </details>
 
       <details class="qa">
+        <summary>What are the main failure types in a RAG system?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>RAG failures can be divided into two broad categories: <b>retriever failure</b> and <b>generator failure</b>. Separating them is important because improving the prompt cannot fix missing evidence, while changing the retriever cannot fix an LLM that ignores good evidence.</p>
+
+            <h3>1. Retriever failure</h3>
+            <p>A retriever failure occurs when the system does not place the correct, relevant, and authorised evidence into the final prompt. The answer may then be wrong even if the LLM follows its instructions perfectly.</p>
+            <p><b>Common causes:</b></p>
+            <ul>
+              <li><b>Missing knowledge:</b> the required document was never ingested, failed during parsing, or was deleted from the index.</li>
+              <li><b>Poor chunking:</b> the answer is split across chunks, headings are separated from their content, or chunks are so large that their embedding becomes unfocused.</li>
+              <li><b>Weak embeddings:</b> the embedding model does not represent the domain, language, abbreviations, or query intent well.</li>
+              <li><b>Query mismatch:</b> the user uses different wording, misspellings, acronyms, or an ambiguous question that does not match the indexed text.</li>
+              <li><b>Bad search configuration:</b> top-k is too small, the score threshold is too strict, metadata filters exclude the correct source, or the ANN index misses a relevant neighbour.</li>
+              <li><b>Ranking failure:</b> the correct chunk is retrieved as a candidate but irrelevant chunks are ranked above it and consume the context window.</li>
+              <li><b>Stale or conflicting content:</b> an older document is selected instead of the current version, or several sources disagree without a clear authority rule.</li>
+            </ul>
+            <p><b>Example:</b> A user asks, “How many casual leaves can I carry forward?” The current HR policy contains the answer, but it was chunked separately from the heading “Casual Leave,” so the retriever returns a similar paragraph about earned leave. The LLM answers from the wrong policy section. This is a retrieval failure.</p>
+            <p><b>How to detect it:</b> inspect the retrieved chunks before reading the final answer. Measure retrieval recall, context precision, relevance, rank of the gold passage, and performance by query type. Include known-answer, no-answer, multilingual, acronym, and metadata-filter cases in the evaluation set.</p>
+            <p><b>How to improve it:</b> fix ingestion and parsing, use structure-aware or overlapping chunks, add useful metadata, try hybrid keyword and vector search, rewrite or expand queries, retrieve more candidates, rerank them, tune thresholds on an evaluation set, and apply document version and access-control rules.</p>
+
+            <h3>2. Generator failure</h3>
+            <p>A generator failure occurs when the correct evidence is present in the prompt, but the LLM produces an incorrect, unsupported, incomplete, or badly formatted answer.</p>
+            <p><b>Common causes:</b></p>
+            <ul>
+              <li><b>Evidence is ignored:</b> the model relies on its prior knowledge instead of the retrieved context.</li>
+              <li><b>Hallucination:</b> the model adds claims that are not supported by any retrieved passage.</li>
+              <li><b>Incorrect synthesis:</b> the model misunderstands a table, combines unrelated chunks, performs faulty arithmetic, or draws the wrong conclusion from valid evidence.</li>
+              <li><b>Lost-in-the-middle:</b> the relevant passage is included but buried among too many chunks, so the model pays less attention to it.</li>
+              <li><b>Conflicting context:</b> the model selects the wrong statement when retrieved sources disagree or fails to mention the conflict.</li>
+              <li><b>Citation failure:</b> the answer is correct but points to the wrong source, or a citation does not support the claim attached to it.</li>
+              <li><b>Instruction or format failure:</b> the model does not abstain when evidence is insufficient, ignores the required response schema, or answers in the wrong language or tone.</li>
+            </ul>
+            <p><b>Example:</b> The retriever supplies the correct policy stating that five casual leaves may be carried forward, but the model answers “ten” by combining it with a separate earned-leave limit. Because the necessary evidence was available but used incorrectly, this is a generation failure.</p>
+            <p><b>How to detect it:</b> evaluate the answer against the retrieved context. Measure faithfulness or groundedness, factual correctness, answer relevance, citation correctness, completeness, and format adherence. Review whether every important claim is entailed by a retrieved passage.</p>
+            <p><b>How to improve it:</b> give explicit grounding and abstention instructions, remove irrelevant context, order and label sources clearly, require claim-level citations, use structured output, lower temperature for factual tasks, run post-generation verification, and use a stronger model when synthesis or reasoning is the bottleneck.</p>
+
+            <h3>How to identify the root cause</h3>
+            <ol>
+              <li>Define the evidence that a correct answer requires.</li>
+              <li>Check whether that evidence exists in the indexed knowledge base.</li>
+              <li>Run retrieval and inspect whether the evidence appears in the returned top-k chunks.</li>
+              <li>If the evidence is absent, diagnose ingestion, chunking, embedding, filtering, search, or ranking: it is a retriever failure.</li>
+              <li>If the evidence is present, compare each answer claim with it: unsupported or incorrect use of good context is a generator failure.</li>
+              <li>Record both retrieval and generation metrics so an apparent improvement in one stage does not hide a regression in the other.</li>
+            </ol>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> A RAG system fails either because it did not retrieve the evidence needed for the answer, or because the generator failed to use retrieved evidence correctly. I debug retrieval first by inspecting top-k chunks and recall; if the correct context is present, I evaluate generation for faithfulness, correctness, citations, and instruction following.</div>
+        </div>
+      </details>
+
+      <details class="qa">
         <summary>What is a vector store, and why is it used in RAG?</summary>
         <div class="body">
           <div class="ans"><p>A <b>vector store</b> is a system that stores data as numerical vectors, usually embeddings, together with the original chunk text and metadata. In RAG, it lets the application retrieve information by semantic meaning instead of relying only on exact keyword matches.</p>
