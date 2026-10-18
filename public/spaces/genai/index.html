@@ -1504,6 +1504,55 @@
       </details>
 
       <details class="qa">
+        <summary>What is in-context learning, and how does it work?</summary>
+        <div class="body">
+          <div class="ans">
+            <p><b>In-context learning (ICL)</b> is the ability of a pretrained language model to infer a task or response pattern from instructions and examples placed inside the prompt. The model uses that temporary context while generating the current response; its weights are not updated and it does not permanently learn from the prompt.</p>
+
+            <h3>Common forms</h3>
+            <ul>
+              <li><b>Zero-shot:</b> provide only an instruction. Example: “Classify this review as positive, neutral, or negative.”</li>
+              <li><b>One-shot:</b> provide one input-output example before the new input.</li>
+              <li><b>Few-shot:</b> provide several representative examples so the model can infer the desired labels, format, tone, or reasoning pattern.</li>
+            </ul>
+
+            <p><b>Example:</b></p>
+            <pre><code>Instruction: Convert support messages into JSON.
+
+Message: "I was charged twice."
+Output: {"category":"billing","priority":"high"}
+
+Message: "How do I change my password?"
+Output: {"category":"account","priority":"normal"}
+
+Message: "My payment failed but money was deducted."
+Output:</code></pre>
+            <p>The examples demonstrate the output schema, available categories, and priority style. The model continues that pattern for the final message without any parameter update.</p>
+
+            <h3>Why it works</h3>
+            <p>During pretraining, a language model learns to predict continuations across many kinds of text, including instructions, demonstrations, lists, conversations, and question-answer patterns. At inference time, attention lets the model relate the current input to patterns present in the prompt and generate a continuation consistent with them. The demonstrations act as temporary task specifications rather than new training records.</p>
+
+            <h3>In-context learning versus fine-tuning and RAG</h3>
+            <ul>
+              <li><b>In-context learning:</b> changes the prompt for this request. It is fast and does not modify model weights, but consumes context-window tokens.</li>
+              <li><b>Fine-tuning:</b> trains on examples and updates model parameters, creating a more persistent behaviour across requests.</li>
+              <li><b>RAG:</b> retrieves external evidence at request time. It primarily supplies facts and sources; examples in the final prompt can still use in-context learning to control how that evidence is interpreted or formatted.</li>
+            </ul>
+
+            <h3>Limitations and good practices</h3>
+            <ul>
+              <li>Results are sensitive to example quality, wording, order, labels, and similarity to the real input.</li>
+              <li>Too many examples consume the context window, increase cost and latency, and may distract the model.</li>
+              <li>Unbalanced or contradictory demonstrations can bias the output or make the intended rule unclear.</li>
+              <li>ICL does not guarantee factual correctness and does not give the model permanent knowledge.</li>
+              <li>Use clear instructions, diverse and correct examples, consistent formatting, coverage of important edge cases, and a held-out evaluation set.</li>
+            </ul>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> In-context learning means teaching an LLM a task through instructions and zero, one, or a few examples inside the prompt. The model adapts its response from that temporary context without changing its weights, so it is quick and flexible but limited by prompt quality and context-window size.</div>
+        </div>
+      </details>
+
+      <details class="qa">
         <summary>What is fine-tuning, and what does a typical fine-tuning workflow look like?</summary>
         <div class="body">
           <div class="ans"><p><b>Fine-tuning</b> continues training a pretrained model on carefully curated prompt-and-output examples so that its behaviour changes for a specialised task. A practical workflow is to collect high-quality examples, choose a method such as full fine-tuning or LoRA/QLoRA, train for a small number of epochs, then evaluate quality and safety on held-out data.</p></div>
