@@ -658,6 +658,10 @@ const SHEET_SECTIONS = [
   id: "dp",
   title: "18. Dynamic Programming",
   resources: [
+    ["Dynamic Programming (DP) — Problem List 1", "https://leetcode.com/problem-list/m221lq9s/"],
+    ["Dynamic Programming (DP) — Problem List 2", "https://leetcode.com/problem-list/m22bqrnt/"],
+    ["Dynamic Programming (DP) — Problem List 3", "https://leetcode.com/problem-list/m221jeds/"],
+    ["Dynamic Programming (DP) — Problem List 4", "https://leetcode.com/problem-list/m221wfav/"],
     ["Grokking Dynamic Programming Patterns (Educative course)", "https://www.educative.io/courses/grokking-dynamic-programming-patterns-for-coding-interviews/m2G1pAq0OO0"],
     ["Dynamic Programming Patterns (LeetCode discuss)", "https://leetcode.com/discuss/post/458695/dynamic-programming-patterns-by-aatalyk-pmgr/"],
     ["Comprehensive DS & Algorithms Guide (LeetCode discuss)", "https://leetcode.com/discuss/post/494279/comprehensive-data-structure-and-algorit-tdez/"]
