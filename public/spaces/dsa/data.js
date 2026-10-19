@@ -20,6 +20,9 @@ const SHEET_SECTIONS = [
 {
   id: "arrays",
   title: "1. Arrays",
+  resources: [
+    ["Arrays — LeetCode Problem List", "https://leetcode.com/problem-list/m3gzl66s/"]
+  ],
   items: [
     [null, "Second Largest", "https://www.geeksforgeeks.org/problems/second-largest3735/1"],
     [null, "Merge Two Sorted Arrays Without Extra Space (GFG)", "https://www.geeksforgeeks.org/dsa/merge-two-sorted-arrays-o1-extra-space/"],
@@ -138,6 +141,7 @@ const SHEET_SECTIONS = [
   title: "4. Binary Search",
   info: "Upper bound: if the value exists, return the next number; if not, return the next greater number. Lower bound: if the value exists, return that same number; if not, return the next greater number.",
   resources: [
+    ["Binary Search — LeetCode Problem List", "https://leetcode.com/problem-list/m2783mc6/"],
     ["OP Binary Search Questions (LeetCode discuss, by Kalinga)", "https://leetcode.com/discuss/post/3266833/op-binary-search-questions-by-kalinga-n4qb/"]
   ],
   items: [
@@ -199,6 +203,10 @@ const SHEET_SECTIONS = [
 {
   id: "recursion-backtracking",
   title: "5. Recursion and Backtracking",
+  resources: [
+    ["Recursion — LeetCode Problem List", "https://leetcode.com/problem-list/mk7l73rc/"],
+    ["Backtracking — LeetCode Problem List", "https://leetcode.com/problem-list/mk7dslmg/"]
+  ],
   items: [
     [66, "Combination Sum", "https://leetcode.com/problems/combination-sum/description/", null, false, ["Top150"]],
     [67, "Combination Sum II", "https://leetcode.com/problems/combination-sum-ii/description/"],
@@ -348,6 +356,7 @@ const SHEET_SECTIONS = [
   id: "string-algorithms",
   title: "8. String Algorithm",
   resources: [
+    ["Strings — LeetCode Problem List", "https://leetcode.com/problem-list/m22c9n62/"],
     ["Z Algorithm — Z values (video)", "https://www.youtube.com/watch?v=CpZh4eF8QBw"],
     ["Z Algorithm reference implementation (Java)", "https://github.com/mission-peace/interview/blob/master/src/com/interview/string/ZAlgorithm.java"]
   ],
@@ -391,6 +400,11 @@ const SHEET_SECTIONS = [
 {
   id: "two-pointer",
   title: "9. Two Pointer",
+  resources: [
+    ["Sliding Window — LeetCode Problem List", "https://leetcode.com/problem-list/m276dxk2/"],
+    ["Two Pointers: Fast and Slow — LeetCode Problem List", "https://leetcode.com/problem-list/m276n247/"],
+    ["Two Pointers: Classic — LeetCode Problem List", "https://leetcode.com/problem-list/m2762w11/"]
+  ],
   items: [
     [129, "Move Zeroes", "https://leetcode.com/problems/move-zeroes/description/", null, false, ["LC75"]],
     [130, "Max Consecutive Ones", "https://leetcode.com/problems/max-consecutive-ones/description/"],
@@ -420,6 +434,10 @@ const SHEET_SECTIONS = [
 {
   id: "stacks",
   title: "10. Stacks",
+  resources: [
+    ["Stack — LeetCode Problem List", "https://leetcode.com/problem-list/ma8ubivs/"],
+    ["Monotonic Stack — LeetCode Problem List", "https://leetcode.com/problem-list/ma8s5ihv/"]
+  ],
   items: [
     [null, "Implement Stack Using Array (GFG)", "https://www.geeksforgeeks.org/dsa/implement-stack-using-array/"],
     [138, "Valid Parentheses", "https://leetcode.com/problems/valid-parentheses/description/", null, false, ["Top150"]],
@@ -449,6 +467,9 @@ const SHEET_SECTIONS = [
 {
   id: "queues",
   title: "11. Queues",
+  resources: [
+    ["Queue — LeetCode Problem List", "https://leetcode.com/problem-list/ma8c3d9g/"]
+  ],
   items: [
     [148, "Implement Stack using Queues", "https://leetcode.com/problems/implement-stack-using-queues/description/"],
     [149, "Implement Queue using Stacks", "https://leetcode.com/problems/implement-queue-using-stacks/description/"],
@@ -464,6 +485,9 @@ const SHEET_SECTIONS = [
 {
   id: "linked-list",
   title: "12. Linked List",
+  resources: [
+    ["Linked List — LeetCode Problem List", "https://leetcode.com/problem-list/mmbq602t/"]
+  ],
   items: [
     [151, "Merge Two Sorted Lists", "https://leetcode.com/problems/merge-two-sorted-lists/description/", null, false, ["Top150"]],
     [152, "Reverse Linked List", "https://leetcode.com/problems/reverse-linked-list/description/", null, false, ["LC75"]],
@@ -502,6 +526,9 @@ const SHEET_SECTIONS = [
 {
   id: "trees",
   title: "13. Trees",
+  resources: [
+    ["Binary Search Tree and Binary Tree — LeetCode Problem List", "https://leetcode.com/problem-list/mmbknbs2/"]
+  ],
   items: [
     [170, "Binary Tree Inorder Traversal", "https://leetcode.com/problems/binary-tree-inorder-traversal/description/", "Recursive & iterative"],
     [171, "Binary Tree Preorder Traversal", "https://leetcode.com/problems/binary-tree-preorder-traversal/description/", "Recursive & iterative"],
@@ -568,6 +595,12 @@ const SHEET_SECTIONS = [
 {
   id: "heaps",
   title: "14. Heaps",
+  resources: [
+    ["Heap and Priority Queue — Problem List 1", "https://leetcode.com/problem-list/m27ub47v/"],
+    ["Heap and Priority Queue — Problem List 2", "https://leetcode.com/problem-list/m27ucclg/"],
+    ["Heap and Priority Queue — Problem List 3", "https://leetcode.com/problem-list/m27uy5ti/"],
+    ["Heap and Priority Queue — Problem List 4", "https://leetcode.com/problem-list/matj04jd/"]
+  ],
   items: [
     [212, "Connect N Ropes with Minimum Cost (GfG)", "https://www.geeksforgeeks.org/connect-n-ropes-minimum-cost/"],
     [213, "Maximize Sum of Array After K Negations", "https://leetcode.com/problems/maximize-sum-of-array-after-k-negations/description/"],
@@ -620,6 +653,13 @@ const SHEET_SECTIONS = [
 {
   id: "graphs",
   title: "17. Graphs",
+  resources: [
+    ["Graph DFS — LeetCode Problem List", "https://leetcode.com/problem-list/m22zk1nr/"],
+    ["Graph BFS — LeetCode Problem List", "https://leetcode.com/problem-list/m22zq90v/"],
+    ["Graph Traversal — LeetCode Problem List", "https://leetcode.com/problem-list/m22z5xn2/"],
+    ["Graph Cycle Algorithms — LeetCode Problem List", "https://leetcode.com/problem-list/mmmn3zis/"],
+    ["Graph Shortest Path — LeetCode Problem List", "https://leetcode.com/problem-list/mmnpz31h/"]
+  ],
   items: [
     [229, "Number of Islands", "https://leetcode.com/problems/number-of-islands/description/"],
     [230, "Rotting Oranges", "https://leetcode.com/problems/rotting-oranges/description/"],
