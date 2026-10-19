@@ -1376,6 +1376,57 @@
       </details>
 
       <details class="qa">
+        <summary>What are document loaders, and what do they do in a RAG pipeline?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>A <b>document loader</b> is the ingestion component that connects to a knowledge source, reads its raw content, and converts it into a consistent document representation that the rest of the RAG pipeline can process. It hides source-specific details so that a PDF, web page, database row, or API response can all become documents containing <b>text plus metadata</b>.</p>
+
+            <h3>Three key tasks of a document loader</h3>
+            <ol>
+              <li><b>Load the document:</b> Access the source and read its raw data. The source may be a local file, uploaded file, URL, cloud drive, object store, database, email system, wiki, or API. The loader may also handle authentication, pagination, retries, encodings, and batch processing.</li>
+              <li><b>Parse the document:</b> Understand the source format and turn it into usable content. A PDF parser may preserve page boundaries; an HTML parser may remove navigation and scripts; a CSV loader may convert each row into a document; and a scanned file may require OCR. Layout-aware parsers can also identify headings, paragraphs, lists, tables, and images.</li>
+              <li><b>Extract and output:</b> Return normalized text together with useful metadata such as file name, source URL, page number, section heading, author, creation date, document ID, tenant, and access level. This output is then passed to chunking, embedding, and indexing.</li>
+            </ol>
+
+            <h3>Common document-loader types</h3>
+            <ul>
+              <li><b>File loaders:</b> PDF, DOCX, TXT, Markdown, HTML, CSV, JSON, PowerPoint, and spreadsheets.</li>
+              <li><b>Web loaders:</b> Public pages, sitemaps, documentation sites, and pages rendered by a browser.</li>
+              <li><b>Data loaders:</b> SQL queries, NoSQL collections, APIs, object storage, and message or event streams.</li>
+              <li><b>Enterprise loaders:</b> Internal wikis, cloud drives, email, ticketing systems, and source-code repositories.</li>
+              <li><b>Multimodal loaders:</b> Scanned PDFs and images using OCR, and audio or video using speech-to-text.</li>
+            </ul>
+
+            <h3>Example</h3>
+            <p>Suppose a company handbook is stored as a 40-page PDF. The loader reads the file, parses each page, extracts its text, and produces records such as:</p>
+            <pre><code>{
+  "text": "Employees may claim up to ₹2,000 per month...",
+  "metadata": {
+    "source": "employee-handbook.pdf",
+    "page": 18,
+    "section": "Internet reimbursement",
+    "revision": "2026-09",
+    "access": "employees"
+  }
+}</code></pre>
+            <p>The chunker can then split this normalized content while retaining the metadata. After retrieval, the application can use the page and section fields for filtering, permission checks, and citations.</p>
+
+            <h3>What a loader does not do</h3>
+            <p>A loader normally does not decide semantic chunk boundaries, create embeddings, search the vector store, or generate an answer. Its responsibility is to produce accurate, clean, traceable input for those later stages. Some libraries combine loading and splitting for convenience, but they remain separate concerns in the RAG architecture.</p>
+
+            <h3>Production considerations</h3>
+            <ul>
+              <li>Preserve source and access-control metadata so retrieved content can be authorised and cited.</li>
+              <li>Detect empty pages, broken encodings, OCR errors, duplicate files, unsupported formats, and partial parsing instead of silently indexing bad content.</li>
+              <li>Use stable document IDs, content hashes, and version metadata to support updates, deletion, and incremental re-indexing.</li>
+              <li>Choose parsers based on document structure. Plain text extraction may be enough for simple files, while contracts, tables, or multi-column PDFs may need layout-aware parsing.</li>
+            </ul>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> A document loader is the entry point of the RAG ingestion pipeline. It connects to a source, loads and parses the raw document, and outputs normalized text with metadata. That output is then chunked, embedded, and stored for retrieval.</div>
+        </div>
+      </details>
+
+      <details class="qa">
         <summary>What are the main failure types in a RAG system?</summary>
         <div class="body">
           <div class="ans">
