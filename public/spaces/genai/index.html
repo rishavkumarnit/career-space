@@ -999,10 +999,20 @@
       </details>
 
       <details class="qa">
-        <summary>What is the difference between a list, tuple, set, and dictionary?</summary>
+        <summary>What are Python's core data structures, and when should you use each one?</summary>
         <div class="body">
-          <div class="ans"><ul><li><b>List:</b> ordered, mutable collection that can contain duplicates.</li><li><b>Tuple:</b> ordered, immutable collection; useful for fixed records and safe dictionary keys when its values are hashable.</li><li><b>Set:</b> unordered collection of unique hashable values; useful for membership checks and removing duplicates.</li><li><b>Dictionary:</b> mutable mapping of unique keys to values; ideal for structured lookups and named fields.</li></ul></div>
-          <div class="why"><b>Interview-ready version:</b> Use lists for ordered mutable sequences, tuples for fixed records, sets for uniqueness and fast membership, and dictionaries for key-value lookups.</div>
+          <div class="ans">
+            <ul>
+              <li><b>List:</b> an ordered, mutable sequence that permits duplicates. Appending at the end is amortized <code>O(1)</code>; indexing is <code>O(1)</code>; searching or inserting near the front is <code>O(n)</code>.</li>
+              <li><b>Tuple:</b> an ordered, immutable sequence. It represents fixed records well and can be a dictionary key or set element when every contained value is hashable.</li>
+              <li><b>Set / frozenset:</b> a hash-table-based collection of unique values. Average membership, insertion, and deletion are <code>O(1)</code>. <code>frozenset</code> is the immutable, hashable form.</li>
+              <li><b>Dictionary:</b> an insertion-ordered, mutable mapping from unique hashable keys to values. Average lookup, insertion, and deletion are <code>O(1)</code>.</li>
+              <li><b>String:</b> an immutable Unicode sequence. Repeated concatenation can create many temporary objects, so use <code>"".join(parts)</code> when combining many strings.</li>
+              <li><b>Deque:</b> <code>collections.deque</code> supports efficient <code>O(1)</code> insertion and removal from both ends, making it preferable to a list for queues and BFS.</li>
+            </ul>
+            <p>The advertised hash-table complexities are averages; poor hash distributions or collisions can degrade them. Keys and set elements must be hashable, meaning their hash and equality must remain stable while stored.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Use lists for general ordered mutable data, tuples for fixed immutable records, sets for uniqueness and fast membership, dictionaries for key-value lookup, and deques when both ends must be efficient.</div>
         </div>
       </details>
 
@@ -1025,8 +1035,19 @@
       <details class="qa">
         <summary>How does exception handling work in Python?</summary>
         <div class="body">
-          <div class="ans"><p>Put code that may fail in a <code>try</code> block and handle expected errors in specific <code>except</code> blocks. Use <code>else</code> for code that should run only when no exception occurs, and <code>finally</code> for cleanup that must run either way, such as closing a file or connection.</p><p>Catch specific exception types rather than a bare <code>except</code>, log enough context to debug the failure, and re-raise or return a clear error when the caller needs to know the operation failed.</p></div>
-          <div class="why"><b>Good practice:</b> exceptions should handle expected failure paths, not hide programming mistakes or replace normal control flow.</div>
+          <div class="ans">
+            <p>Python searches matching <code>except</code> clauses from top to bottom when code in <code>try</code> raises an exception. <code>else</code> runs only when the <code>try</code> block succeeds, while <code>finally</code> runs whether the operation succeeds, fails, returns, or is cancelled, so it is suitable for mandatory cleanup.</p>
+            <pre><code>try:
+    value = int(raw_value)
+except ValueError as exc:
+    raise InvalidInput("value must be an integer") from exc
+else:
+    save(value)
+finally:
+    audit_attempt()</code></pre>
+            <p>Use <code>raise</code> to signal a failure and <code>raise NewError(...) from exc</code> to preserve the original cause. Define a custom exception when callers need to distinguish a domain failure from built-in errors. Catch the narrowest expected type, avoid silently swallowing exceptions, and catch <code>Exception</code> only at a boundary that can log, translate, retry, or safely terminate the operation.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> <code>try</code> contains risky work, specific <code>except</code> blocks recover from known failures, <code>else</code> handles success-only work, and <code>finally</code> guarantees cleanup. Preserve causes when translating exceptions.</div>
         </div>
       </details>
 
@@ -1035,6 +1056,170 @@
         <div class="body">
           <div class="ans"><p><b>Inheritance</b> lets a child class reuse and extend the behaviour of a parent class. <b>Method overriding</b> happens when the child defines its own version of a parent method, allowing specialised behaviour while keeping the same interface.</p><p>Use <code>super()</code> to call parent initialisation or behaviour when it is still needed. Prefer composition—giving an object the collaborators it needs—when the relationship is not genuinely an “is-a” relationship.</p></div>
           <div class="why"><b>Interview-ready version:</b> Inheritance shares common behaviour; overriding customises it in a subclass; composition is often the cleaner choice for combining independent responsibilities.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>How does memory management work in Python?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>In CPython, objects live in a private heap managed by the interpreter, and variables hold references to those objects. Most objects are reclaimed immediately through <b>reference counting</b>: assigning another reference increases the count, removing a reference decreases it, and a count of zero deallocates the object.</p>
+            <p>Reference counting alone cannot reclaim a cycle, such as two objects that reference each other. CPython therefore also has a <b>generational cyclic garbage collector</b> that periodically finds unreachable reference cycles. Short-lived objects are checked more often because most objects die young.</p>
+            <ul>
+              <li><b><code>del name</code> removes a reference:</b> it does not guarantee immediate destruction if other references still point to the object.</li>
+              <li><b>Small-object allocation:</b> CPython's allocator groups small allocations into arenas, pools, and blocks. Freed memory may be retained by the process for reuse, so resident memory does not always fall immediately.</li>
+              <li><b>Resource cleanup:</b> files, sockets, and database connections should use context managers. Do not rely on garbage collection timing to release external resources.</li>
+              <li><b>Diagnosing growth:</b> use tools such as <code>tracemalloc</code>, object-count snapshots, and heap profilers to distinguish a real leak from allocator reuse or an intentionally growing cache.</li>
+            </ul>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> CPython primarily uses reference counting and supplements it with a generational collector for cycles. The interpreter manages object memory, while context managers should deterministically release external resources.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>What are the object-oriented programming fundamentals in Python?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>A <b>class</b> defines state and behaviour, and an <b>object</b> is an instance of that class. Python supports the main OOP ideas while remaining dynamic and favouring protocols over rigid type hierarchies.</p>
+            <ul>
+              <li><b>Encapsulation:</b> keep state and the operations that protect its invariants together. Python uses naming conventions such as <code>_internal</code>, name mangling for <code>__name</code>, and <code>@property</code> rather than strict private fields.</li>
+              <li><b>Abstraction:</b> expose what a component does while hiding how it does it. Abstract base classes and <code>typing.Protocol</code> can define contracts.</li>
+              <li><b>Inheritance:</b> derive a specialised class from a base class. Python uses method-resolution order for multiple inheritance, and <code>super()</code> follows that order.</li>
+              <li><b>Polymorphism:</b> different objects can support the same operation. Duck typing means callers often care about behaviour—such as a <code>send()</code> method—rather than the object's concrete class.</li>
+              <li><b>Composition:</b> build a class from collaborating objects. It often produces looser coupling than deep inheritance trees.</li>
+            </ul>
+            <pre><code>class PaymentProcessor:
+    def __init__(self, gateway):
+        self._gateway = gateway
+
+    def pay(self, amount):
+        return self._gateway.charge(amount)</code></pre>
+            <p>This example uses encapsulation and composition. Any gateway object with a compatible <code>charge</code> method works polymorphically.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Python OOP combines classes and objects with encapsulation, abstraction, inheritance, and polymorphism. In production code, I prefer small interfaces and composition unless there is a clear is-a relationship.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>How should file I/O be handled in Python?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>Open files with a context manager so they close even when reading or writing raises an exception. Choose text or binary mode deliberately, and specify the encoding for text files.</p>
+            <pre><code>from pathlib import Path
+
+path = Path("notes.txt")
+with path.open("r", encoding="utf-8") as file:
+    for line in file:
+        process(line.rstrip("\n"))</code></pre>
+            <ul>
+              <li><b>Modes:</b> <code>r</code> reads, <code>w</code> replaces, <code>a</code> appends, <code>x</code> creates only when absent, <code>b</code> selects bytes, and <code>+</code> enables reading and writing.</li>
+              <li><b>Streaming:</b> iterate over the file or read fixed-size chunks for large content instead of loading the whole file with <code>read()</code>.</li>
+              <li><b>Position:</b> <code>tell()</code> reports the current position and <code>seek()</code> moves it when the stream supports random access.</li>
+              <li><b>Structured formats:</b> use <code>json</code> and <code>csv</code> rather than manually parsing their syntax. Treat untrusted <code>pickle</code> data as unsafe because deserialisation can execute code.</li>
+              <li><b>Safer replacement:</b> write important output to a temporary file, flush it as required, then atomically replace the destination to avoid leaving a partial file after a crash.</li>
+            </ul>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Use <code>with</code> for deterministic closure, set the text encoding, stream large files, use format-specific parsers, and use atomic replacement when a partially written file would be dangerous.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>How does Python's asyncio event loop work internally?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>The event loop is a cooperative scheduler, usually running in one OS thread. It maintains ready callbacks and tasks, scheduled timers, and registrations for I/O readiness. Underneath, a selector or platform-specific mechanism waits efficiently for sockets, pipes, or other supported operations to become ready.</p>
+            <ol>
+              <li>The loop runs a ready task until that coroutine reaches an <code>await</code> whose result is not available.</li>
+              <li>The coroutine yields control and is suspended on a <code>Future</code> or another awaitable.</li>
+              <li>The loop processes other ready tasks or waits for I/O and timers.</li>
+              <li>When the awaited operation completes, its callback marks the future done and places the suspended task back on the ready queue.</li>
+              <li>The task resumes from the statement after <code>await</code>.</li>
+            </ol>
+            <p>Cooperative scheduling means code must yield. A blocking database driver, <code>time.sleep()</code>, or CPU-heavy loop inside an async function blocks the event-loop thread and delays every other task. Use async libraries, <code>asyncio.sleep()</code>, a bounded thread pool for blocking I/O, or a process pool for CPU-heavy Python work.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> The event loop runs coroutines until they await, watches their I/O or timers, and schedules them again when results are ready. It provides high I/O concurrency on one thread, so blocking that thread blocks all async work.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>What is the difference between a coroutine and an asyncio task?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>Calling an <code>async def</code> function creates a <b>coroutine object</b>. It describes work but does not start running merely because it was created. Awaiting it runs it as part of the current task.</p>
+            <p>An <code>asyncio.Task</code> wraps a coroutine and schedules it on the event loop so it can make progress concurrently with the current task:</p>
+            <pre><code>async def load_user(user_id):
+    ...
+
+user_task = asyncio.create_task(load_user(7))
+orders_task = asyncio.create_task(load_orders(7))
+user, orders = await asyncio.gather(user_task, orders_task)</code></pre>
+            <p><code>gather()</code> waits for multiple awaitables and returns results in input order. For structured concurrency, <code>asyncio.TaskGroup</code> keeps related task lifetimes inside one scope and cancels sibling tasks when one fails. Keep task references, await their completion, handle their exceptions, and allow <code>CancelledError</code> to propagate after necessary cleanup.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> A coroutine is an awaitable description of async work; a task schedules that coroutine to run concurrently on the event loop and tracks its result, exception, and cancellation.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>What is an async context manager, and when should you use one?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>An async context manager performs asynchronous setup and cleanup around an <code>async with</code> block. Its <code>__aenter__</code> and <code>__aexit__</code> methods return awaitables, unlike a regular context manager's synchronous methods.</p>
+            <pre><code>class Connection:
+    async def __aenter__(self):
+        self.client = await open_connection()
+        return self.client
+
+    async def __aexit__(self, exc_type, exc, traceback):
+        await self.client.close()
+        return False
+
+async with Connection() as client:
+    await client.send(data)</code></pre>
+            <p>Use it for resources whose acquisition or release requires awaiting, such as database transactions, network clients, distributed locks, or async streams. Returning <code>True</code> from <code>__aexit__</code> suppresses the exception, so most resource managers return <code>False</code>. The <code>@asynccontextmanager</code> decorator provides a concise generator-based alternative.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Async context managers guarantee awaitable setup and cleanup with <code>async with</code>, even when the body fails or is cancelled.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>What is the difference between concurrency and parallelism in Python?</summary>
+        <div class="body">
+          <div class="ans">
+            <p><b>Concurrency</b> means multiple tasks make progress during overlapping time. <b>Parallelism</b> means multiple tasks execute at the same instant on different CPU cores or processors.</p>
+            <ul>
+              <li><b><code>asyncio</code>:</b> cooperative concurrency on an event-loop thread. It is ideal for many I/O-bound operations that already have async APIs.</li>
+              <li><b>Threads:</b> pre-emptive concurrency with shared process memory. They suit blocking I/O and libraries that release the GIL, but shared mutable state requires synchronization.</li>
+              <li><b>Processes:</b> separate interpreters and memory spaces. They enable parallel CPU-bound Python execution at the cost of startup, communication, and serialization overhead.</li>
+            </ul>
+            <p>Example: handling 1,000 mostly waiting HTTP requests is a concurrency problem; speeding up independent CPU-heavy image transformations across cores is a parallelism problem.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Concurrency overlaps tasks; parallelism runs tasks simultaneously. Use asyncio or threads for I/O-bound concurrency and processes for CPU-bound Python parallelism.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>How do you integrate ThreadPoolExecutor with asyncio?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>Move a blocking synchronous function off the event-loop thread, then await its result. <code>asyncio.to_thread()</code> is the simplest option for ordinary blocking I/O:</p>
+            <pre><code>result = await asyncio.to_thread(blocking_read, path)</code></pre>
+            <p>For an explicitly sized or shared pool, use <code>ThreadPoolExecutor</code> with <code>run_in_executor()</code>:</p>
+            <pre><code>from concurrent.futures import ThreadPoolExecutor
+
+pool = ThreadPoolExecutor(max_workers=8)
+
+async def fetch_report(report_id):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(pool, load_report, report_id)</code></pre>
+            <ul>
+              <li>Bound the worker count so bursts do not create uncontrolled threads or overload a downstream service.</li>
+              <li>Do not send native async functions to the executor; await them directly.</li>
+              <li>Threads generally do not speed up CPU-bound Python bytecode because of the GIL. Use a process pool or native code that releases the GIL.</li>
+              <li>Cancelling the awaiting coroutine does not necessarily stop a function already running in a worker thread. Design blocking calls with timeouts and cooperative cancellation where possible.</li>
+              <li>Shut down an application-owned executor during application cleanup.</li>
+            </ul>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Use <code>to_thread()</code> or <code>run_in_executor()</code> to keep blocking I/O away from the event loop. Bound the pool, apply timeouts, and use processes for CPU-heavy Python code.</div>
         </div>
       </details>
 
