@@ -1101,45 +1101,122 @@ finally:
       </details>
 
       <details class="qa">
-        <summary>Explain OOP principles in Python with a practical example.</summary>
+        <summary>Explain classes, objects, and the four main pillars of OOP in Python.</summary>
         <div class="body">
           <div class="ans">
-            <p>The four commonly discussed OOP principles are <b>encapsulation, abstraction, inheritance, and polymorphism</b>. Python implements them through classes, methods, properties, abstract base classes, inheritance, method overriding, and duck typing.</p>
+            <h3>1. The Core Building Blocks: Classes and Objects</h3>
+            <ul>
+              <li><b>Class:</b> A blueprint or template for creating objects.</li>
+              <li><b>Object:</b> An instance of a class that holds actual data.</li>
+              <li><b><code>__init__</code> Method:</b> A special method (constructor) that runs automatically when a new object is created to initialize its values.</li>
+              <li><b><code>self</code> Parameter:</b> Represents the specific object you are currently creating or manipulating.</li>
+            </ul>
+            <p><b>python</b></p>
+            <pre><code># Defining a Class
+class Dog:
+    # Constructor method to initialize attributes
+    def __init__(self, name, breed):
+        self.name = name    # Instance attribute
+        self.breed = breed  # Instance attribute
+
+    # Method (behavior)
+    def bark(self):
+        return f"{self.name} says Woof!"
+
+# Creating Objects (Instantiating the class)
+dog1 = Dog("Buddy", "Golden Retriever")
+dog2 = Dog("Max", "German Shepherd")
+
+# Accessing attributes and calling methods
+print(dog1.name)    # Output: Buddy
+print(dog2.bark())  # Output: Max says Woof!</code></pre>
+            <p>Use code with caution.</p>
+
+            <h3>2. The 4 Main Pillars of OOP</h3>
+            <p>To utilize the full power of OOP, you must understand its four fundamental concepts:</p>
+
+            <h3>A. Inheritance</h3>
+            <p>Inheritance allows a new class (child class) to adopt attributes and methods from an existing class (parent class), preventing code repetition.</p>
+            <p><b>python</b></p>
+            <pre><code># Parent Class
+class Animal:
+    def eat(self):
+        return "Eating food..."
+
+# Child Class inherits from Animal
+class Cat(Animal):
+    def meow(self):
+        return "Meow!"
+
+my_cat = Cat()
+print(my_cat.eat())   # Inherited method -&gt; Output: Eating food...
+print(my_cat.meow())  # Child method -&gt; Output: Meow!</code></pre>
+            <p>Use code with caution.</p>
+
+            <h3>B. Polymorphism</h3>
+            <p>Polymorphism means "many forms." It allows different classes to have methods with the exact same name but different behaviors.</p>
+            <p><b>python</b></p>
+            <pre><code>class Car:
+    def start_engine(self):
+        return "Vroom! Car engine started."
+
+class Motorcycle:
+    def start_engine(self):
+        return "Braap! Motorcycle engine started."
+
+# A function that takes any object with a 'start_engine' method
+def vehicle_test(vehicle_object):
+    print(vehicle_object.start_engine())
+
+car = Car()
+bike = Motorcycle()
+
+vehicle_test(car)   # Output: Vroom! Car engine started.
+vehicle_test(bike)  # Output: Braap! Motorcycle engine started.</code></pre>
+            <p>Use code with caution.</p>
+
+            <h3>C. Encapsulation</h3>
+            <p>Encapsulation restricts direct access to certain data fields to prevent accidental modifications. In Python, you prefix an attribute with a single underscore <code>_</code> (protected) or a double underscore <code>__</code> (private).</p>
+            <p><b>python</b></p>
+            <pre><code>class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner
+        self.__balance = balance  # Private attribute (cannot be accessed directly outside class)
+
+    # Getter method to safely read private data
+    def get_balance(self):
+        return self.__balance
+
+    # Setter method to safely modify private data
+    def deposit(self, amount):
+        if amount &gt; 0:
+            self.__balance += amount
+
+account = BankAccount("Alice", 1000)
+account.deposit(500)
+print(account.get_balance())  # Output: 1500
+# print(account.__balance)    # Throws an AttributeError</code></pre>
+            <p>Use code with caution.</p>
+
+            <h3>D. Abstraction</h3>
+            <p>Abstraction hides complex implementation details and only shows the essential features to the user. This is achieved using Python's <code>abc</code> (Abstract Base Classes) module.</p>
+            <p><b>python</b></p>
             <pre><code>from abc import ABC, abstractmethod
 
-class PaymentMethod(ABC):                 # abstraction
+# Abstract Base Class (cannot be instantiated directly)
+class RemoteControl(ABC):
     @abstractmethod
-    def pay(self, amount: float) -&gt; str:
+    def press_power_button(self):
         pass
 
-class CardPayment(PaymentMethod):         # inheritance
-    def __init__(self, card_number: str):
-        self.__card_number = card_number  # encapsulation
+class TVRemote(RemoteControl):
+    def press_power_button(self):
+        return "Turning on the Television."
 
-    def pay(self, amount: float) -&gt; str:  # overriding
-        last_four = self.__card_number[-4:]
-        return f"Paid {amount} using card ending {last_four}"
-
-class UpiPayment(PaymentMethod):
-    def pay(self, amount: float) -&gt; str:
-        return f"Paid {amount} using UPI"
-
-class CheckoutService:
-    def checkout(self, method: PaymentMethod, amount: float) -&gt; str:
-        return method.pay(amount)          # polymorphism
-
-service = CheckoutService()
-service.checkout(CardPayment("1234567812345678"), 500)
-service.checkout(UpiPayment(), 500)</code></pre>
-            <ul>
-              <li><b>Encapsulation:</b> <code>CardPayment</code> owns the card number and exposes payment behaviour instead of letting callers manipulate that state directly. Double underscores trigger name mangling, although Python privacy is convention-based rather than absolute.</li>
-              <li><b>Abstraction:</b> <code>PaymentMethod</code> defines the required <code>pay()</code> contract without exposing gateway-specific implementation details.</li>
-              <li><b>Inheritance:</b> the concrete payment classes derive from <code>PaymentMethod</code> and satisfy its contract.</li>
-              <li><b>Polymorphism:</b> <code>CheckoutService</code> calls the same <code>pay()</code> method while runtime dispatch selects the implementation belonging to the supplied object.</li>
-            </ul>
-            <p>In Python, strict inheritance is not always required for polymorphism. With duck typing, any object that provides a compatible <code>pay()</code> method could work. Prefer composition when classes collaborate but do not have a genuine is-a relationship.</p>
+remote = TVRemote()
+print(remote.press_power_button()) # Output: Turning on the Television.</code></pre>
+            <p>Use code with caution.</p>
           </div>
-          <div class="why"><b>Interview-ready version:</b> Encapsulation protects an object's state, abstraction exposes a contract, inheritance reuses or specialises behaviour, and polymorphism lets one interface invoke different implementations. Python supports these through classes, ABCs, overriding, and duck typing.</div>
         </div>
       </details>
 
