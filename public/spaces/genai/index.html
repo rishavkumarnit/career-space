@@ -1101,6 +1101,49 @@ finally:
       </details>
 
       <details class="qa">
+        <summary>Explain OOP principles in Python with a practical example.</summary>
+        <div class="body">
+          <div class="ans">
+            <p>The four commonly discussed OOP principles are <b>encapsulation, abstraction, inheritance, and polymorphism</b>. Python implements them through classes, methods, properties, abstract base classes, inheritance, method overriding, and duck typing.</p>
+            <pre><code>from abc import ABC, abstractmethod
+
+class PaymentMethod(ABC):                 # abstraction
+    @abstractmethod
+    def pay(self, amount: float) -&gt; str:
+        pass
+
+class CardPayment(PaymentMethod):         # inheritance
+    def __init__(self, card_number: str):
+        self.__card_number = card_number  # encapsulation
+
+    def pay(self, amount: float) -&gt; str:  # overriding
+        last_four = self.__card_number[-4:]
+        return f"Paid {amount} using card ending {last_four}"
+
+class UpiPayment(PaymentMethod):
+    def pay(self, amount: float) -&gt; str:
+        return f"Paid {amount} using UPI"
+
+class CheckoutService:
+    def checkout(self, method: PaymentMethod, amount: float) -&gt; str:
+        return method.pay(amount)          # polymorphism
+
+service = CheckoutService()
+service.checkout(CardPayment("1234567812345678"), 500)
+service.checkout(UpiPayment(), 500)</code></pre>
+            <ul>
+              <li><b>Encapsulation:</b> <code>CardPayment</code> owns the card number and exposes payment behaviour instead of letting callers manipulate that state directly. Double underscores trigger name mangling, although Python privacy is convention-based rather than absolute.</li>
+              <li><b>Abstraction:</b> <code>PaymentMethod</code> defines the required <code>pay()</code> contract without exposing gateway-specific implementation details.</li>
+              <li><b>Inheritance:</b> the concrete payment classes derive from <code>PaymentMethod</code> and satisfy its contract.</li>
+              <li><b>Polymorphism:</b> <code>CheckoutService</code> calls the same <code>pay()</code> method while runtime dispatch selects the implementation belonging to the supplied object.</li>
+            </ul>
+            <p>In Python, strict inheritance is not always required for polymorphism. With duck typing, any object that provides a compatible <code>pay()</code> method could work. Prefer composition when classes collaborate but do not have a genuine is-a relationship.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Encapsulation protects an object's state, abstraction exposes a contract, inheritance reuses or specialises behaviour, and polymorphism lets one interface invoke different implementations. Python supports these through classes, ABCs, overriding, and duck typing.</div>
+        </div>
+      </details>
+
+      <details class="qa">
         <summary>How should file I/O be handled in Python?</summary>
         <div class="body">
           <div class="ans">
