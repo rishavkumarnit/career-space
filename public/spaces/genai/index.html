@@ -1033,6 +1033,63 @@
       </details>
 
       <details class="qa">
+        <summary>How does scope work in Python, and what is the LEGB rule?</summary>
+        <div class="body">
+          <div class="ans">
+            <p><b>Scope</b> determines where a name can be accessed, while a <b>namespace</b> is the mapping that stores names and their objects. When Python evaluates a name, it generally searches according to the <b>LEGB</b> rule:</p>
+            <ol>
+              <li><b>Local:</b> names defined inside the current function.</li>
+              <li><b>Enclosing:</b> names in outer functions surrounding a nested function.</li>
+              <li><b>Global:</b> names defined at the module level.</li>
+              <li><b>Built-in:</b> names provided by <code>builtins</code>, such as <code>len</code>, <code>print</code>, and <code>range</code>.</li>
+            </ol>
+            <pre><code>message = "global"
+
+def outer():
+    message = "enclosing"
+
+    def inner():
+        message = "local"
+        print(message)
+
+    inner()
+
+outer()  # local</code></pre>
+
+            <h3><code>global</code> and <code>nonlocal</code></h3>
+            <p>An assignment inside a function creates or updates a local name by default. Use <code>global</code> when the function must rebind a module-level name, and <code>nonlocal</code> when a nested function must rebind a name in its nearest enclosing function scope.</p>
+            <pre><code>count = 0
+
+def make_counter():
+    count = 0
+
+    def increment():
+        nonlocal count
+        count += 1
+        return count
+
+    return increment
+
+counter = make_counter()
+print(counter())  # 1
+print(counter())  # 2</code></pre>
+            <p>The returned <code>increment</code> function is a <b>closure</b>: it keeps access to the enclosing <code>count</code> even after <code>make_counter</code> has returned.</p>
+
+            <h3>Common scope traps</h3>
+            <ul>
+              <li><b><code>UnboundLocalError</code>:</b> if a function assigns to a name anywhere in its body, Python treats that name as local unless it is declared <code>global</code> or <code>nonlocal</code>. Reading it before the local assignment fails.</li>
+              <li><b>Blocks do not create a scope:</b> <code>if</code>, <code>for</code>, <code>while</code>, <code>try</code>, and <code>with</code> blocks do not create separate local scopes.</li>
+              <li><b>Comprehensions:</b> in Python 3, the loop variable inside a list, set, or dictionary comprehension has its own scope and does not leak into the surrounding scope.</li>
+              <li><b>Class scope:</b> a class body creates a namespace, but methods should access class or instance attributes through <code>ClassName.attribute</code>, <code>self.attribute</code>, or <code>cls.attribute</code>.</li>
+              <li><b>Late binding in closures:</b> closures look up captured variables when called. Functions created in a loop may therefore all observe the final loop value; bind the current value with a default argument when that is the required behaviour.</li>
+              <li><b>Shadowing:</b> avoid naming variables <code>list</code>, <code>dict</code>, <code>str</code>, or <code>sum</code>, because doing so hides the corresponding built-in in that scope.</li>
+            </ul>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Python resolves names using Local, Enclosing, Global, then Built-in scope. Assignments are local by default; <code>global</code> rebinds a module name and <code>nonlocal</code> rebinds a name in an enclosing function.</div>
+        </div>
+      </details>
+
+      <details class="qa">
         <summary>How does exception handling work in Python?</summary>
         <div class="body">
           <div class="ans">
