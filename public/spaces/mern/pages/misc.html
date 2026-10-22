@@ -329,6 +329,10 @@ add(2, "3"); // compile error — caught before the code ever runs
 interface User { age: number }   // merges — User now has both name and age
 
 type Id = string | number;        // type can express a union; interface can't</code></pre>
+      <ul>
+        <li>Use <strong><code>type</code></strong> when you need union types (like <code>string | number</code>) or complex mapped types.</li>
+        <li>Use <strong><code>interface</code></strong> when you want to extend/merge multiple shapes easily using <code>extends</code>.</li>
+      </ul>
       <p><strong>Common follow-up:</strong> "so which should I default to?" — most style guides land on: prefer <code>interface</code> for public object/class shapes that might need extending later (cleaner error messages, declaration merging can be useful for augmenting third-party types), and prefer <code>type</code> for unions, tuples, and anything that isn't a plain object shape, since <code>interface</code> can't express those at all.</p>
     </div>
   </details>
