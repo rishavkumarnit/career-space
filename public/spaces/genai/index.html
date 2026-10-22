@@ -111,7 +111,7 @@
   .deep-learning h2::after{display:none;}
   .deep-learning p{margin:0; color:var(--ink-soft); font-size:13.5px;}
   .guide-panel{display:none;}
-  body.agri-selected #agri-guide, body.agri-selected #agri-guide-continuation, body.python-selected #python-guide, body.deep-selected #deep-learning, body.rag-selected #rag-guide, body.web3-selected #web3-guide, body.rust-selected #rust-guide, body.evals-selected #evals-guide, body.solana-selected #solana-guide, body.production-selected #production-guide{display:block;}
+  body.agri-selected #agri-guide, body.agri-selected #agri-guide-continuation, body.python-selected #python-guide, body.deep-selected #deep-learning, body.ml-selected #ml-guide, body.rag-selected #rag-guide, body.web3-selected #web3-guide, body.rust-selected #rust-guide, body.evals-selected #evals-guide, body.solana-selected #solana-guide, body.production-selected #production-guide{display:block;}
   body.guide-open .tracks{display:none;}
   body:not(.guide-open) nav.toc{display:none;}
   body:not(.agri-selected) nav.toc a[href*="frame.claudeusercontent"]{display:none;}
@@ -284,7 +284,7 @@
   nav.toc{display:none!important}.shell{max-width:1280px}main{width:100%;padding:50px 32px 96px}header.top{margin-bottom:34px}h1{font-size:36px;letter-spacing:-.03em;margin-bottom:8px}.lede{font-size:18px;max-width:72ch;margin-bottom:0}.tracks{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:42px}.track{min-height:190px;padding:23px;border-radius:10px;background:var(--card);transition:border-color .16s,transform .16s}.track:hover{transform:translateY(-2px)}.track .track-no{font-size:13px}.track strong{font-size:21px;margin-top:12px}.track span:last-child{font-size:14px;line-height:1.5}
   .project-label{font-size:14px;margin-bottom:16px}.pitch{border-radius:10px;padding:24px 26px;margin-bottom:42px;background:var(--card)}.pitch .label,section.cat h2{font-size:13px}.pitch p{font-size:16px;line-height:1.65}section.cat{margin-bottom:42px}section.cat .cat-desc{font-size:14px;margin-bottom:18px}.guide-panel{counter-reset:question}details.qa{border-radius:10px;margin-bottom:10px;background:var(--card);counter-increment:question}details.qa summary{min-height:56px;padding:13px 26px;font-size:18px;gap:16px}details.qa summary::before{content:"▸  " counter(question) ".";width:auto;min-width:46px;color:var(--accent);font-size:15px}details.qa[open] summary::before{content:"▾  " counter(question) "."}details.qa .body{border-top:1px solid var(--rule);padding:24px 58px 28px 88px}details.qa .ans{font-size:16px;line-height:1.7}details.qa .why{padding:14px 16px;font-size:14px}.term{padding:16px 18px;border-radius:10px}.term-name{font-size:15px}.term-def{font-size:15px}.deep-learning{max-width:900px;margin-top:0;padding:28px}.deep-learning h2{font-size:26px}footer.note{font-size:13px}
   @media (max-width:860px){.section-nav .nav-inner{min-height:60px;padding:0 20px;gap:18px}.section-nav .nav-title{font-size:17px}.section-nav a:not(.nav-title){font-size:14px;padding:19px 0 16px}main{padding:36px 20px 70px}.tracks{grid-template-columns:1fr}h1{font-size:30px}details.qa summary{padding:17px 18px;font-size:16px}details.qa .body{padding:20px}}
-  .deep-learning,.rag-learning,.web3-learning,.rust-learning,.evals-learning,.solana-learning,.production-learning{max-width:none;margin:0;padding:0;background:transparent;border:0;border-radius:0}.deep-learning .back-to-sections,.rag-learning .back-to-sections,.web3-learning .back-to-sections,.rust-learning .back-to-sections,.evals-learning .back-to-sections,.solana-learning .back-to-sections,.production-learning .back-to-sections{margin-bottom:26px}.deep-learning h2,.rag-learning h2,.web3-learning h2,.rust-learning h2,.evals-learning h2,.solana-learning h2,.production-learning h2{font-size:36px;letter-spacing:-.03em;margin:0 0 8px;color:var(--ink)}.deep-learning>p,.rag-learning>p,.web3-learning>p,.rust-learning>p,.evals-learning>p,.solana-learning>p,.production-learning>p{margin:0 0 28px;color:var(--ink-soft);font-size:18px}.deep-learning details.qa,.rag-learning details.qa,.web3-learning details.qa,.evals-learning details.qa,.solana-learning details.qa,.production-learning details.qa{max-width:100%}.web3-learning .q-num{display:none}.web3-learning .qa-body,.solana-learning .qa-body,.production-learning .qa-body{border-top:1px solid var(--rule);padding:24px 58px 28px 88px;font-size:16px;line-height:1.7}.web3-learning .qa-body p,.solana-learning .qa-body p,.production-learning .qa-body p{margin:0 0 12px}.web3-learning .qa-body ul,.solana-learning .qa-body ul,.production-learning .qa-body ul{margin:0;padding-left:20px}.web3-learning pre,.solana-learning pre,.production-learning pre{overflow:auto;padding:14px;background:var(--code-bg);border:1px solid var(--rule);border-radius:8px;color:var(--code-ink);font-size:14px;line-height:1.5}body.deep-selected footer.note,body.rag-selected footer.note,body.web3-selected footer.note,body.rust-selected footer.note,body.evals-selected footer.note,body.solana-selected footer.note,body.production-selected footer.note{display:none}
+  .deep-learning,.ml-learning,.rag-learning,.web3-learning,.rust-learning,.evals-learning,.solana-learning,.production-learning{max-width:none;margin:0;padding:0;background:transparent;border:0;border-radius:0}.deep-learning .back-to-sections,.ml-learning .back-to-sections,.rag-learning .back-to-sections,.web3-learning .back-to-sections,.rust-learning .back-to-sections,.evals-learning .back-to-sections,.solana-learning .back-to-sections,.production-learning .back-to-sections{margin-bottom:26px}.deep-learning h2,.ml-learning h2,.rag-learning h2,.web3-learning h2,.rust-learning h2,.evals-learning h2,.solana-learning h2,.production-learning h2{font-size:36px;letter-spacing:-.03em;margin:0 0 8px;color:var(--ink)}.deep-learning>p,.ml-learning>p,.rag-learning>p,.web3-learning>p,.rust-learning>p,.evals-learning>p,.solana-learning>p,.production-learning>p{margin:0 0 28px;color:var(--ink-soft);font-size:18px}.deep-learning details.qa,.ml-learning details.qa,.rag-learning details.qa,.web3-learning details.qa,.evals-learning details.qa,.solana-learning details.qa,.production-learning details.qa{max-width:100%}.web3-learning .q-num{display:none}.web3-learning .qa-body,.solana-learning .qa-body,.production-learning .qa-body{border-top:1px solid var(--rule);padding:24px 58px 28px 88px;font-size:16px;line-height:1.7}.web3-learning .qa-body p,.solana-learning .qa-body p,.production-learning .qa-body p{margin:0 0 12px}.web3-learning .qa-body ul,.solana-learning .qa-body ul,.production-learning .qa-body ul{margin:0;padding-left:20px}.web3-learning pre,.solana-learning pre,.production-learning pre{overflow:auto;padding:14px;background:var(--code-bg);border:1px solid var(--rule);border-radius:8px;color:var(--code-ink);font-size:14px;line-height:1.5}body.deep-selected footer.note,body.ml-selected footer.note,body.rag-selected footer.note,body.web3-selected footer.note,body.rust-selected footer.note,body.evals-selected footer.note,body.solana-selected footer.note,body.production-selected footer.note{display:none}
   .concept-diagram{margin:22px 0;padding:12px;background:#0c0f14;border:1px solid var(--rule);border-radius:10px}.concept-diagram img{display:block;width:100%;max-width:920px;margin:0 auto;border-radius:6px}.concept-diagram figcaption{padding:11px 4px 1px;color:var(--ink-soft);font-size:13px;line-height:1.5}
   .resource-bar{position:relative;z-index:10;pointer-events:auto;background:#111720;border-bottom:1px solid var(--rule)}.resource-bar .resource-inner{max-width:1280px;margin:0 auto;padding:12px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}.resource-bar strong{font-size:13px;color:var(--ink-soft);white-space:nowrap}.resource-bar a{font-size:13px;color:var(--accent-strong);text-decoration:none;white-space:nowrap;pointer-events:auto;cursor:pointer}.resource-bar a:hover{text-decoration:underline;color:var(--ink)}
   .section-resources{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 24px;padding:14px 16px;background:var(--card);border:1px solid var(--rule);border-radius:10px}.section-resources strong{font-size:14px;color:var(--ink-soft);white-space:nowrap}.section-resources a{font-size:14px;color:var(--accent-strong);text-decoration:none;white-space:nowrap}.section-resources a:hover{text-decoration:underline;color:var(--ink)}
@@ -297,6 +297,7 @@
     <a href="#agri" data-guide="agri">Multilingual Agri Q&amp;A</a>
     <a href="#python" data-guide="python">Python / FastAPI</a>
     <a href="#deep" data-guide="deep">Deep Learning</a>
+    <a href="#ml" data-guide="ml">ML</a>
     <a href="#rag" data-guide="rag">RAG</a>
     <a href="#evals" data-guide="evals">LLM Evals</a>
     <a href="#production" data-guide="production">LLM Production</a>
@@ -325,6 +326,7 @@
     <a href="#tracks" data-guide="home">All sections</a>
     <a href="#agri" data-guide="agri">Multilingual Agri Q&amp;A</a>
     <a href="#deep" data-guide="deep">Deep Learning</a>
+    <a href="#ml" data-guide="ml">Machine Learning</a>
     <a href="#pitch">60-second pitch</a>
     <a href="#glossary">Glossary — key terms <span class="count">20</span></a>
     <a href="#architecture">Architecture &amp; orchestration <span class="count">5</span></a>
@@ -350,13 +352,18 @@
         <strong>Deep Learning</strong>
         <span>Neural networks, MLPs, training, evaluation, CNNs, and transformers.</span>
       </a>
+      <a class="track" href="#ml" data-guide="ml">
+        <span class="track-no">03 — MACHINE LEARNING</span>
+        <strong>ML</strong>
+        <span>Learning types, model evaluation, overfitting, feature preparation, and ensemble methods.</span>
+      </a>
       <a class="track" href="#python" data-guide="python">
-        <span class="track-no">03 — PROGRAMMING</span>
+        <span class="track-no">04 — PROGRAMMING</span>
         <strong>Python / FastAPI</strong>
         <span>Async programming, typing, generators, the GIL, FastAPI, and backend interview questions.</span>
       </a>
       <a class="track" href="#rag" data-guide="rag">
-        <span class="track-no">04 — GENAI FUNDAMENTALS</span>
+        <span class="track-no">05 — GENAI FUNDAMENTALS</span>
         <strong>RAG</strong>
         <span>Retrieval, embeddings, chunking, vector search, and grounded answers.</span>
       </a>
@@ -908,7 +915,7 @@
 
     <section class="guide-panel" id="python-guide">
       <a class="back-to-sections" href="#tracks" data-guide="home">All sections</a>
-      <p class="project-label">03 — Python / FastAPI</p>
+      <p class="project-label">04 — Python / FastAPI</p>
     <section class="cat" id="python">
       <h2>Python / FastAPI</h2>
       <p class="cat-desc">Core Python and FastAPI backend questions for GenAI interviews—grounded in this codebase as well as common API design topics.</p>
@@ -1623,9 +1630,124 @@ async def fetch_report(report_id):
       </details>
     </section>
 
+    <section class="guide-panel ml-learning" id="ml-guide">
+      <a class="back-to-sections" href="#tracks" data-guide="home">All sections</a>
+      <h2>03 — Machine Learning</h2>
+      <p>Core machine-learning concepts, model evaluation, data preparation, and common interview trade-offs.</p>
+
+      <details class="qa" open>
+        <summary>What is Machine Learning, and what are its main types?</summary>
+        <div class="body">
+          <div class="ans">
+            <p><b>Machine Learning (ML)</b> is a branch of AI in which systems learn patterns from data and use those patterns to make predictions or decisions without every rule being explicitly programmed.</p>
+            <ul>
+              <li><b>Supervised learning:</b> learns from labelled input-output pairs. Common tasks are classification, such as spam detection, and regression, such as house-price prediction.</li>
+              <li><b>Unsupervised learning:</b> finds structure in unlabelled data. Common tasks include clustering, dimensionality reduction, and anomaly detection.</li>
+              <li><b>Semi-supervised learning:</b> combines a small labelled dataset with a larger unlabelled dataset when labels are expensive.</li>
+              <li><b>Reinforcement learning:</b> an agent learns actions through rewards and penalties while interacting with an environment.</li>
+            </ul>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> ML learns a mapping or structure from data. The learning type depends mainly on whether labels exist and whether feedback comes from examples or rewards.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>What is the difference between underfitting and overfitting?</summary>
+        <div class="body">
+          <div class="ans">
+            <p><b>Underfitting</b> happens when a model is too simple to learn the important pattern. It performs poorly on both training and unseen data, which usually indicates high bias.</p>
+            <p><b>Overfitting</b> happens when a model learns training-specific noise instead of a general pattern. Training performance is strong, but validation or test performance is much worse, which usually indicates high variance.</p>
+            <p>Reduce underfitting with better features, a more expressive model, or longer training. Reduce overfitting with more representative data, cross-validation, regularisation, pruning, dropout, early stopping, data augmentation, or a simpler model.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Underfitting means the model has not learned enough; overfitting means it memorised too much. Compare training and validation performance to diagnose the difference.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>What is the bias-variance trade-off?</summary>
+        <div class="body">
+          <div class="ans">
+            <p><b>Bias</b> is error caused by assumptions that are too simple. A high-bias model misses real relationships. <b>Variance</b> is sensitivity to the particular training sample. A high-variance model changes too much when the data changes slightly.</p>
+            <p>Increasing model complexity often lowers bias but raises variance. The goal is to choose enough complexity to capture the signal while still generalising to unseen data. Validation data and cross-validation help find this balance.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> High bias causes underfitting, while high variance causes overfitting. Good model selection balances both to minimise generalisation error.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>Why do we split data into training, validation, and test sets?</summary>
+        <div class="body">
+          <div class="ans">
+            <ul>
+              <li><b>Training set:</b> fits the model parameters.</li>
+              <li><b>Validation set:</b> selects features, hyperparameters, thresholds, and the model itself.</li>
+              <li><b>Test set:</b> provides the final unbiased estimate after all modelling decisions are complete.</li>
+            </ul>
+            <p>The test set must remain untouched during development. When data is limited, use cross-validation on the training portion and keep a final holdout test set. For time-series data, split chronologically rather than randomly to avoid learning from the future.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Train on one set, tune on another, and evaluate once on untouched data. This prevents model-selection decisions from leaking into the final score.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>Which evaluation metrics should you use for classification?</summary>
+        <div class="body">
+          <div class="ans">
+            <ul>
+              <li><b>Accuracy:</b> overall fraction of correct predictions; useful when classes and error costs are balanced.</li>
+              <li><b>Precision:</b> of all predicted positives, how many were correct. Prioritise it when false positives are expensive.</li>
+              <li><b>Recall:</b> of all actual positives, how many were found. Prioritise it when missing a positive is expensive.</li>
+              <li><b>F1 score:</b> harmonic mean of precision and recall; useful for imbalanced classes when both matter.</li>
+              <li><b>ROC-AUC:</b> measures ranking quality across thresholds, while <b>PR-AUC</b> is often more informative for rare positive classes.</li>
+            </ul>
+            <p>Always inspect the confusion matrix and select the decision threshold according to the business cost of each error type.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> There is no universally best metric. Choose one that reflects class imbalance and the real cost of false positives versus false negatives.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>Why are feature scaling and categorical encoding needed?</summary>
+        <div class="body">
+          <div class="ans">
+            <p><b>Feature scaling</b> puts numeric features on comparable ranges. Standardisation transforms values using their mean and standard deviation, while min-max scaling maps them to a fixed interval. Scaling matters for distance-based and gradient-based models such as KNN, SVM, linear/logistic regression, and neural networks. Tree models usually do not require it.</p>
+            <p><b>Categorical encoding</b> converts categories into numeric representations. One-hot encoding is suitable for unordered categories; ordinal encoding is suitable only when a real order exists. High-cardinality fields may need hashing, carefully cross-fitted target encoding, or learned embeddings.</p>
+            <p>Fit every transformer only on training data, then reuse it for validation, test, and production inputs to prevent data leakage.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Scaling makes numeric magnitudes comparable, and encoding gives models numeric representations of categories. Both must be learned from training data only.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>What are L1 and L2 regularisation?</summary>
+        <div class="body">
+          <div class="ans">
+            <p>Regularisation adds a penalty to the training objective so the model avoids unnecessarily large weights.</p>
+            <ul>
+              <li><b>L1 regularisation (Lasso):</b> penalises the absolute value of weights. It can push some weights exactly to zero, so it can perform feature selection.</li>
+              <li><b>L2 regularisation (Ridge or weight decay):</b> penalises squared weights. It usually shrinks weights smoothly and distributes influence across correlated features.</li>
+            </ul>
+            <p>The regularisation strength is a hyperparameter: too little may leave overfitting, while too much can cause underfitting.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Both reduce model complexity by penalising large weights. L1 encourages sparse solutions; L2 smoothly shrinks weights.</div>
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary>What is the difference between bagging and boosting?</summary>
+        <div class="body">
+          <div class="ans">
+            <p><b>Bagging</b> trains multiple models independently on bootstrapped samples and combines their predictions. It mainly reduces variance and can be trained in parallel. Random Forest adds random feature selection to bagged decision trees.</p>
+            <p><b>Boosting</b> trains models sequentially, with each new learner focusing on errors left by the current ensemble. It often reduces bias and can produce very strong predictors, but it is more sensitive to noise and hyperparameters. Examples include AdaBoost, Gradient Boosting, XGBoost, LightGBM, and CatBoost.</p>
+          </div>
+          <div class="why"><b>Interview-ready version:</b> Bagging builds independent learners and averages them; boosting builds learners in sequence so later models correct earlier mistakes.</div>
+        </div>
+      </details>
+    </section>
+
     <section class="guide-panel rag-learning" id="rag-guide">
       <a class="back-to-sections" href="#tracks" data-guide="home">All sections</a>
-      <h2>04 — Retrieval-Augmented Generation</h2>
+      <h2>05 — Retrieval-Augmented Generation</h2>
       <p>Core RAG concepts: retrieval, embeddings, chunking, vector search, and answer grounding.</p>
 
       <div class="section-resources" aria-label="RAG interview resources">
@@ -2234,10 +2356,11 @@ add_conditional_edges("assess_context", route, {
       window.open(externalLink.href, '_blank', 'noopener,noreferrer');
     });
     function renderGuide(guide) {
-      body.classList.remove('guide-open', 'agri-selected', 'python-selected', 'deep-selected', 'rag-selected', 'web3-selected', 'rust-selected', 'evals-selected', 'solana-selected', 'production-selected');
+      body.classList.remove('guide-open', 'agri-selected', 'python-selected', 'deep-selected', 'ml-selected', 'rag-selected', 'web3-selected', 'rust-selected', 'evals-selected', 'solana-selected', 'production-selected');
       if (guide === 'agri') body.classList.add('guide-open', 'agri-selected');
       if (guide === 'python') body.classList.add('guide-open', 'python-selected');
       if (guide === 'deep') body.classList.add('guide-open', 'deep-selected');
+      if (guide === 'ml') body.classList.add('guide-open', 'ml-selected');
       if (guide === 'rag') body.classList.add('guide-open', 'rag-selected');
       if (guide === 'web3') body.classList.add('guide-open', 'web3-selected');
       if (guide === 'rust') body.classList.add('guide-open', 'rust-selected');
@@ -2250,7 +2373,7 @@ add_conditional_edges("assess_context", route, {
       });
     }
     function selectGuide() {
-      renderGuide(window.location.hash === '#agri' ? 'agri' : window.location.hash === '#python' ? 'python' : window.location.hash === '#deep' ? 'deep' : window.location.hash === '#rag' ? 'rag' : window.location.hash === '#web3' ? 'web3' : window.location.hash === '#rust' ? 'rust' : window.location.hash === '#evals' ? 'evals' : window.location.hash === '#solana' ? 'solana' : window.location.hash === '#production' ? 'production' : 'home');
+      renderGuide(window.location.hash === '#agri' ? 'agri' : window.location.hash === '#python' ? 'python' : window.location.hash === '#deep' ? 'deep' : window.location.hash === '#ml' ? 'ml' : window.location.hash === '#rag' ? 'rag' : window.location.hash === '#web3' ? 'web3' : window.location.hash === '#rust' ? 'rust' : window.location.hash === '#evals' ? 'evals' : window.location.hash === '#solana' ? 'solana' : window.location.hash === '#production' ? 'production' : 'home');
     }
     document.addEventListener('click', function (event) {
       var link = event.target.closest('[data-guide]');
@@ -2258,7 +2381,7 @@ add_conditional_edges("assess_context", route, {
       var guide = link.getAttribute('data-guide');
       event.preventDefault();
       renderGuide(guide);
-      window.location.hash = guide === 'agri' ? 'agri' : guide === 'python' ? 'python' : guide === 'deep' ? 'deep' : guide === 'rag' ? 'rag' : guide === 'web3' ? 'web3' : guide === 'rust' ? 'rust' : guide === 'evals' ? 'evals' : guide === 'solana' ? 'solana' : guide === 'production' ? 'production' : 'tracks';
+      window.location.hash = guide === 'agri' ? 'agri' : guide === 'python' ? 'python' : guide === 'deep' ? 'deep' : guide === 'ml' ? 'ml' : guide === 'rag' ? 'rag' : guide === 'web3' ? 'web3' : guide === 'rust' ? 'rust' : guide === 'evals' ? 'evals' : guide === 'solana' ? 'solana' : guide === 'production' ? 'production' : 'tracks';
       window.scrollTo({top: 0, behavior: 'instant'});
     });
     window.addEventListener('hashchange', selectGuide);
